@@ -1,0 +1,347 @@
+# Changelog
+
+## Unreleased — bulk product creation
+
+### Added
+
+- Optional `images` (HTTPS URL and alt text) on `create_product` and every `create_products_bulk` row. Shopify downloads images during asynchronous media processing; no separate manual upload is needed.
+
+- `create_products_bulk`: asynchronous draft product creation from an inline batch or JSONL artifact,
+  using staged upload and a fixed Shopify bulk mutation. Validates all rows before submission.
+- Product bulk uploads use existing external-effect suppression and identity; unknown outcomes
+  are not automatically replayed. Shopify clientIdentifier is correlation, not deduplication.
+
+### Security
+
+- Mutation errors retain the error code and field path without echoing free-form Shopify messages that can contain customer data.
+
+All notable changes to the Shopify extension are recorded here.
+
+Entries use these sections where they apply: **Added**, **Changed**, **Deprecated**,
+**Removed**, **Fixed**, **Security**. When an entry adds or changes an operation it names the
+capability in plain language and the technical Shopify operation, so both a store owner and an
+integrator can read it:
+
+```markdown
+## 0.2.0
+
+### Added
+
+- Added the ability to read stock for one item at every location.
+  Query: `inventoryItem.inventoryLevels`.
+```
+
+## 0.3.0
+
+### Added
+
+- **Complete product exports now follow every Shopify cursor without filling workflow state.**
+  `export_products` streams the matching catalog to a JSONL artifact in object storage. Its
+  optional `filter` accepts Shopify product-search expressions, while the GraphQL document stays
+  fixed and the provider-specific cursor protocol remains inside the extension.
+
+### Fixed
+
+- **A newly created product can now continue through price, SKU and stock setup in one workflow.**
+  `create_product` returns `product_variants`, containing the initial variant and its inventory
+  item, instead of forcing an unsafe store-wide variant lookup. Mutation: `productCreate`.
+
+### Changed
+
+- **Connecting a store is now an authorization, not a form.** Shopify no longer offers the
+  pre-generated Admin API access token this extension was built around, so a connection is made by
+  the OAuth authorization code grant instead. Adding one asks for the store and nothing else;
+  Shopify is where the access is approved, and no token is ever typed or pasted.
+- **The store is the one Shopify confirmed.** The callback carries an HMAC-SHA256 signature over its
+  own query, verified against the app's client secret, and the shop named inside it becomes
+  `connection_config.oauth.subject`. Every later request — the Admin API endpoint and the token
+  refresh alike — is built from that verified value, so a workflow can no longer name the store it
+  talks to. What was typed is used only to reach the right authorization page.
+- **Access expires and renews itself.** The grant is requested with `expiring=1`, so Shopify returns
+  an access token, a refresh token and both lifetimes. The platform refreshes ahead of expiry under
+  its existing per-connection lock and takes the durations from Shopify rather than assuming them.
+  Reauthorization is needed only if the app is uninstalled, its credentials rotate, or the refresh
+  token itself expires.
+- **The Setup Guide is written for two different people.** One section for whoever creates the
+  Shopify app in the Dev Dashboard — standalone, Custom distribution, the exact redirect URL, the
+  scope release, and where the Client ID and secret go. One for whoever connects a store, who needs
+  no developer account at all.
+
+- **Every operation now publishes one canonical `required_oauth_scopes` list.** Core,
+  readiness, the workflow builder, capability reporting, and runtime consume the same
+  all-of declaration; the private `scope_policy` dialect is removed.
+- **Fresh authorization requests the full eight-scope union.** `list_locations` requires
+  `read_locations` for the Location fields it selects, in addition to `write_inventory` for the
+  inventory operation group. The returned grant, Core checks and operation requirements share one
+  literal vocabulary. Existing stores with the old seven-scope grant need to authorize again.
+
+- **A token response missing a documented field is malformed.** Shopify documents
+  `access_token`, `scope`, `expires_in`, `refresh_token` and
+  `refresh_token_expires_in` on both the initial exchange and the refresh. Any of
+  them absent now fails the response outright rather than saving what did arrive,
+  and the granted scopes are never reconstructed from what was requested — that
+  would record a grant Shopify never confirmed.
+
+### Removed
+
+- **The `Admin API access token` field, and the connection form that held it.** There is no
+  migration: the field is gone, and any connection made the old way must be created again through
+  authorization. Nothing was released to a customer on the old contract.
+
+### Fixed
+
+- **Repeated stock imports no longer fail when every quantity is unchanged.** Shopify returns no
+  adjustment group for a compare-and-swap batch that already matches the requested absolute
+  quantities. `set_inventory_quantities` now reports that proven no-op as succeeded while keeping
+  an absent receipt for any expected change or unchecked write as `timeout_unknown`.
+
+### Security
+
+- **A reconnect cannot move a connection to a different store.** Reconnecting
+  replaces the grant on a connection that already exists, and workflows name that
+  connection rather than the store behind it. A reconnect landing a different shop
+  would leave every one of them running and quietly addressing somewhere else, so
+  the shop is checked against the one the connection is bound to — before the code
+  is exchanged, and again under the grant lock immediately before it.
+- **A grant and a refresh for the same store can no longer overlap.** They were
+  taking two different locks, so neither blocked the other — and each revokes what
+  the other just produced, leaving whichever finished second holding a pair that
+  was already dead. Both now take one claim, keyed on the configuration and the
+  verified store.
+- **A grant that succeeded is never reported as a refusal.** A store can approve
+  the authorization and still return fewer scopes than the connection needs. The
+  exchange has completed by then and a token set exists, so the previous grant may
+  already have been retired to issue it — but the shortfall was being classified
+  by its error code alone and read as though nothing had happened. Certainty is
+  now decided by the phase first: once the exchange succeeds, nothing is promised
+  about the authorization it replaces.
+
+- **An uncertain reconnect no longer claims the old connection survived.** After a
+  timeout or an unreadable answer the provider may already have accepted the grant
+  and revoked what the old connection was using, while its access token keeps
+  working until it expires — a failure that surfaces an hour later. Only an
+  explicit refusal now reports the connection as preserved; anything after
+  dispatch marks it as needing attention.
+
+- **One grant per configuration and store is serialized end to end.** The
+  duplicate check, the exchange and the write that follows are now one indivisible
+  step. Checking and then exchanging left a window in which two callbacks both
+  passed the check and both exchanged, after which Shopify had retired one of the
+  two tokens behind a connection still holding it.
+
+- **A second connection to the same store under the same app is refused before the code is
+  exchanged.** Shopify keeps one token per app and store and retires the previous one when a new
+  grant is issued, so a duplicate would silently break the connection already working. The
+  authorization code is left to expire unused and the operator is pointed at the existing
+  connection. Separate configurations may still hold the same store, because they can be separate
+  Shopify apps.
+- **A forged callback cannot spend a valid authorization.** The signature and the shop are checked
+  before the authorization state is consumed, so a bad signature or a mismatched shop leaves the
+  state intact for the genuine callback. A repeated query parameter is refused outright, because it
+  would make the signed message ambiguous.
+- **Nothing new carries a secret.** Authorization codes, tokens, the client secret and the signed
+  callback query appear in no result, log line, error message or audit record added here.
+
+## 0.2.0
+
+### Added
+
+- **Catalog and order automation, on the same closed pattern as inventory.** Twenty-three new
+  operations bring the surface to thirty-one, of which thirty contact Shopify and eleven change
+  anything. Every one owns a single fixed GraphQL document.
+- **Read the catalog.** Cursor-paginated products and variants, one product or variant by id,
+  metafields for a product or variant, and a product's media.
+  Actions: `list_products`, `get_product`, `list_product_variants`, `get_product_variant`,
+  `list_catalog_metafields`, `list_product_media`.
+  Queries: `products`, `product`, `productVariants`, `productVariant`, `node`, `product.media`.
+- **Create and change catalog records.** A product is always created as a draft; an update touches
+  only the fields supplied; variants are created and changed 1–250 at a time with decimal-string
+  prices; metafields are set 1–25 at a time under compare-and-set.
+  Actions: `create_product`, `update_product`, `create_product_variants_batch`,
+  `update_product_variants_batch`, `set_catalog_metafields`.
+  Mutations: `productCreate`, `productUpdate`, `productVariantsBulkCreate`,
+  `productVariantsBulkUpdate`, `metafieldsSet`.
+- **Change one media item's alt text.** The single Files API exception, and the input is built
+  internally as exactly `{id, alt}`.
+  Action: `update_product_media_alt`. Mutation: `fileUpdate`.
+- **Read orders without reading customers.** Orders, one order, line items, metafields,
+  fulfillment orders, one fulfillment order, and fulfillments with the store's own total.
+  Actions: `list_orders`, `get_order`, `list_order_line_items`, `list_order_metafields`,
+  `list_order_fulfillment_orders`, `get_fulfillment_order`, `list_order_fulfillments`.
+  Queries: `orders`, `order`, `order.lineItems`, `order.metafields`, `order.fulfillmentOrders`,
+  `fulfillmentOrder`, `order.fulfillments`.
+- **Change order metadata and fulfil orders.** Note, PO number, tags and custom attributes;
+  order metafields under compare-and-set; a fulfillment with explicitly named line items; and
+  tracking on an existing fulfillment.
+  Actions: `update_order_metadata`, `set_order_metafields`, `create_fulfillment`,
+  `update_fulfillment_tracking`.
+  Mutations: `orderUpdate`, `metafieldsSet`, `fulfillmentCreate`,
+  `fulfillmentTrackingInfoUpdate`.
+- **A distinct external effect kind for every mutation**, generated from the registry rather than
+  written into the manifest, so the host is never told a product edit moved stock.
+
+### Changed
+
+- **OAuth grants now cover the full published operation surface.** The connection requires the
+  union of every operation's canonical `required_oauth_scopes` list and rejects an incomplete
+  callback. An older stale grant can still be inspected so the app can be corrected, released and
+  authorized again.
+- **`test_connection` reports capabilities from the canonical operation contract.** The
+  registry-ordered `capabilities` array is now a readable list of eligible operation IDs. The full
+  `capability_scope_matrix` remains machine-readable, keyed by operation ID, with
+  `scope_eligible`, `required_oauth_scopes`, and `missing_required_oauth_scopes`. Eligibility means
+  the scopes permit the attempt — Shopify staff permissions, shop state, fulfillment-order
+  ownership and record state still decide the outcome.
+- **Scope requirements are owned by operation rows.** Reading location details requires
+  `read_locations` alongside `write_inventory`; other read and write operations likewise publish
+  the exact scope Core and the OAuth connection enforce.
+- **The Setup Guide, connection form, connection contract and README explain why
+  location details need `read_locations`.** They carry a per-operation-group scope table and explain what
+  `scope_eligible` does and does not promise. Following the old instruction produced a token that
+  could not touch a product or an order, and the failure arrived at the first workflow step rather
+  than at setup.
+- **The duplicate-protection wording is now accurate.** Only `set_inventory_quantities` uses the
+  external effect id as a Shopify `@idempotent` key, because that is the only mutation where
+  Shopify offers one. The other ten actions require the id but gain no de-duplication from it, and
+  the guide says so rather than implying every action is safe to retry.
+
+### Fixed
+
+- **`get_inventory_levels_batch` never asked Shopify for inactive levels.** `include_inactive` was
+  applied to the response, and Shopify omits an inactive level unless the query requests it — so
+  the option could only ever remove rows, never reveal one. The document now declares and passes
+  `includeInactive`.
+- **A confirmed mutation is no longer truncated.** `inventoryAdjustmentGroup.changes` was capped at
+  250, and one requested quantity can produce several changes, so a caller reconciling stock could
+  be handed a short receipt for a write that had already happened.
+- **The canonical store address is now stored.** The connection form maps
+  `normalized_shop_domain` back into `shop_domain`, so `ACME` no longer saves as typed while the
+  runtime derives `acme.myshopify.com` for the same store.
+
+- **A real product category could never be set.** Shopify's taxonomy ids are handle-shaped —
+  `gid://shopify/TaxonomyCategory/hb-1-9-6` — and every GID was validated as digits, so
+  `category_id` returned `invalid_payload` for every category that actually exists. The id pattern
+  is now per type: taxonomy categories accept their own shape, everything else still requires a
+  number.
+- **Long text was silently cut at 8192 characters.** A description may be 65 535 characters and a
+  metafield value half a mebibyte; a caller reading a result back saw a complete-looking record
+  whose description had been truncated mid-word, with nothing in the response to say so. Nothing
+  clips per field any more — size is bounded once, at the transport, where exceeding it is an error.
+- **Partial data with a recognised error code was treated as a definite refusal.** `THROTTLED`
+  means Shopify refused before doing anything — but not when it arrives alongside a mutation
+  payload. For a mutation, partial data now outranks the code and the outcome is `timeout_unknown`
+  whatever Shopify called it.
+- **An empty confirmation counted as a successful variant create.** One variant requested, an empty
+  `productVariants` list and no `userErrors` returned `ok: true`. Creates now require exactly as
+  many distinct, well-typed ids as were asked for, and every confirmed variant must sit on the
+  product that was addressed. Updates check the product too.
+- **A source accepted an answer about a different record.** `get_product` given one id and handed
+  another returned it as success. Every get-by-id source and every order/product subquery now
+  verifies the returned id, and reports `upstream_failure` — not `not_found`, because the record is
+  not absent, and not success, because it is not the one that was asked for.
+- **An unrequested metafield confirmation was dropped on the way out.** Shopify reporting a change
+  to something nobody asked about was reported as everything going to plan. The returned set must
+  now equal the requested set exactly.
+
+- **Reading stock was reported as possible with `read_products` alone.** `InventoryItem` is readable
+  with `read_inventory` **or** `read_products`, but the `InventoryLevel` hanging off it requires
+  `read_inventory` — and `get_inventory_levels_batch` selects a nested level. The capability report
+  told operators a `read_products` token could read stock, and Shopify then refused the call. That
+  one operation now declares the narrower requirement; the two that read the item itself keep both
+  ways in.
+- **A variant confirmation with no readable owner counted as success.** The owner check skipped any
+  record whose `product` was missing or carried no `id`, so Shopify answering in an unexpected shape
+  produced `ok: true` with `product_id: null` for a write that may already have been applied. Both
+  documents select `product { id }`, so an unreadable owner is now `timeout_unknown` — for creates
+  and for updates.
+- **A malformed answer was reported as a missing record.** A `product` field that was absent, a
+  string, a list, or an object with no `id` all became `not_found`, telling a workflow the record
+  had been deleted when nothing of the sort was known. Only an explicit `null` means absence now;
+  every other unusable answer is `upstream_failure`.
+- **The README still described the first release.** It claimed eight operations and seven GraphQL
+  documents, in the design rules and again in the layout, where there are thirty-one and thirty.
+
+### Security
+
+- **An unreadable or unrecognised answer to a mutation is reported as unknown, not as failure.**
+  A malformed or oversized body, a missing mutation payload, partial data with top-level errors,
+  and an unrecognised top-level error code now all return `timeout_unknown` with
+  `definitely_no_external_effect: false`. Only a rejection Shopify states explicitly is treated as
+  proof that nothing happened.
+- **Batch results are correlated by returned identifier, never by array position.** Updated
+  variants are matched by id, metafields by owner, namespace and key, and a duplicated, missing,
+  wrong-type or unrequested identifier fails safely rather than attaching one record's
+  confirmation to another's request.
+- **No customer is ever notified.** Both fulfillment mutations hard-code `notifyCustomer: false`,
+  and no operation sends an order invoice or any other customer email.
+- **No order shape carries a customer, email address, phone number, address, payment method,
+  transaction or IP address.** Those fields are neither queried nor shaped.
+- **Every action requires the host's `external_effect_id`** and suppresses in test mode before the
+  connection is hydrated and before any transport exists, returning a schema-valid neutral result.
+  Only the inventory mutation uses it as a Shopify `@idempotent` key; the ten new actions do not
+  claim idempotency Shopify has not granted them.
+
+## 0.1.0
+
+### Added
+
+- **First release. A closed, inventory-only surface over the Shopify Admin GraphQL API `2026-07`.**
+  Eight operations, seven of which contact Shopify and exactly one of which changes anything.
+- **Connect one or more Shopify stores to a project.** A connection is created by hand from a store
+  address and an Admin API access token that grants `write_inventory`. A project may hold several
+  independent connections, one per store.
+  Connection type: `shopify_admin`.
+- **Check a store address before the connection saves.** Accepts `store-name` or
+  `store-name.myshopify.com`, stores the canonical lowercase `store-name.myshopify.com`, and refuses
+  schemes, paths, ports, credentials, query strings, fragments, whitespace, wildcards and custom
+  storefront domains. Makes no network request.
+  Action: `validate_connection_settings`.
+- **Test a connection.** Confirms that Shopify accepts the token, that the store it belongs to is the
+  one the connection names, and that `write_inventory` was granted.
+  Action: `test_connection`. Queries: `shop`, `currentAppInstallation.accessScopes`.
+- **Read a store's identity and locale.** Returns a fixed selection of five fields and nothing else:
+  no owner email, no billing data, no unrelated store configuration.
+  Action: `get_shop`. Query: `shop`.
+- **List inventory locations, one page at a time.** Cursor-paginated, 1 to 250 per page, with an
+  option to include deactivated locations. Does not auto-paginate.
+  Action: `list_locations`. Query: `locations`.
+- **List inventory items, one page at a time.** Cursor-paginated, 1 to 250 per page, optionally
+  narrowed to one SKU. The Shopify search string is built inside the extension and sent as a
+  variable, so a SKU can never become query syntax.
+  Action: `list_inventory_items`. Query: `inventoryItems`.
+- **Get one inventory item by its Shopify id.** A missing or wrong-typed node is reported as
+  `not_found`.
+  Action: `get_inventory_item`. Query: `inventoryItem`.
+- **Read stock for up to 250 items at one location in a single call.** Returns the `available` and
+  `on_hand` quantities in the order the items were asked for. An item that is not stocked at that
+  location is reported with no level, which is data rather than a failure.
+  Action: `get_inventory_levels_batch`. Query: `nodes` with
+  `InventoryItem.inventoryLevel(locationId:)` and `quantities(names: ["available", "on_hand"])`.
+- **Set absolute stock quantities for 1 to 250 items, synchronously.** Writes the `available`
+  quantity as a `correction` and waits for Shopify's answer before reporting anything. Every entry
+  must carry `change_from_quantity`, either the last known quantity or an explicit `null` to opt out
+  of the compare-and-swap check.
+  Action: `set_inventory_quantities`. Mutation: `inventorySetQuantities`.
+
+### Security
+
+- **The Admin API access token never leaves the extension.** It is not returned in a result, not
+  written to a log, not placed in an exception message, and not echoed by connection-test
+  diagnostics. The connection object overrides `__repr__` so that a stray f-string cannot leak it.
+- **The Shopify endpoint is built internally and never accepted from workflow input.** It is always
+  `https://{canonical_shop_domain}/admin/api/2026-07/graphql.json`, and the transport refuses to send
+  to any other URL.
+- **No operation accepts GraphQL.** Seven fixed documents are the whole surface: there is no
+  `execute_graphql`, no raw query input, no arbitrary Shopify search string and no arbitrary node
+  lookup. Every caller value travels as a GraphQL variable.
+- **Requests go out only through the public Flow Steward extension SDK**, which performs URL
+  validation, DNS and IP pinning, connected-peer verification, redirect rejection and timeout
+  enforcement. The bundle contains no `urlopen`, `requests`, `httpx`, `ShopifyAPI` or `shopifyapp`.
+- **Shopify's own text is classified, never echoed.** Top-level GraphQL error codes such as
+  `THROTTLED`, `ACCESS_DENIED` and `SHOP_INACTIVE` — which Shopify can return with HTTP 200 — are
+  mapped onto this extension's stable error codes.
+- **A mutation whose outcome is unknown is reported as unknown.** A timeout or disconnect after the
+  mutation has been sent returns `timeout_unknown`, never success, and is not retried.
+- **Test mode makes no network request.** `set_inventory_quantities` suppresses before the connection
+  is hydrated and before any transport exists, and reports
+  `external_effect_status: suppressed` with `definitely_no_external_effect: true`.

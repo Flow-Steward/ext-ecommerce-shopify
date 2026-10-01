@@ -1,0 +1,31 @@
+connection_types:
+  - connection_type_id: shopify_admin
+    display_name: Shopify store
+    description: One Shopify store authorized through your Shopify app. A project may hold several, one per store.
+    auth:
+      type: oauth2
+      provider_id: shopify_admin_oauth
+      scopes:
+        # Request the minimum union that covers every published operation.
+        # Scope changes require a fresh authorization grant.
+        required:
+          - write_inventory
+          - read_locations
+          - write_products
+          - write_files
+          - write_orders
+          - write_assigned_fulfillment_orders
+          - write_merchant_managed_fulfillment_orders
+          - write_third_party_fulfillment_orders
+        optional: []
+    # The store is not configuration. It is the subject Shopify itself confirmed
+    # in the signed callback, so it is written by the platform rather than typed
+    # into a form and trusted.
+    config_schema: {type: object, additionalProperties: false, properties: {}}
+    secret_schema:
+      type: object
+      additionalProperties: false
+      properties: {access_token: {type: string}}
+    capabilities:
+      test_connection: true
+      shopify_admin_graphql: true

@@ -1,0 +1,33 @@
+page_id: connection
+title: Connection
+description: Add and manage the project-scoped Shopify store connections.
+components:
+  # The platform renders the OAuth connection UI from this component: the list of
+  # existing connections, the field for the store, and the button that sends the
+  # operator to Shopify. Without it the page is prose and nothing can be added.
+  - component_id: shopify_store_connections
+    type: connection_form
+    title: Shopify stores
+    description: Add a store by authorizing it at Shopify. You are asked for the store, never for a token.
+    data:
+      oauth_provider_id: shopify_admin_oauth
+      connection_type: shopify_admin
+      oauth_intent: shopify_connect
+      test_action: test_connection
+  - component_id: connection_notes
+    type: markdown
+    title: How a store connection is made
+    body: |
+      Read the `Setup Guide` page first if the Shopify app has not been created and configured yet. It is available before any connection exists.
+
+      **You are not asked for a token.** Adding a connection asks for one thing: the store, as `store-name` or `store-name.myshopify.com`. Flow Steward then sends you to Shopify to approve the access, and Shopify sends back a grant. Nothing is copied by hand, and there is no Admin API access token to paste anywhere.
+
+      **The store is the one Shopify confirmed, not the one you typed.** The callback from Shopify is signed, and the store name inside it is what the connection is bound to. If it does not match the store the authorization was started for, the connection is not created.
+
+      **One connection per store.** A project may hold as many Shopify connections as it needs. Each workflow step names the connection it runs against, and nothing is shared between them: the store and the token are loaded for one invocation and discarded when it ends.
+
+      **A second connection to the same store, under the same Shopify app, is refused.** Shopify keeps one token per app and store, so authorizing again would retire the token the first connection is using and quietly break it. Reconnect the existing connection instead. Two different Flow Steward configurations may hold the same store, because they can be two different Shopify apps.
+
+      **Access expires and is renewed automatically.** The access token Shopify issues is short-lived and comes with a refresh token; Flow Steward renews it before it expires. You only have to authorize again if the app is uninstalled in the store, its credentials are rotated, or the refresh token itself expires.
+
+      **All eight scopes are required.** They are not a menu. Shopify presents a required set whole — the merchant accepts it or declines it, never trims it — so a grant that comes back short means the app asked for less, not that someone picked and chose. A partial grant creates no connection, because it cannot serve the operations the connection publishes. Location details require `read_locations` in addition to the inventory write scope. The Setup Guide lists the exact set.

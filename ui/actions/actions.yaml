@@ -1,0 +1,1476 @@
+# Generated from the closed runtime registry in runtime/catalog.py.
+# Extension-owned parity tests fail if this file and the registry disagree.
+actions:
+- action_id: validate_connection_settings
+  title: Check connection settings
+  description: Normalizes and checks the store address before the connection is saved, without contacting Shopify.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: false
+  parameters:
+  - name: shop_domain
+    type: string
+    required: true
+  result_fields:
+  - valid
+  - normalized_shop_domain
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - unsupported_operation
+  - internal_error
+- action_id: test_connection
+  title: Test the connection
+  description: Checks that the authorization still works and belongs to the connected store, then reports which operations its granted scopes allow.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  result_fields:
+  - shop_id
+  - shop_name
+  - myshopify_domain
+  - api_version
+  - granted_scopes
+  - capability_summary
+  - capabilities
+  - capability_scope_matrix
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - shop_domain_mismatch
+- action_id: get_shop
+  title: Get the store
+  description: Returns a fixed, bounded set of store identity and locale fields.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  result_fields:
+  - shop
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- action_id: list_locations
+  title: List locations
+  description: Returns one cursor-paginated page of inventory locations. Pass end_cursor back as after to read the next page.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: first
+    type: integer
+    required: false
+  - name: after
+    type: string
+    required: false
+  - name: include_inactive
+    type: boolean
+    required: false
+  result_fields:
+  - locations
+  - page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- action_id: list_inventory_items
+  title: List inventory items
+  description: Returns one cursor-paginated page of inventory items, optionally narrowed to one SKU. Pass end_cursor back as after to read the next page.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: first
+    type: integer
+    required: false
+  - name: after
+    type: string
+    required: false
+  - name: sku
+    type: string
+    required: false
+  result_fields:
+  - inventory_items
+  - page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- action_id: get_inventory_item
+  title: Get an inventory item
+  description: Returns one inventory item, found by its Shopify inventory item id.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: inventory_item_id
+    type: string
+    required: true
+  result_fields:
+  - inventory_item
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- action_id: get_inventory_levels_batch
+  title: Get stock for many items at one location
+  description: Returns the available and on-hand quantities for up to 250 inventory items at one location, in the order they were asked for.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: location_id
+    type: string
+    required: true
+  - name: inventory_item_ids
+    type: array
+    required: true
+  - name: include_inactive
+    type: boolean
+    required: false
+  result_fields:
+  - location_id
+  - items
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- action_id: set_inventory_quantities
+  title: Set stock quantities
+  description: Sets absolute available quantities for 1 to 250 inventory items and waits for Shopify's answer. This changes what the store has in stock; a quantity of 0 makes the item out of stock at that location.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: quantities
+    type: array
+    required: true
+  result_fields:
+  - inventory_adjustment_group
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- action_id: list_products
+  title: List products
+  description: Returns one cursor-paginated page of products. Pass end_cursor back as after to read the next page.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: first
+    type: integer
+    required: false
+  - name: after
+    type: string
+    required: false
+  - name: filter
+    type: string
+    required: false
+  result_fields:
+  - products
+  - page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- action_id: export_products
+  title: Export all matching products
+  description: Follows every Shopify product cursor and streams the complete matching catalog to a JSONL artifact. Use filter to export a filtered subset.
+  required_scopes:
+  - extension:invoke
+  - artifact:write
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: first
+    type: integer
+    required: false
+  - name: include_images
+    type: boolean
+    required: false
+  - name: include_variants
+    type: boolean
+    required: false
+  - name: include_inventory
+    type: boolean
+    required: false
+  - name: filter
+    type: string
+    required: false
+  result_fields:
+  - artifact_handle
+  - filename
+  - content_type
+  - item_count
+  - page_count
+  - size_bytes
+  - sha256
+  - artifacts
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - artifact_output_unavailable
+- action_id: get_product
+  title: Get a product
+  description: Returns one product, found by its Shopify product id.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: product_id
+    type: string
+    required: true
+  result_fields:
+  - product
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- action_id: list_product_variants
+  title: List product variants
+  description: Returns one cursor-paginated page of product variants across the store. Pass end_cursor back as after to read the next page.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: first
+    type: integer
+    required: false
+  - name: after
+    type: string
+    required: false
+  result_fields:
+  - product_variants
+  - page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- action_id: get_product_variant
+  title: Get a product variant
+  description: Returns one product variant, found by its Shopify variant id.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: product_variant_id
+    type: string
+    required: true
+  result_fields:
+  - product_variant
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- action_id: list_catalog_metafields
+  title: List catalog metafields
+  description: Returns one cursor-paginated page of metafields for one product or one product variant. The owner type must match the id.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: owner_type
+    type: string
+    required: true
+  - name: owner_id
+    type: string
+    required: true
+  - name: first
+    type: integer
+    required: false
+  - name: after
+    type: string
+    required: false
+  result_fields:
+  - owner_id
+  - owner_type
+  - metafields
+  - page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- action_id: list_product_media
+  title: List product media
+  description: Returns one cursor-paginated page of the media attached to one product. Reads media and processing status, including images supplied during product creation.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: product_id
+    type: string
+    required: true
+  - name: first
+    type: integer
+    required: false
+  - name: after
+    type: string
+    required: false
+  result_fields:
+  - product_id
+  - media
+  - page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- action_id: create_product
+  title: Create a product
+  description: Creates one product as a draft. Shopify creates only the initial variant, using the first value of each supplied option. product_variants contains that one variant and its inventory item so a workflow can immediately set SKU, price and stock; add the rest with the variant batch operations. Optional images are downloaded from public HTTPS URLs and processed asynchronously. No metafields, collections or publications are created.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: title
+    type: string
+    required: true
+  - name: handle
+    type: string
+    required: true
+  - name: description_html
+    type: string
+    required: false
+  - name: vendor
+    type: string
+    required: false
+  - name: product_type
+    type: string
+    required: false
+  - name: tags
+    type: array
+    required: false
+  - name: category_id
+    type: string
+    required: false
+  - name: seo_title
+    type: string
+    required: false
+  - name: seo_description
+    type: string
+    required: false
+  - name: options
+    type: array
+    required: false
+  - name: images
+    type: array
+    required: false
+  result_fields:
+  - product
+  - product_variants
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- action_id: create_products_bulk
+  title: Create products in bulk
+  description: Uploads a batch of new draft products for asynchronous creation. Supply either products or a JSONL artifact containing create_product fields. Submission success is not per-row success; Shopify continues processing after this action returns. Creates only the initial variant.
+  required_scopes:
+  - extension:invoke
+  - artifact:read
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: products
+    type: array
+    required: false
+  - name: artifact_handle
+    type: artifact_handle
+    required: false
+  result_fields:
+  - bulk_operation
+  - item_count
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- action_id: update_product
+  title: Update a product
+  description: Changes one product. Only the fields you supply are sent; everything else is left as it is. replace_tags overwrites the whole tag list. Status, publications, collections, media and metafields are out of reach here.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: product_id
+    type: string
+    required: true
+  - name: title
+    type: string
+    required: false
+  - name: description_html
+    type: string
+    required: false
+  - name: vendor
+    type: string
+    required: false
+  - name: product_type
+    type: string
+    required: false
+  - name: handle
+    type: string
+    required: false
+  - name: replace_tags
+    type: array
+    required: false
+  - name: category_id
+    type: string
+    required: false
+  - name: seo_title
+    type: string
+    required: false
+  - name: seo_description
+    type: string
+    required: false
+  result_fields:
+  - product
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- action_id: create_product_variants_batch
+  title: Create product variants
+  description: 'Creates 1 to 250 variants on one product in a single call. The product''s options must already exist. The product''s standalone variant is preserved. Stock quantities are not part of this: set them with the inventory operations.'
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: product_id
+    type: string
+    required: true
+  - name: variants
+    type: array
+    required: true
+  result_fields:
+  - product_variants
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- action_id: update_product_variants_batch
+  title: Update product variants
+  description: Changes 1 to 250 existing variants on one product in a single call. Shopify is asked to apply all of them or none. Each entry must name a variant and carry at least one actual change.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: product_id
+    type: string
+    required: true
+  - name: variants
+    type: array
+    required: true
+  result_fields:
+  - product_variants
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- action_id: set_catalog_metafields
+  title: Set catalog metafields
+  description: Creates or updates 1 to 25 metafields on products and product variants in one atomic call. Every entry carries a compare digest, so a value someone else changed since you read it is refused rather than overwritten.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: metafields
+    type: array
+    required: true
+  result_fields:
+  - metafields
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- action_id: update_product_media_alt
+  title: Update media alt text
+  description: 'Changes the alt text of one existing media file. Nothing else about the file is touched: not its source, filename, preview, or which products it belongs to.'
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: media_id
+    type: string
+    required: true
+  - name: alt
+    type: string
+    required: true
+  result_fields:
+  - file
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- action_id: list_orders
+  title: List orders
+  description: Returns one cursor-paginated page of orders. Customer, address, payment and contact details are never requested.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: first
+    type: integer
+    required: false
+  - name: after
+    type: string
+    required: false
+  result_fields:
+  - orders
+  - page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- action_id: get_order
+  title: Get an order
+  description: Returns one order, found by its Shopify order id. Customer, address, payment and contact details are never requested.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: order_id
+    type: string
+    required: true
+  result_fields:
+  - order
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- action_id: list_order_line_items
+  title: List order line items
+  description: Returns one cursor-paginated page of the line items on one order.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: order_id
+    type: string
+    required: true
+  - name: first
+    type: integer
+    required: false
+  - name: after
+    type: string
+    required: false
+  result_fields:
+  - order_id
+  - line_items
+  - page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- action_id: list_order_metafields
+  title: List order metafields
+  description: Returns one cursor-paginated page of the metafields on one order.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: order_id
+    type: string
+    required: true
+  - name: first
+    type: integer
+    required: false
+  - name: after
+    type: string
+    required: false
+  result_fields:
+  - order_id
+  - metafields
+  - page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- action_id: list_order_fulfillment_orders
+  title: List fulfillment orders
+  description: Returns one cursor-paginated page of the fulfillment orders on one order, each with an explicitly sized page of its own line items.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: order_id
+    type: string
+    required: true
+  - name: first
+    type: integer
+    required: false
+  - name: after
+    type: string
+    required: false
+  - name: line_items_first
+    type: integer
+    required: false
+  result_fields:
+  - order_id
+  - fulfillment_orders
+  - page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- action_id: get_fulfillment_order
+  title: Get a fulfillment order
+  description: Returns one fulfillment order with an explicitly paginated page of its line items.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: fulfillment_order_id
+    type: string
+    required: true
+  - name: line_items_first
+    type: integer
+    required: false
+  - name: line_items_after
+    type: string
+    required: false
+  result_fields:
+  - fulfillment_order
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- action_id: list_order_fulfillments
+  title: List order fulfillments
+  description: Returns up to 250 of an order's fulfillments plus the store's own total, so a caller can tell a complete answer from a partial one.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  mutates_platform: false
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: order_id
+    type: string
+    required: true
+  - name: first
+    type: integer
+    required: false
+  result_fields:
+  - order_id
+  - fulfillments
+  - total_count
+  - truncated
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- action_id: update_order_metadata
+  title: Update order metadata
+  description: Changes an order's note, PO number, tags or custom attributes. The two replace_ fields overwrite their whole list. Customers, addresses, payments, line items, refunds and order edits are out of reach here.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: order_id
+    type: string
+    required: true
+  - name: note
+    type: string
+    required: false
+  - name: po_number
+    type: string
+    required: false
+  - name: replace_tags
+    type: array
+    required: false
+  - name: replace_custom_attributes
+    type: array
+    required: false
+  result_fields:
+  - order
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- action_id: set_order_metafields
+  title: Set order metafields
+  description: Creates or updates 1 to 25 metafields on orders in one atomic call, with the same compare-and-set protection as the catalog operation.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: metafields
+    type: array
+    required: true
+  result_fields:
+  - metafields
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- action_id: create_fulfillment
+  title: Create a fulfillment
+  description: 'Fulfills named line items on named fulfillment orders. Every line item and quantity must be stated: Shopify would otherwise fulfil everything remaining, and that is not a decision an omitted field should make. The customer is not notified.'
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: fulfillment_orders
+    type: array
+    required: true
+  - name: tracking
+    type: object
+    required: false
+  result_fields:
+  - fulfillment
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- action_id: update_fulfillment_tracking
+  title: Update fulfillment tracking
+  description: 'Replaces the tracking information on one existing fulfillment. At least one tracking value is required: this operation cannot be used to clear tracking. The customer is not notified.'
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
+  command_type: invoke_extension_action
+  mutates_platform: true
+  workflow_visible: true
+  parameters:
+  - name: connection_ref
+    type: connection_ref
+    required: true
+  - name: fulfillment_id
+    type: string
+    required: true
+  - name: tracking
+    type: object
+    required: true
+  result_fields:
+  - fulfillment
+  - external_effect_status
+  - definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown

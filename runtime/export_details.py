@@ -1,0 +1,188 @@
+"""Complete optional export relations, batched within one product page."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from time import sleep
+from typing import Any
+
+from . import errors, export_documents, shapes
+from .errors import ExtensionError
+
+# Keep requested GraphQL cost bounded even when each parent has a full child page.
+PARENT_BATCH_SIZE = 5
+MAX_RELATION_PAGES = 100_000
+
+
+def _failure() -> ExtensionError:
+    return ExtensionError(
+        errors.UPSTREAM_FAILURE, "Shopify did not provide complete export details"
+    )
+
+
+def read_export(
+    transport: Any, document: str, variables: Mapping[str, Any], *, purpose: str
+) -> Any:
+    """Retry only throttled export reads, retaining the same query and cursor."""
+    for attempt in range(6):
+        try:
+            return transport.execute(document, variables, mutating=False, purpose=purpose)
+        except ExtensionError as exc:
+            if exc.code != errors.RATE_LIMITED or attempt == 5:
+                raise
+            delay = max(float(2**attempt), exc.retry_after_seconds or 0.0)
+            if delay > 30.0:
+                raise
+            sleep(delay)
+    raise _failure()  # pragma: no cover
+
+
+def _relation_page(
+    node: Any, expected: str, field: str
+) -> tuple[list[Mapping[str, Any]], str | None]:
+    if not isinstance(node, Mapping) or node.get("id") != expected:
+        raise _failure()
+    connection = node.get(field)
+    if not isinstance(connection, Mapping):
+        raise _failure()
+    children, info = connection.get("nodes"), connection.get("pageInfo")
+    if (
+        not isinstance(children, list)
+        or not isinstance(info, Mapping)
+        or not isinstance(info.get("hasNextPage"), bool)
+        or any(not isinstance(child, Mapping) for child in children)
+    ):
+        raise _failure()
+    if not info["hasNextPage"]:
+        return children, None
+    cursor = info.get("endCursor")
+    if not isinstance(cursor, str) or not cursor:
+        raise _failure()
+    return children, cursor
+
+
+def _relation_batch(
+    transport: Any, document: str, ids: list[str], field: str, **variables: Any
+) -> dict[str, list[Mapping[str, Any]]]:
+    result: dict[str, list[Mapping[str, Any]]] = {id_: [] for id_ in ids}
+    pending: list[tuple[list[str], str | None]] = [(ids, None)]
+    seen: dict[str, set[str]] = {}
+    pages = 0
+    while pending:
+        batch, after = pending.pop()
+        pages += 1
+        if pages > MAX_RELATION_PAGES:
+            raise _failure()
+        data = read_export(
+            transport,
+            document,
+            {"ids": batch, "after": after, **variables},
+            purpose="Shopify product export details",
+        ).data
+        nodes = data.get("nodes")
+        if not isinstance(nodes, list) or len(nodes) != len(batch):
+            raise _failure()
+        for expected, node in zip(batch, nodes, strict=True):
+            children, cursor = _relation_page(node, expected, field)
+            result[expected].extend(children)
+            if cursor is not None:
+                visited = seen.setdefault(expected, set())
+                if cursor in visited:
+                    raise _failure()
+                visited.add(cursor)
+                pending.append(([expected], cursor))
+    return result
+
+
+def _relations(
+    transport: Any, document: str, ids: list[str], field: str, **variables: Any
+) -> dict[str, list[Mapping[str, Any]]]:
+    result: dict[str, list[Mapping[str, Any]]] = {id_: [] for id_ in ids}
+    for start in range(0, len(ids), PARENT_BATCH_SIZE):
+        batch = _relation_batch(
+            transport, document, ids[start : start + PARENT_BATCH_SIZE], field, **variables
+        )
+        # Retain accumulation if the caller supplies the same parent in several batches.
+        for id_, children in batch.items():
+            result[id_].extend(children)
+    return result
+
+
+def _variant_record(
+    node: Mapping[str, Any], items: dict[str, dict[str, Any]], *, include_inventory: bool
+) -> dict[str, Any]:
+    variant = {
+        "id": shapes.text(node.get("id")),
+        "title": shapes.optional_text(node.get("title")),
+        "sku": shapes.optional_text(node.get("sku")),
+        "price": shapes.optional_text(node.get("price")),
+        "compare_at_price": shapes.optional_text(node.get("compareAtPrice")),
+        "selected_options": [
+            {
+                "name": shapes.optional_text(o.get("name")),
+                "value": shapes.optional_text(o.get("value")),
+            }
+            for o in node.get("selectedOptions", [])
+        ],
+    }
+    if include_inventory:
+        item = shapes.mapping(node.get("inventoryItem"))
+        item_id = item.get("id")
+        if not isinstance(item_id, str) or not item_id:
+            raise _failure()
+        inventory_item = {
+            "id": item_id,
+            "tracked": shapes.optional_bool(item.get("tracked")),
+        }
+        variant["inventory_item"] = inventory_item
+        items[item_id] = inventory_item
+    return variant
+
+
+def enrich_products(
+    transport: Any,
+    products: list[dict[str, Any]],
+    *,
+    include_images: bool,
+    include_variants: bool,
+    include_inventory: bool,
+) -> None:
+    """Enrich a bounded product page in place; omit all unrequested fields."""
+    ids = [p["id"] for p in products]
+    if include_images:
+        images = _relations(transport, export_documents.IMAGES, ids, "media")
+        for product in products:
+            product["images"] = [
+                {
+                    "id": shapes.text(n.get("id")),
+                    "alt": shapes.optional_text(n.get("alt")),
+                    "url": shapes.optional_text(shapes.mapping(n.get("image")).get("url")),
+                }
+                for n in images[product["id"]]
+            ]
+            product["image_count"] = len(product["images"])
+    if not (include_variants or include_inventory):
+        return
+    variants = _relations(
+        transport, export_documents.VARIANTS, ids, "variants", inventory=include_inventory
+    )
+    items: dict[str, dict[str, Any]] = {}
+    for product in products:
+        product["variants"] = []
+        for node in variants[product["id"]]:
+            variant = _variant_record(node, items, include_inventory=include_inventory)
+            product["variants"].append(variant)
+    if include_inventory:
+        levels = _relations(transport, export_documents.INVENTORY, list(items), "inventoryLevels")
+        for item_id, item in items.items():
+            item["levels"] = [
+                {
+                    "id": shapes.text(n.get("id")),
+                    "location_id": shapes.nested_id(n.get("location")),
+                    "location_name": shapes.optional_text(
+                        shapes.mapping(n.get("location")).get("name")
+                    ),
+                    "quantities": {q["name"]: q["quantity"] for q in n.get("quantities", [])},
+                }
+                for n in levels[item_id]
+            ]

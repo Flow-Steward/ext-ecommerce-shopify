@@ -1,0 +1,458 @@
+# Generated from the closed runtime registry in runtime/catalog.py.
+# Extension-owned parity tests fail if this file and the registry disagree.
+forms:
+- operation_id: validate_connection_settings
+  title: Check connection settings
+  fields:
+  - name: shop_domain
+    label: Store address
+    widget_type: text
+    required: true
+- operation_id: test_connection
+  title: Test the connection
+  fields: []
+- operation_id: get_shop
+  title: Get the store
+  fields: []
+- operation_id: list_locations
+  title: List locations
+  fields:
+  - name: first
+    label: Page size
+    widget_type: number
+    required: false
+  - name: after
+    label: After cursor
+    widget_type: text
+    required: false
+  - name: include_inactive
+    label: Include deactivated locations
+    widget_type: boolean
+    required: false
+- operation_id: list_inventory_items
+  title: List inventory items
+  fields:
+  - name: first
+    label: Page size
+    widget_type: number
+    required: false
+  - name: after
+    label: After cursor
+    widget_type: text
+    required: false
+  - name: sku
+    label: SKU
+    widget_type: text
+    required: false
+- operation_id: get_inventory_item
+  title: Get an inventory item
+  fields:
+  - name: inventory_item_id
+    label: Inventory item id
+    widget_type: text
+    required: true
+- operation_id: get_inventory_levels_batch
+  title: Get stock for many items at one location
+  fields:
+  - name: location_id
+    label: Location id
+    widget_type: text
+    required: true
+  - name: inventory_item_ids
+    label: Inventory item ids
+    widget_type: json
+    required: true
+  - name: include_inactive
+    label: Include a deactivated location
+    widget_type: boolean
+    required: false
+- operation_id: set_inventory_quantities
+  title: Set stock quantities
+  fields:
+  - name: quantities
+    label: Quantities
+    widget_type: json
+    required: true
+- operation_id: list_products
+  title: List products
+  fields:
+  - name: first
+    label: Page size
+    widget_type: number
+    required: false
+  - name: after
+    label: After cursor
+    widget_type: text
+    required: false
+  - name: filter
+    label: Shopify search query
+    widget_type: text
+    required: false
+- operation_id: export_products
+  title: Export all matching products
+  fields:
+  - name: first
+    label: Page size
+    widget_type: number
+    required: false
+  - name: include_images
+    label: Include images
+    widget_type: boolean
+    required: false
+  - name: include_variants
+    label: Include variants
+    widget_type: boolean
+    required: false
+  - name: include_inventory
+    label: Include inventory
+    widget_type: boolean
+    required: false
+  - name: filter
+    label: Shopify search query
+    widget_type: text
+    required: false
+- operation_id: get_product
+  title: Get a product
+  fields:
+  - name: product_id
+    label: Product id
+    widget_type: text
+    required: true
+- operation_id: list_product_variants
+  title: List product variants
+  fields:
+  - name: first
+    label: Page size
+    widget_type: number
+    required: false
+  - name: after
+    label: After cursor
+    widget_type: text
+    required: false
+- operation_id: get_product_variant
+  title: Get a product variant
+  fields:
+  - name: product_variant_id
+    label: Product variant id
+    widget_type: text
+    required: true
+- operation_id: list_catalog_metafields
+  title: List catalog metafields
+  fields:
+  - name: owner_type
+    label: Owner type
+    widget_type: text
+    required: true
+  - name: owner_id
+    label: Owner id
+    widget_type: text
+    required: true
+  - name: first
+    label: Page size
+    widget_type: number
+    required: false
+  - name: after
+    label: After cursor
+    widget_type: text
+    required: false
+- operation_id: list_product_media
+  title: List product media
+  fields:
+  - name: product_id
+    label: Product id
+    widget_type: text
+    required: true
+  - name: first
+    label: Page size
+    widget_type: number
+    required: false
+  - name: after
+    label: After cursor
+    widget_type: text
+    required: false
+- operation_id: create_product
+  title: Create a product
+  fields:
+  - name: title
+    label: Title
+    widget_type: text
+    required: true
+  - name: handle
+    label: Handle
+    widget_type: text
+    required: true
+  - name: description_html
+    label: Description HTML
+    widget_type: text
+    required: false
+  - name: vendor
+    label: Vendor
+    widget_type: text
+    required: false
+  - name: product_type
+    label: Product type
+    widget_type: text
+    required: false
+  - name: tags
+    label: Tags
+    widget_type: json
+    required: false
+  - name: category_id
+    label: Category id
+    widget_type: text
+    required: false
+  - name: seo_title
+    label: SEO title
+    widget_type: text
+    required: false
+  - name: seo_description
+    label: SEO description
+    widget_type: text
+    required: false
+  - name: options
+    label: Options
+    widget_type: json
+    required: false
+  - name: images
+    label: Images
+    widget_type: json
+    required: false
+- operation_id: create_products_bulk
+  title: Create products in bulk
+  fields:
+  - name: products
+    label: Products
+    widget_type: json
+    required: false
+  - name: artifact_handle
+    label: Products JSONL artifact
+    widget_type: text
+    required: false
+- operation_id: update_product
+  title: Update a product
+  fields:
+  - name: product_id
+    label: Product id
+    widget_type: text
+    required: true
+  - name: title
+    label: Title
+    widget_type: text
+    required: false
+  - name: description_html
+    label: Description HTML
+    widget_type: text
+    required: false
+  - name: vendor
+    label: Vendor
+    widget_type: text
+    required: false
+  - name: product_type
+    label: Product type
+    widget_type: text
+    required: false
+  - name: handle
+    label: Handle
+    widget_type: text
+    required: false
+  - name: replace_tags
+    label: Replace tags
+    widget_type: json
+    required: false
+  - name: category_id
+    label: Category id
+    widget_type: text
+    required: false
+  - name: seo_title
+    label: SEO title
+    widget_type: text
+    required: false
+  - name: seo_description
+    label: SEO description
+    widget_type: text
+    required: false
+- operation_id: create_product_variants_batch
+  title: Create product variants
+  fields:
+  - name: product_id
+    label: Product id
+    widget_type: text
+    required: true
+  - name: variants
+    label: Variants
+    widget_type: json
+    required: true
+- operation_id: update_product_variants_batch
+  title: Update product variants
+  fields:
+  - name: product_id
+    label: Product id
+    widget_type: text
+    required: true
+  - name: variants
+    label: Variants
+    widget_type: json
+    required: true
+- operation_id: set_catalog_metafields
+  title: Set catalog metafields
+  fields:
+  - name: metafields
+    label: Metafields
+    widget_type: json
+    required: true
+- operation_id: update_product_media_alt
+  title: Update media alt text
+  fields:
+  - name: media_id
+    label: Media id
+    widget_type: text
+    required: true
+  - name: alt
+    label: Alt text
+    widget_type: text
+    required: true
+- operation_id: list_orders
+  title: List orders
+  fields:
+  - name: first
+    label: Page size
+    widget_type: number
+    required: false
+  - name: after
+    label: After cursor
+    widget_type: text
+    required: false
+- operation_id: get_order
+  title: Get an order
+  fields:
+  - name: order_id
+    label: Order id
+    widget_type: text
+    required: true
+- operation_id: list_order_line_items
+  title: List order line items
+  fields:
+  - name: order_id
+    label: Order id
+    widget_type: text
+    required: true
+  - name: first
+    label: Page size
+    widget_type: number
+    required: false
+  - name: after
+    label: After cursor
+    widget_type: text
+    required: false
+- operation_id: list_order_metafields
+  title: List order metafields
+  fields:
+  - name: order_id
+    label: Order id
+    widget_type: text
+    required: true
+  - name: first
+    label: Page size
+    widget_type: number
+    required: false
+  - name: after
+    label: After cursor
+    widget_type: text
+    required: false
+- operation_id: list_order_fulfillment_orders
+  title: List fulfillment orders
+  fields:
+  - name: order_id
+    label: Order id
+    widget_type: text
+    required: true
+  - name: first
+    label: Page size
+    widget_type: number
+    required: false
+  - name: after
+    label: After cursor
+    widget_type: text
+    required: false
+  - name: line_items_first
+    label: Line items per fulfillment order
+    widget_type: number
+    required: false
+- operation_id: get_fulfillment_order
+  title: Get a fulfillment order
+  fields:
+  - name: fulfillment_order_id
+    label: Fulfillment order id
+    widget_type: text
+    required: true
+  - name: line_items_first
+    label: Line items page size
+    widget_type: number
+    required: false
+  - name: line_items_after
+    label: After cursor
+    widget_type: text
+    required: false
+- operation_id: list_order_fulfillments
+  title: List order fulfillments
+  fields:
+  - name: order_id
+    label: Order id
+    widget_type: text
+    required: true
+  - name: first
+    label: Page size
+    widget_type: number
+    required: false
+- operation_id: update_order_metadata
+  title: Update order metadata
+  fields:
+  - name: order_id
+    label: Order id
+    widget_type: text
+    required: true
+  - name: note
+    label: Note
+    widget_type: text
+    required: false
+  - name: po_number
+    label: PO number
+    widget_type: text
+    required: false
+  - name: replace_tags
+    label: Replace tags
+    widget_type: json
+    required: false
+  - name: replace_custom_attributes
+    label: Replace custom attributes
+    widget_type: json
+    required: false
+- operation_id: set_order_metafields
+  title: Set order metafields
+  fields:
+  - name: metafields
+    label: Metafields
+    widget_type: json
+    required: true
+- operation_id: create_fulfillment
+  title: Create a fulfillment
+  fields:
+  - name: fulfillment_orders
+    label: Fulfillment orders
+    widget_type: json
+    required: true
+  - name: tracking
+    label: Tracking
+    widget_type: json
+    required: false
+- operation_id: update_fulfillment_tracking
+  title: Update fulfillment tracking
+  fields:
+  - name: fulfillment_id
+    label: Fulfillment id
+    widget_type: text
+    required: true
+  - name: tracking
+    label: Tracking
+    widget_type: json
+    required: true

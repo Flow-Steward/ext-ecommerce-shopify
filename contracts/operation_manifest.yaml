@@ -1,0 +1,5280 @@
+# Generated from the closed runtime registry in runtime/catalog.py.
+# Extension-owned parity tests fail if this file and the registry disagree.
+operations:
+- operation_id: validate_connection_settings
+  display_name: Check connection settings
+  description: Normalizes and checks the store address before the connection is saved, without contacting Shopify.
+  operation_kind: source
+  category: ecommerce
+  contacts_shopify: false
+  workflow_visible: false
+  required_oauth_scopes: []
+  inputs:
+  - name: shop_domain
+    value_type: text
+    required: true
+    schema:
+      type: string
+      title: Store address
+      description: store-name or store-name.myshopify.com.
+      minLength: 1
+      maxLength: 255
+  outputs:
+  - name: valid
+    value_type: boolean
+    schema:
+      type: boolean
+  - name: normalized_shop_domain
+    value_type: text
+    schema:
+      type: string
+  result_fields:
+  - result.valid
+  - result.normalized_shop_domain
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - unsupported_operation
+  - internal_error
+- operation_id: test_connection
+  display_name: Test the connection
+  description: Checks that the authorization still works and belongs to the connected store, then reports which operations its granted scopes allow.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes: []
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  outputs:
+  - name: shop_id
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: shop_name
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: myshopify_domain
+    value_type: text
+    schema:
+      type:
+      - string
+      - 'null'
+  - name: api_version
+    value_type: text
+    schema:
+      type: string
+  - name: granted_scopes
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: string
+  - name: capability_summary
+    value_type: text
+    schema:
+      type: string
+  - name: capabilities
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: string
+  - name: capability_scope_matrix
+    value_type: object
+    schema:
+      type: object
+      additionalProperties:
+        type: object
+        additionalProperties: false
+        required:
+        - scope_eligible
+        - required_oauth_scopes
+        - missing_required_oauth_scopes
+        properties:
+          scope_eligible:
+            type: boolean
+          required_oauth_scopes:
+            type: array
+            items:
+              type: string
+          missing_required_oauth_scopes:
+            type: array
+            items:
+              type: string
+  result_fields:
+  - result.shop_id
+  - result.shop_name
+  - result.myshopify_domain
+  - result.api_version
+  - result.granted_scopes
+  - result.capability_summary
+  - result.capabilities
+  - result.capability_scope_matrix
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - shop_domain_mismatch
+- operation_id: get_shop
+  display_name: Get the store
+  description: Returns a fixed, bounded set of store identity and locale fields.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes: []
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  outputs:
+  - name: shop
+    value_type: object
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - name
+      - myshopify_domain
+      - currency_code
+      - iana_timezone
+      properties:
+        id:
+          type: string
+        name:
+          type:
+          - string
+          - 'null'
+        myshopify_domain:
+          type:
+          - string
+          - 'null'
+        currency_code:
+          type:
+          - string
+          - 'null'
+        iana_timezone:
+          type:
+          - string
+          - 'null'
+  result_fields:
+  - result.shop
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- operation_id: list_locations
+  display_name: List locations
+  description: Returns one cursor-paginated page of inventory locations. Pass end_cursor back as after to read the next page.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_inventory
+  - read_locations
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: first
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      title: Page size
+      description: How many locations to return, 1 to 250.
+      minimum: 1
+      maximum: 250
+      default: 50
+  - name: after
+    value_type: text
+    required: false
+    schema:
+      type: string
+      title: After cursor
+      description: The end_cursor of the previous page.
+      minLength: 1
+      maxLength: 1024
+  - name: include_inactive
+    value_type: boolean
+    required: false
+    schema:
+      type: boolean
+      title: Include deactivated locations
+      description: Deactivated locations can no longer stock inventory.
+      default: false
+  outputs:
+  - name: locations
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - id
+        - name
+        - is_active
+        - fulfills_online_orders
+        - ships_inventory
+        properties:
+          id:
+            type: string
+          name:
+            type:
+            - string
+            - 'null'
+          is_active:
+            type:
+            - boolean
+            - 'null'
+          fulfills_online_orders:
+            type:
+            - boolean
+            - 'null'
+          ships_inventory:
+            type:
+            - boolean
+            - 'null'
+  - name: page_info
+    value_type: object
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+      - has_next_page
+      - end_cursor
+      properties:
+        has_next_page:
+          type: boolean
+        end_cursor:
+          type:
+          - string
+          - 'null'
+  result_fields:
+  - result.locations
+  - result.page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- operation_id: list_inventory_items
+  display_name: List inventory items
+  description: Returns one cursor-paginated page of inventory items, optionally narrowed to one SKU. Pass end_cursor back as after to read the next page.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_inventory
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: first
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      title: Page size
+      description: How many inventory items to return, 1 to 250.
+      minimum: 1
+      maximum: 250
+      default: 50
+  - name: after
+    value_type: text
+    required: false
+    schema:
+      type: string
+      title: After cursor
+      description: The end_cursor of the previous page.
+      minLength: 1
+      maxLength: 1024
+  - name: sku
+    value_type: text
+    required: false
+    schema:
+      type: string
+      title: SKU
+      description: Narrow the page to this SKU. The value is sent to Shopify as a quoted search term, so matching follows Shopify's own SKU search.
+      minLength: 1
+      maxLength: 255
+  outputs:
+  - name: inventory_items
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - id
+        - sku
+        - tracked
+        - requires_shipping
+        - updated_at
+        properties:
+          id:
+            type: string
+          sku:
+            type:
+            - string
+            - 'null'
+          tracked:
+            type:
+            - boolean
+            - 'null'
+          requires_shipping:
+            type:
+            - boolean
+            - 'null'
+          updated_at:
+            type:
+            - string
+            - 'null'
+  - name: page_info
+    value_type: object
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+      - has_next_page
+      - end_cursor
+      properties:
+        has_next_page:
+          type: boolean
+        end_cursor:
+          type:
+          - string
+          - 'null'
+  result_fields:
+  - result.inventory_items
+  - result.page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- operation_id: get_inventory_item
+  display_name: Get an inventory item
+  description: Returns one inventory item, found by its Shopify inventory item id.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_inventory
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: inventory_item_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Inventory item id
+      description: A gid://shopify/InventoryItem/... id.
+  outputs:
+  - name: inventory_item
+    value_type: object
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - sku
+      - tracked
+      - requires_shipping
+      - updated_at
+      properties:
+        id:
+          type: string
+        sku:
+          type:
+          - string
+          - 'null'
+        tracked:
+          type:
+          - boolean
+          - 'null'
+        requires_shipping:
+          type:
+          - boolean
+          - 'null'
+        updated_at:
+          type:
+          - string
+          - 'null'
+  result_fields:
+  - result.inventory_item
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- operation_id: get_inventory_levels_batch
+  display_name: Get stock for many items at one location
+  description: Returns the available and on-hand quantities for up to 250 inventory items at one location, in the order they were asked for.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_inventory
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: location_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Location id
+      description: A gid://shopify/Location/... id.
+  - name: inventory_item_ids
+    value_type: array
+    required: true
+    schema:
+      type: array
+      title: Inventory item ids
+      description: Between 1 and 250 distinct gid://shopify/InventoryItem/... ids.
+      minItems: 1
+      maxItems: 250
+      items:
+        type: string
+        minLength: 1
+        maxLength: 128
+  - name: include_inactive
+    value_type: boolean
+    required: false
+    schema:
+      type: boolean
+      title: Include a deactivated location
+      description: When false, stock held at a deactivated location is reported as no level.
+      default: false
+  outputs:
+  - name: location_id
+    value_type: text
+    schema:
+      type: string
+  - name: items
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - inventory_item_id
+        - found
+        - sku
+        - tracked
+        - level
+        properties:
+          inventory_item_id:
+            type: string
+          found:
+            type: boolean
+          sku:
+            type:
+            - string
+            - 'null'
+          tracked:
+            type:
+            - boolean
+            - 'null'
+          level:
+            type:
+            - object
+            - 'null'
+            additionalProperties: false
+            required:
+            - id
+            - location_id
+            - is_active
+            - available
+            - on_hand
+            properties:
+              id:
+                type: string
+              location_id:
+                type:
+                - string
+                - 'null'
+              is_active:
+                type:
+                - boolean
+                - 'null'
+              available:
+                type:
+                - integer
+                - 'null'
+              on_hand:
+                type:
+                - integer
+                - 'null'
+  result_fields:
+  - result.location_id
+  - result.items
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- operation_id: set_inventory_quantities
+  display_name: Set stock quantities
+  description: Sets absolute available quantities for 1 to 250 inventory items and waits for Shopify's answer. This changes what the store has in stock; a quantity of 0 makes the item out of stock at that location.
+  operation_kind: action
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_inventory
+  effect_kind: shopify_inventory_set_quantities
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: quantities
+    value_type: array
+    required: true
+    schema:
+      type: array
+      title: Quantities
+      description: Between 1 and 250 absolute quantities. Each entry names one inventory item at one location.
+      minItems: 1
+      maxItems: 250
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - inventory_item_id
+        - location_id
+        - quantity
+        - change_from_quantity
+        properties:
+          inventory_item_id:
+            type: string
+            minLength: 1
+            maxLength: 128
+            title: Inventory item id
+            description: A gid://shopify/InventoryItem/... id.
+          location_id:
+            type: string
+            minLength: 1
+            maxLength: 128
+            title: Location id
+            description: A gid://shopify/Location/... id.
+          quantity:
+            type: integer
+            title: Quantity
+            description: The absolute available quantity to set, not a change. 0 makes the item out of stock at that location.
+            minimum: 0
+            maximum: 2147483647
+          change_from_quantity:
+            type:
+            - integer
+            - 'null'
+            title: Change from quantity
+            description: The quantity you last read, so Shopify can refuse the write if someone else changed it first. Send null to write regardless.
+            minimum: 0
+            maximum: 2147483647
+  outputs:
+  - name: inventory_adjustment_group
+    value_type: object
+    schema:
+      type:
+      - object
+      - 'null'
+      additionalProperties: false
+      required:
+      - id
+      - created_at
+      - reason
+      - reference_document_uri
+      - changes
+      properties:
+        id:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type:
+          - string
+          - 'null'
+        reason:
+          type:
+          - string
+          - 'null'
+        reference_document_uri:
+          type:
+          - string
+          - 'null'
+        changes:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - inventory_item_id
+            - location_id
+            - name
+            - delta
+            - quantity_after_change
+            properties:
+              inventory_item_id:
+                type:
+                - string
+                - 'null'
+              location_id:
+                type:
+                - string
+                - 'null'
+              name:
+                type:
+                - string
+                - 'null'
+              delta:
+                type:
+                - integer
+                - 'null'
+              quantity_after_change:
+                type:
+                - integer
+                - 'null'
+  - name: external_effect_status
+    value_type: text
+    schema:
+      type: string
+  - name: definitely_no_external_effect
+    value_type: boolean
+    schema:
+      type: boolean
+  result_fields:
+  - result.inventory_adjustment_group
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- operation_id: list_products
+  display_name: List products
+  description: Returns one cursor-paginated page of products. Pass end_cursor back as after to read the next page.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_products
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: first
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      title: Page size
+      description: How many products to return, 1 to 250.
+      minimum: 1
+      maximum: 250
+      default: 50
+  - name: after
+    value_type: text
+    required: false
+    schema:
+      type: string
+      title: After cursor
+      description: The end_cursor of the previous page.
+      minLength: 1
+      maxLength: 1024
+  - name: filter
+    value_type: text
+    required: false
+    schema:
+      type: string
+      title: Shopify search query
+      description: An optional Shopify product search expression, for example status:active, vendor:Acme, tag:summer, or category_id:sg-4-17.
+      minLength: 1
+      maxLength: 4096
+  outputs:
+  - name: products
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - id
+        - title
+        - handle
+        - description_html
+        - vendor
+        - product_type
+        - status
+        - tags
+        - category_id
+        - seo
+        - created_at
+        - updated_at
+        - options
+        properties:
+          id:
+            type: string
+          title:
+            type:
+            - string
+            - 'null'
+          handle:
+            type:
+            - string
+            - 'null'
+          description_html:
+            type:
+            - string
+            - 'null'
+          vendor:
+            type:
+            - string
+            - 'null'
+          product_type:
+            type:
+            - string
+            - 'null'
+          status:
+            type:
+            - string
+            - 'null'
+          tags:
+            type: array
+            items:
+              type: string
+          category_id:
+            type:
+            - string
+            - 'null'
+          seo:
+            type:
+            - object
+            - 'null'
+            additionalProperties: false
+            required:
+            - title
+            - description
+            properties:
+              title:
+                type:
+                - string
+                - 'null'
+              description:
+                type:
+                - string
+                - 'null'
+          created_at:
+            type:
+            - string
+            - 'null'
+          updated_at:
+            type:
+            - string
+            - 'null'
+          options:
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              required:
+              - id
+              - name
+              - position
+              properties:
+                id:
+                  type: string
+                name:
+                  type:
+                  - string
+                  - 'null'
+                position:
+                  type:
+                  - integer
+                  - 'null'
+  - name: page_info
+    value_type: object
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+      - has_next_page
+      - end_cursor
+      properties:
+        has_next_page:
+          type: boolean
+        end_cursor:
+          type:
+          - string
+          - 'null'
+  result_fields:
+  - result.products
+  - result.page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- operation_id: export_products
+  display_name: Export all matching products
+  description: Follows every Shopify product cursor and streams the complete matching catalog to a JSONL artifact. Use filter to export a filtered subset.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_products
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: first
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      title: Page size
+      description: How many products to read per request, 1 to 250.
+      minimum: 1
+      maximum: 250
+      default: 50
+  - name: include_images
+    value_type: boolean
+    required: false
+    schema:
+      type: boolean
+      default: false
+      title: Include images
+      description: Export all image media with URL and alt text, plus image_count. Adds paginated reads.
+  - name: include_variants
+    value_type: boolean
+    required: false
+    schema:
+      type: boolean
+      default: false
+      title: Include variants
+      description: Export all variants with SKU, selected options and prices. Adds paginated reads.
+  - name: include_inventory
+    value_type: boolean
+    required: false
+    schema:
+      type: boolean
+      default: false
+      title: Include inventory
+      description: Include variants automatically and export all inventory locations and quantities. Requires read_inventory or write_inventory, plus read_locations. Adds paginated reads.
+  - name: filter
+    value_type: text
+    required: false
+    schema:
+      type: string
+      title: Shopify search query
+      description: An optional Shopify product search expression, for example status:active, vendor:Acme, tag:summer, or category_id:sg-4-17.
+      minLength: 1
+      maxLength: 4096
+  outputs:
+  - name: artifact_handle
+    value_type: artifact_handle
+  - name: filename
+    value_type: text
+    schema:
+      type: string
+  - name: content_type
+    value_type: text
+    schema:
+      type: string
+  - name: item_count
+    value_type: integer
+    schema:
+      type: integer
+      minimum: 0
+  - name: page_count
+    value_type: integer
+    schema:
+      type: integer
+      minimum: 1
+  - name: size_bytes
+    value_type: integer
+    schema:
+      type: integer
+      minimum: 0
+  - name: sha256
+    value_type: text
+    schema:
+      type: string
+  - name: artifacts
+    value_type: object
+    schema:
+      type: object
+  result_fields:
+  - result.artifact_handle
+  - result.filename
+  - result.content_type
+  - result.item_count
+  - result.page_count
+  - result.size_bytes
+  - result.sha256
+  - result.artifacts
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - artifact_output_unavailable
+- operation_id: get_product
+  display_name: Get a product
+  description: Returns one product, found by its Shopify product id.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_products
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: product_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Product id
+      description: A gid://shopify/Product/... id.
+  outputs:
+  - name: product
+    value_type: object
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - title
+      - handle
+      - description_html
+      - vendor
+      - product_type
+      - status
+      - tags
+      - category_id
+      - seo
+      - created_at
+      - updated_at
+      - options
+      properties:
+        id:
+          type: string
+        title:
+          type:
+          - string
+          - 'null'
+        handle:
+          type:
+          - string
+          - 'null'
+        description_html:
+          type:
+          - string
+          - 'null'
+        vendor:
+          type:
+          - string
+          - 'null'
+        product_type:
+          type:
+          - string
+          - 'null'
+        status:
+          type:
+          - string
+          - 'null'
+        tags:
+          type: array
+          items:
+            type: string
+        category_id:
+          type:
+          - string
+          - 'null'
+        seo:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - title
+          - description
+          properties:
+            title:
+              type:
+              - string
+              - 'null'
+            description:
+              type:
+              - string
+              - 'null'
+        created_at:
+          type:
+          - string
+          - 'null'
+        updated_at:
+          type:
+          - string
+          - 'null'
+        options:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - id
+            - name
+            - position
+            properties:
+              id:
+                type: string
+              name:
+                type:
+                - string
+                - 'null'
+              position:
+                type:
+                - integer
+                - 'null'
+  result_fields:
+  - result.product
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- operation_id: list_product_variants
+  display_name: List product variants
+  description: Returns one cursor-paginated page of product variants across the store. Pass end_cursor back as after to read the next page.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_products
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: first
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      title: Page size
+      description: How many variants to return, 1 to 250.
+      minimum: 1
+      maximum: 250
+      default: 50
+  - name: after
+    value_type: text
+    required: false
+    schema:
+      type: string
+      title: After cursor
+      description: The end_cursor of the previous page.
+      minLength: 1
+      maxLength: 1024
+  outputs:
+  - name: product_variants
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - id
+        - product_id
+        - title
+        - barcode
+        - price
+        - compare_at_price
+        - inventory_policy
+        - taxable
+        - created_at
+        - updated_at
+        - selected_options
+        - inventory_item
+        properties:
+          id:
+            type: string
+          product_id:
+            type:
+            - string
+            - 'null'
+          title:
+            type:
+            - string
+            - 'null'
+          barcode:
+            type:
+            - string
+            - 'null'
+          price:
+            type:
+            - string
+            - 'null'
+          compare_at_price:
+            type:
+            - string
+            - 'null'
+          inventory_policy:
+            type:
+            - string
+            - 'null'
+          taxable:
+            type:
+            - boolean
+            - 'null'
+          created_at:
+            type:
+            - string
+            - 'null'
+          updated_at:
+            type:
+            - string
+            - 'null'
+          selected_options:
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              required:
+              - name
+              - value
+              properties:
+                name:
+                  type:
+                  - string
+                  - 'null'
+                value:
+                  type:
+                  - string
+                  - 'null'
+          inventory_item:
+            type:
+            - object
+            - 'null'
+            additionalProperties: false
+            required:
+            - id
+            - sku
+            - tracked
+            - requires_shipping
+            properties:
+              id:
+                type:
+                - string
+                - 'null'
+              sku:
+                type:
+                - string
+                - 'null'
+              tracked:
+                type:
+                - boolean
+                - 'null'
+              requires_shipping:
+                type:
+                - boolean
+                - 'null'
+  - name: page_info
+    value_type: object
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+      - has_next_page
+      - end_cursor
+      properties:
+        has_next_page:
+          type: boolean
+        end_cursor:
+          type:
+          - string
+          - 'null'
+  result_fields:
+  - result.product_variants
+  - result.page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- operation_id: get_product_variant
+  display_name: Get a product variant
+  description: Returns one product variant, found by its Shopify variant id.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_products
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: product_variant_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Product variant id
+      description: A gid://shopify/ProductVariant/... id.
+  outputs:
+  - name: product_variant
+    value_type: object
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - product_id
+      - title
+      - barcode
+      - price
+      - compare_at_price
+      - inventory_policy
+      - taxable
+      - created_at
+      - updated_at
+      - selected_options
+      - inventory_item
+      properties:
+        id:
+          type: string
+        product_id:
+          type:
+          - string
+          - 'null'
+        title:
+          type:
+          - string
+          - 'null'
+        barcode:
+          type:
+          - string
+          - 'null'
+        price:
+          type:
+          - string
+          - 'null'
+        compare_at_price:
+          type:
+          - string
+          - 'null'
+        inventory_policy:
+          type:
+          - string
+          - 'null'
+        taxable:
+          type:
+          - boolean
+          - 'null'
+        created_at:
+          type:
+          - string
+          - 'null'
+        updated_at:
+          type:
+          - string
+          - 'null'
+        selected_options:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - name
+            - value
+            properties:
+              name:
+                type:
+                - string
+                - 'null'
+              value:
+                type:
+                - string
+                - 'null'
+        inventory_item:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - id
+          - sku
+          - tracked
+          - requires_shipping
+          properties:
+            id:
+              type:
+              - string
+              - 'null'
+            sku:
+              type:
+              - string
+              - 'null'
+            tracked:
+              type:
+              - boolean
+              - 'null'
+            requires_shipping:
+              type:
+              - boolean
+              - 'null'
+  result_fields:
+  - result.product_variant
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- operation_id: list_catalog_metafields
+  display_name: List catalog metafields
+  description: Returns one cursor-paginated page of metafields for one product or one product variant. The owner type must match the id.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_products
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: owner_type
+    value_type: text
+    required: true
+    schema:
+      type: string
+      title: Owner type
+      description: Which kind of record owns the metafields.
+      enum:
+      - product
+      - product_variant
+  - name: owner_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Owner id
+      description: A Product or ProductVariant id matching the owner type.
+  - name: first
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      title: Page size
+      description: How many metafields to return, 1 to 250.
+      minimum: 1
+      maximum: 250
+      default: 50
+  - name: after
+    value_type: text
+    required: false
+    schema:
+      type: string
+      title: After cursor
+      description: The end_cursor of the previous page.
+      minLength: 1
+      maxLength: 1024
+  outputs:
+  - name: owner_id
+    value_type: text
+    schema:
+      type: string
+  - name: owner_type
+    value_type: text
+    schema:
+      type: string
+  - name: metafields
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - id
+        - owner_id
+        - namespace
+        - key
+        - type
+        - value
+        - compare_digest
+        - created_at
+        - updated_at
+        properties:
+          id:
+            type: string
+          owner_id:
+            type:
+            - string
+            - 'null'
+          namespace:
+            type:
+            - string
+            - 'null'
+          key:
+            type:
+            - string
+            - 'null'
+          type:
+            type:
+            - string
+            - 'null'
+          value:
+            type:
+            - string
+            - 'null'
+          compare_digest:
+            type:
+            - string
+            - 'null'
+          created_at:
+            type:
+            - string
+            - 'null'
+          updated_at:
+            type:
+            - string
+            - 'null'
+  - name: page_info
+    value_type: object
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+      - has_next_page
+      - end_cursor
+      properties:
+        has_next_page:
+          type: boolean
+        end_cursor:
+          type:
+          - string
+          - 'null'
+  result_fields:
+  - result.owner_id
+  - result.owner_type
+  - result.metafields
+  - result.page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- operation_id: list_product_media
+  display_name: List product media
+  description: Returns one cursor-paginated page of the media attached to one product. Reads media and processing status, including images supplied during product creation.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_products
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: product_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Product id
+      description: A gid://shopify/Product/... id.
+  - name: first
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      title: Page size
+      description: How many media items to return, 1 to 250.
+      minimum: 1
+      maximum: 250
+      default: 50
+  - name: after
+    value_type: text
+    required: false
+    schema:
+      type: string
+      title: After cursor
+      description: The end_cursor of the previous page.
+      minLength: 1
+      maxLength: 1024
+  outputs:
+  - name: product_id
+    value_type: text
+    schema:
+      type: string
+  - name: media
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - id
+        - media_content_type
+        - alt
+        - status
+        - preview
+        properties:
+          id:
+            type: string
+          media_content_type:
+            type:
+            - string
+            - 'null'
+          alt:
+            type:
+            - string
+            - 'null'
+          status:
+            type:
+            - string
+            - 'null'
+          preview:
+            type:
+            - object
+            - 'null'
+            additionalProperties: false
+            required:
+            - status
+            - width
+            - height
+            properties:
+              status:
+                type:
+                - string
+                - 'null'
+              width:
+                type:
+                - integer
+                - 'null'
+              height:
+                type:
+                - integer
+                - 'null'
+  - name: page_info
+    value_type: object
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+      - has_next_page
+      - end_cursor
+      properties:
+        has_next_page:
+          type: boolean
+        end_cursor:
+          type:
+          - string
+          - 'null'
+  result_fields:
+  - result.product_id
+  - result.media
+  - result.page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- operation_id: create_product
+  display_name: Create a product
+  description: Creates one product as a draft. Shopify creates only the initial variant, using the first value of each supplied option. product_variants contains that one variant and its inventory item so a workflow can immediately set SKU, price and stock; add the rest with the variant batch operations. Optional images are downloaded from public HTTPS URLs and processed asynchronously. No metafields, collections or publications are created.
+  operation_kind: action
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_products
+  effect_kind: shopify_product_create
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: title
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 255
+      title: Title
+  - name: handle
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 255
+      title: Handle
+      description: The URL handle. Shopify rejects the call if it is already taken.
+  - name: description_html
+    value_type: text
+    required: false
+    schema:
+      type: string
+      title: Description HTML
+      maxLength: 65535
+  - name: vendor
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 255
+      title: Vendor
+  - name: product_type
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 255
+      title: Product type
+  - name: tags
+    value_type: array
+    required: false
+    schema:
+      type: array
+      title: Tags
+      maxItems: 250
+      items:
+        type: string
+        minLength: 1
+        maxLength: 255
+  - name: category_id
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Category id
+      description: A gid://shopify/TaxonomyCategory/... id.
+  - name: seo_title
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 255
+      title: SEO title
+  - name: seo_description
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 1024
+      title: SEO description
+  - name: options
+    value_type: array
+    required: false
+    schema:
+      type: array
+      title: Options
+      description: Up to three product options. Shopify builds the initial variant from the first value of each.
+      maxItems: 3
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - name
+        - values
+        properties:
+          name:
+            type: string
+            minLength: 1
+            maxLength: 255
+          values:
+            type: array
+            minItems: 1
+            maxItems: 100
+            items:
+              type: string
+              minLength: 1
+              maxLength: 255
+  - name: images
+    value_type: array
+    required: false
+    schema:
+      type: array
+      title: Images
+      description: Public HTTPS image URLs. Shopify downloads and processes these asynchronously; creation success does not mean images are READY.
+      maxItems: 250
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - url
+        properties:
+          url:
+            type: string
+            minLength: 9
+            maxLength: 2048
+            title: Image URL
+          alt:
+            type: string
+            maxLength: 512
+            title: Alt text
+  outputs:
+  - name: product
+    value_type: object
+    schema:
+      type:
+      - object
+      - 'null'
+      additionalProperties: false
+      required:
+      - id
+      - title
+      - handle
+      - description_html
+      - vendor
+      - product_type
+      - status
+      - tags
+      - category_id
+      - seo
+      - created_at
+      - updated_at
+      - options
+      properties:
+        id:
+          type: string
+        title:
+          type:
+          - string
+          - 'null'
+        handle:
+          type:
+          - string
+          - 'null'
+        description_html:
+          type:
+          - string
+          - 'null'
+        vendor:
+          type:
+          - string
+          - 'null'
+        product_type:
+          type:
+          - string
+          - 'null'
+        status:
+          type:
+          - string
+          - 'null'
+        tags:
+          type: array
+          items:
+            type: string
+        category_id:
+          type:
+          - string
+          - 'null'
+        seo:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - title
+          - description
+          properties:
+            title:
+              type:
+              - string
+              - 'null'
+            description:
+              type:
+              - string
+              - 'null'
+        created_at:
+          type:
+          - string
+          - 'null'
+        updated_at:
+          type:
+          - string
+          - 'null'
+        options:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - id
+            - name
+            - position
+            properties:
+              id:
+                type: string
+              name:
+                type:
+                - string
+                - 'null'
+              position:
+                type:
+                - integer
+                - 'null'
+  - name: product_variants
+    value_type: array
+    schema:
+      type: array
+      maxItems: 1
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - id
+        - product_id
+        - title
+        - barcode
+        - price
+        - compare_at_price
+        - inventory_policy
+        - taxable
+        - created_at
+        - updated_at
+        - selected_options
+        - inventory_item
+        properties:
+          id:
+            type: string
+          product_id:
+            type: string
+          title:
+            type:
+            - string
+            - 'null'
+          barcode:
+            type:
+            - string
+            - 'null'
+          price:
+            type:
+            - string
+            - 'null'
+          compare_at_price:
+            type:
+            - string
+            - 'null'
+          inventory_policy:
+            type:
+            - string
+            - 'null'
+          taxable:
+            type:
+            - boolean
+            - 'null'
+          created_at:
+            type:
+            - string
+            - 'null'
+          updated_at:
+            type:
+            - string
+            - 'null'
+          selected_options:
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              required:
+              - name
+              - value
+              properties:
+                name:
+                  type:
+                  - string
+                  - 'null'
+                value:
+                  type:
+                  - string
+                  - 'null'
+          inventory_item:
+            type: object
+            additionalProperties: false
+            required:
+            - id
+            - sku
+            - tracked
+            - requires_shipping
+            properties:
+              id:
+                type: string
+              sku:
+                type:
+                - string
+                - 'null'
+              tracked:
+                type:
+                - boolean
+                - 'null'
+              requires_shipping:
+                type:
+                - boolean
+                - 'null'
+  - name: external_effect_status
+    value_type: text
+    schema:
+      type: string
+  - name: definitely_no_external_effect
+    value_type: boolean
+    schema:
+      type: boolean
+  result_fields:
+  - result.product
+  - result.product_variants
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- operation_id: create_products_bulk
+  display_name: Create products in bulk
+  description: Uploads a batch of new draft products for asynchronous creation. Supply either products or a JSONL artifact containing create_product fields. Submission success is not per-row success; Shopify continues processing after this action returns. Creates only the initial variant.
+  operation_kind: action
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_products
+  effect_kind: shopify_product_bulk_create
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: products
+    value_type: array
+    required: false
+    schema:
+      type: array
+      title: Products
+      minItems: 1
+      maxItems: 10000
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - title
+        - handle
+        properties:
+          title:
+            type: string
+            minLength: 1
+            maxLength: 255
+            title: Title
+          handle:
+            type: string
+            minLength: 1
+            maxLength: 255
+            title: Handle
+            description: The URL handle. Shopify rejects the call if it is already taken.
+          description_html:
+            type: string
+            title: Description HTML
+            maxLength: 65535
+          vendor:
+            type: string
+            maxLength: 255
+            title: Vendor
+          product_type:
+            type: string
+            maxLength: 255
+            title: Product type
+          tags:
+            type: array
+            title: Tags
+            maxItems: 250
+            items:
+              type: string
+              minLength: 1
+              maxLength: 255
+          category_id:
+            type: string
+            minLength: 1
+            maxLength: 128
+            title: Category id
+            description: A gid://shopify/TaxonomyCategory/... id.
+          seo_title:
+            type: string
+            maxLength: 255
+            title: SEO title
+          seo_description:
+            type: string
+            maxLength: 1024
+            title: SEO description
+          options:
+            type: array
+            title: Options
+            description: Up to three product options. Shopify builds the initial variant from the first value of each.
+            maxItems: 3
+            items:
+              type: object
+              additionalProperties: false
+              required:
+              - name
+              - values
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                values:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items:
+                    type: string
+                    minLength: 1
+                    maxLength: 255
+          images:
+            type: array
+            title: Images
+            description: Public HTTPS image URLs. Shopify downloads and processes these asynchronously; creation success does not mean images are READY.
+            maxItems: 250
+            items:
+              type: object
+              additionalProperties: false
+              required:
+              - url
+              properties:
+                url:
+                  type: string
+                  minLength: 9
+                  maxLength: 2048
+                  title: Image URL
+                alt:
+                  type: string
+                  maxLength: 512
+                  title: Alt text
+      description: New products using create_product fields, without connection_ref. Use a JSONL artifact for large batches.
+  - name: artifact_handle
+    value_type: artifact_handle
+    required: false
+    schema:
+      type: string
+      title: Products JSONL artifact
+      minLength: 1
+      maxLength: 512
+      description: One product per line using create_product fields. Mutually exclusive with products. Maximum 10000 products and 100 MB.
+  outputs:
+  - name: bulk_operation
+    value_type: object
+    schema:
+      type:
+      - object
+      - 'null'
+      additionalProperties: false
+      required:
+      - id
+      - status
+      - client_identifier
+      properties:
+        id:
+          type: string
+          minLength: 1
+        status:
+          type: string
+          minLength: 1
+        client_identifier:
+          type: string
+          minLength: 1
+  - name: item_count
+    value_type: integer
+    schema:
+      type: integer
+      minimum: 0
+  - name: external_effect_status
+    value_type: text
+    schema:
+      type: string
+  - name: definitely_no_external_effect
+    value_type: boolean
+    schema:
+      type: boolean
+  result_fields:
+  - result.bulk_operation
+  - result.item_count
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- operation_id: update_product
+  display_name: Update a product
+  description: Changes one product. Only the fields you supply are sent; everything else is left as it is. replace_tags overwrites the whole tag list. Status, publications, collections, media and metafields are out of reach here.
+  operation_kind: action
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_products
+  effect_kind: shopify_product_update
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: product_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Product id
+      description: A gid://shopify/Product/... id.
+  - name: title
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 255
+      title: Title
+  - name: description_html
+    value_type: text
+    required: false
+    schema:
+      type: string
+      title: Description HTML
+      maxLength: 65535
+  - name: vendor
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 255
+      title: Vendor
+  - name: product_type
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 255
+      title: Product type
+  - name: handle
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 255
+      title: Handle
+      description: A new URL handle. Shopify is always asked to redirect the old one.
+  - name: replace_tags
+    value_type: array
+    required: false
+    schema:
+      type: array
+      title: Replace tags
+      maxItems: 250
+      items:
+        type: string
+        minLength: 1
+        maxLength: 255
+      description: Replaces the product's entire tag list. An empty list is refused, because clearing every tag is more likely a mistake than an intention.
+      minItems: 1
+  - name: category_id
+    value_type: text
+    required: false
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Category id
+      description: A gid://shopify/TaxonomyCategory/... id.
+  - name: seo_title
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 255
+      title: SEO title
+  - name: seo_description
+    value_type: text
+    required: false
+    schema:
+      type: string
+      maxLength: 1024
+      title: SEO description
+  outputs:
+  - name: product
+    value_type: object
+    schema:
+      type:
+      - object
+      - 'null'
+      additionalProperties: false
+      required:
+      - id
+      - title
+      - handle
+      - description_html
+      - vendor
+      - product_type
+      - status
+      - tags
+      - category_id
+      - seo
+      - created_at
+      - updated_at
+      - options
+      properties:
+        id:
+          type: string
+        title:
+          type:
+          - string
+          - 'null'
+        handle:
+          type:
+          - string
+          - 'null'
+        description_html:
+          type:
+          - string
+          - 'null'
+        vendor:
+          type:
+          - string
+          - 'null'
+        product_type:
+          type:
+          - string
+          - 'null'
+        status:
+          type:
+          - string
+          - 'null'
+        tags:
+          type: array
+          items:
+            type: string
+        category_id:
+          type:
+          - string
+          - 'null'
+        seo:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - title
+          - description
+          properties:
+            title:
+              type:
+              - string
+              - 'null'
+            description:
+              type:
+              - string
+              - 'null'
+        created_at:
+          type:
+          - string
+          - 'null'
+        updated_at:
+          type:
+          - string
+          - 'null'
+        options:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - id
+            - name
+            - position
+            properties:
+              id:
+                type: string
+              name:
+                type:
+                - string
+                - 'null'
+              position:
+                type:
+                - integer
+                - 'null'
+  - name: external_effect_status
+    value_type: text
+    schema:
+      type: string
+  - name: definitely_no_external_effect
+    value_type: boolean
+    schema:
+      type: boolean
+  result_fields:
+  - result.product
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- operation_id: create_product_variants_batch
+  display_name: Create product variants
+  description: 'Creates 1 to 250 variants on one product in a single call. The product''s options must already exist. The product''s standalone variant is preserved. Stock quantities are not part of this: set them with the inventory operations.'
+  operation_kind: action
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_products
+  effect_kind: shopify_product_variants_create
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: product_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Product id
+      description: A gid://shopify/Product/... id.
+  - name: variants
+    value_type: array
+    required: true
+    schema:
+      type: array
+      title: Variants
+      description: Between 1 and 250 variants to create.
+      minItems: 1
+      maxItems: 250
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - option_values
+        properties:
+          option_values:
+            type: array
+            minItems: 1
+            maxItems: 3
+            items:
+              type: object
+              additionalProperties: false
+              required:
+              - option_name
+              - value
+              properties:
+                option_name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                value:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+          price:
+            type: string
+            description: A decimal amount as a string, for example "19.99".
+            minLength: 1
+            maxLength: 32
+          compare_at_price:
+            type: string
+            description: A decimal amount as a string, for example "19.99".
+            minLength: 1
+            maxLength: 32
+          barcode:
+            type: string
+            maxLength: 255
+          inventory_policy:
+            type: string
+            enum:
+            - DENY
+            - CONTINUE
+          taxable:
+            type: boolean
+          inventory_item:
+            type: object
+            additionalProperties: false
+            properties:
+              sku:
+                type: string
+                minLength: 1
+                maxLength: 255
+              cost:
+                type: string
+                description: A decimal amount as a string, for example "19.99".
+                minLength: 1
+                maxLength: 32
+              tracked:
+                type: boolean
+              requires_shipping:
+                type: boolean
+  outputs:
+  - name: product_variants
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - id
+        - product_id
+        - title
+        - barcode
+        - price
+        - compare_at_price
+        - inventory_policy
+        - taxable
+        - created_at
+        - updated_at
+        - selected_options
+        - inventory_item
+        properties:
+          id:
+            type: string
+          product_id:
+            type:
+            - string
+            - 'null'
+          title:
+            type:
+            - string
+            - 'null'
+          barcode:
+            type:
+            - string
+            - 'null'
+          price:
+            type:
+            - string
+            - 'null'
+          compare_at_price:
+            type:
+            - string
+            - 'null'
+          inventory_policy:
+            type:
+            - string
+            - 'null'
+          taxable:
+            type:
+            - boolean
+            - 'null'
+          created_at:
+            type:
+            - string
+            - 'null'
+          updated_at:
+            type:
+            - string
+            - 'null'
+          selected_options:
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              required:
+              - name
+              - value
+              properties:
+                name:
+                  type:
+                  - string
+                  - 'null'
+                value:
+                  type:
+                  - string
+                  - 'null'
+          inventory_item:
+            type:
+            - object
+            - 'null'
+            additionalProperties: false
+            required:
+            - id
+            - sku
+            - tracked
+            - requires_shipping
+            properties:
+              id:
+                type:
+                - string
+                - 'null'
+              sku:
+                type:
+                - string
+                - 'null'
+              tracked:
+                type:
+                - boolean
+                - 'null'
+              requires_shipping:
+                type:
+                - boolean
+                - 'null'
+  - name: external_effect_status
+    value_type: text
+    schema:
+      type: string
+  - name: definitely_no_external_effect
+    value_type: boolean
+    schema:
+      type: boolean
+  result_fields:
+  - result.product_variants
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- operation_id: update_product_variants_batch
+  display_name: Update product variants
+  description: Changes 1 to 250 existing variants on one product in a single call. Shopify is asked to apply all of them or none. Each entry must name a variant and carry at least one actual change.
+  operation_kind: action
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_products
+  effect_kind: shopify_product_variants_update
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: product_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Product id
+      description: A gid://shopify/Product/... id.
+  - name: variants
+    value_type: array
+    required: true
+    schema:
+      type: array
+      title: Variants
+      description: Between 1 and 250 variants to change.
+      minItems: 1
+      maxItems: 250
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - variant_id
+        properties:
+          variant_id:
+            type: string
+            minLength: 1
+            maxLength: 128
+          option_values:
+            type: array
+            minItems: 1
+            maxItems: 3
+            items:
+              type: object
+              additionalProperties: false
+              required:
+              - option_name
+              - value
+              properties:
+                option_name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                value:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+          price:
+            type: string
+            description: A decimal amount as a string, for example "19.99".
+            minLength: 1
+            maxLength: 32
+          compare_at_price:
+            type: string
+            description: A decimal amount as a string, for example "19.99".
+            minLength: 1
+            maxLength: 32
+          barcode:
+            type: string
+            maxLength: 255
+          inventory_policy:
+            type: string
+            enum:
+            - DENY
+            - CONTINUE
+          taxable:
+            type: boolean
+          inventory_item:
+            type: object
+            additionalProperties: false
+            properties:
+              sku:
+                type: string
+                minLength: 1
+                maxLength: 255
+              cost:
+                type: string
+                description: A decimal amount as a string, for example "19.99".
+                minLength: 1
+                maxLength: 32
+              tracked:
+                type: boolean
+              requires_shipping:
+                type: boolean
+  outputs:
+  - name: product_variants
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - id
+        - product_id
+        - title
+        - barcode
+        - price
+        - compare_at_price
+        - inventory_policy
+        - taxable
+        - created_at
+        - updated_at
+        - selected_options
+        - inventory_item
+        properties:
+          id:
+            type: string
+          product_id:
+            type:
+            - string
+            - 'null'
+          title:
+            type:
+            - string
+            - 'null'
+          barcode:
+            type:
+            - string
+            - 'null'
+          price:
+            type:
+            - string
+            - 'null'
+          compare_at_price:
+            type:
+            - string
+            - 'null'
+          inventory_policy:
+            type:
+            - string
+            - 'null'
+          taxable:
+            type:
+            - boolean
+            - 'null'
+          created_at:
+            type:
+            - string
+            - 'null'
+          updated_at:
+            type:
+            - string
+            - 'null'
+          selected_options:
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              required:
+              - name
+              - value
+              properties:
+                name:
+                  type:
+                  - string
+                  - 'null'
+                value:
+                  type:
+                  - string
+                  - 'null'
+          inventory_item:
+            type:
+            - object
+            - 'null'
+            additionalProperties: false
+            required:
+            - id
+            - sku
+            - tracked
+            - requires_shipping
+            properties:
+              id:
+                type:
+                - string
+                - 'null'
+              sku:
+                type:
+                - string
+                - 'null'
+              tracked:
+                type:
+                - boolean
+                - 'null'
+              requires_shipping:
+                type:
+                - boolean
+                - 'null'
+  - name: external_effect_status
+    value_type: text
+    schema:
+      type: string
+  - name: definitely_no_external_effect
+    value_type: boolean
+    schema:
+      type: boolean
+  result_fields:
+  - result.product_variants
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- operation_id: set_catalog_metafields
+  display_name: Set catalog metafields
+  description: Creates or updates 1 to 25 metafields on products and product variants in one atomic call. Every entry carries a compare digest, so a value someone else changed since you read it is refused rather than overwritten.
+  operation_kind: action
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_products
+  effect_kind: shopify_catalog_metafields_set
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: metafields
+    value_type: array
+    required: true
+    schema:
+      type: array
+      title: Metafields
+      description: Between 1 and 25 metafields to set.
+      minItems: 1
+      maxItems: 25
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - owner_id
+        - namespace
+        - key
+        - type
+        - value
+        - compare_digest
+        properties:
+          owner_id:
+            type: string
+            minLength: 1
+            maxLength: 128
+            description: A Product or ProductVariant id.
+          namespace:
+            type: string
+            minLength: 1
+            maxLength: 255
+          key:
+            type: string
+            minLength: 1
+            maxLength: 64
+          type:
+            type: string
+            minLength: 1
+            maxLength: 64
+          value:
+            type: string
+            maxLength: 524288
+          compare_digest:
+            type:
+            - string
+            - 'null'
+            description: The compare digest you read with the value, or null to create only.
+            maxLength: 512
+  outputs:
+  - name: metafields
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - id
+        - owner_id
+        - namespace
+        - key
+        - type
+        - value
+        - compare_digest
+        - created_at
+        - updated_at
+        properties:
+          id:
+            type: string
+          owner_id:
+            type:
+            - string
+            - 'null'
+          namespace:
+            type:
+            - string
+            - 'null'
+          key:
+            type:
+            - string
+            - 'null'
+          type:
+            type:
+            - string
+            - 'null'
+          value:
+            type:
+            - string
+            - 'null'
+          compare_digest:
+            type:
+            - string
+            - 'null'
+          created_at:
+            type:
+            - string
+            - 'null'
+          updated_at:
+            type:
+            - string
+            - 'null'
+  - name: external_effect_status
+    value_type: text
+    schema:
+      type: string
+  - name: definitely_no_external_effect
+    value_type: boolean
+    schema:
+      type: boolean
+  result_fields:
+  - result.metafields
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- operation_id: update_product_media_alt
+  display_name: Update media alt text
+  description: 'Changes the alt text of one existing media file. Nothing else about the file is touched: not its source, filename, preview, or which products it belongs to.'
+  operation_kind: action
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_files
+  effect_kind: shopify_product_media_alt_update
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: media_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Media id
+      description: A MediaImage, Video or Model3d id that already exists.
+  - name: alt
+    value_type: text
+    required: true
+    schema:
+      type: string
+      title: Alt text
+      description: The replacement alt text. Must not be empty.
+      minLength: 1
+      maxLength: 1024
+  outputs:
+  - name: file
+    value_type: object
+    schema:
+      type:
+      - object
+      - 'null'
+      additionalProperties: false
+      required:
+      - id
+      - alt
+      - file_status
+      - created_at
+      - updated_at
+      properties:
+        id:
+          type: string
+        alt:
+          type:
+          - string
+          - 'null'
+        file_status:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type:
+          - string
+          - 'null'
+        updated_at:
+          type:
+          - string
+          - 'null'
+  - name: external_effect_status
+    value_type: text
+    schema:
+      type: string
+  - name: definitely_no_external_effect
+    value_type: boolean
+    schema:
+      type: boolean
+  result_fields:
+  - result.file
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- operation_id: list_orders
+  display_name: List orders
+  description: Returns one cursor-paginated page of orders. Customer, address, payment and contact details are never requested.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_orders
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: first
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      title: Page size
+      description: How many orders to return, 1 to 250.
+      minimum: 1
+      maximum: 250
+      default: 50
+  - name: after
+    value_type: text
+    required: false
+    schema:
+      type: string
+      title: After cursor
+      description: The end_cursor of the previous page.
+      minLength: 1
+      maxLength: 1024
+  outputs:
+  - name: orders
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - id
+        - name
+        - created_at
+        - updated_at
+        - processed_at
+        - cancelled_at
+        - closed_at
+        - display_financial_status
+        - display_fulfillment_status
+        - currency_code
+        - tags
+        - note
+        - po_number
+        - custom_attributes
+        - total_price
+        - subtotal_price
+        - total_tax
+        - total_shipping_price
+        - total_discounts
+        properties:
+          id:
+            type: string
+          name:
+            type:
+            - string
+            - 'null'
+          created_at:
+            type:
+            - string
+            - 'null'
+          updated_at:
+            type:
+            - string
+            - 'null'
+          processed_at:
+            type:
+            - string
+            - 'null'
+          cancelled_at:
+            type:
+            - string
+            - 'null'
+          closed_at:
+            type:
+            - string
+            - 'null'
+          display_financial_status:
+            type:
+            - string
+            - 'null'
+          display_fulfillment_status:
+            type:
+            - string
+            - 'null'
+          currency_code:
+            type:
+            - string
+            - 'null'
+          tags:
+            type: array
+            items:
+              type: string
+          note:
+            type:
+            - string
+            - 'null'
+          po_number:
+            type:
+            - string
+            - 'null'
+          custom_attributes:
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              required:
+              - key
+              - value
+              properties:
+                key:
+                  type:
+                  - string
+                  - 'null'
+                value:
+                  type:
+                  - string
+                  - 'null'
+          total_price:
+            type:
+            - object
+            - 'null'
+            additionalProperties: false
+            required:
+            - amount
+            - currency_code
+            properties:
+              amount:
+                type:
+                - string
+                - 'null'
+              currency_code:
+                type:
+                - string
+                - 'null'
+          subtotal_price:
+            type:
+            - object
+            - 'null'
+            additionalProperties: false
+            required:
+            - amount
+            - currency_code
+            properties:
+              amount:
+                type:
+                - string
+                - 'null'
+              currency_code:
+                type:
+                - string
+                - 'null'
+          total_tax:
+            type:
+            - object
+            - 'null'
+            additionalProperties: false
+            required:
+            - amount
+            - currency_code
+            properties:
+              amount:
+                type:
+                - string
+                - 'null'
+              currency_code:
+                type:
+                - string
+                - 'null'
+          total_shipping_price:
+            type:
+            - object
+            - 'null'
+            additionalProperties: false
+            required:
+            - amount
+            - currency_code
+            properties:
+              amount:
+                type:
+                - string
+                - 'null'
+              currency_code:
+                type:
+                - string
+                - 'null'
+          total_discounts:
+            type:
+            - object
+            - 'null'
+            additionalProperties: false
+            required:
+            - amount
+            - currency_code
+            properties:
+              amount:
+                type:
+                - string
+                - 'null'
+              currency_code:
+                type:
+                - string
+                - 'null'
+  - name: page_info
+    value_type: object
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+      - has_next_page
+      - end_cursor
+      properties:
+        has_next_page:
+          type: boolean
+        end_cursor:
+          type:
+          - string
+          - 'null'
+  result_fields:
+  - result.orders
+  - result.page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- operation_id: get_order
+  display_name: Get an order
+  description: Returns one order, found by its Shopify order id. Customer, address, payment and contact details are never requested.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_orders
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: order_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Order id
+      description: A gid://shopify/Order/... id.
+  outputs:
+  - name: order
+    value_type: object
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - name
+      - created_at
+      - updated_at
+      - processed_at
+      - cancelled_at
+      - closed_at
+      - display_financial_status
+      - display_fulfillment_status
+      - currency_code
+      - tags
+      - note
+      - po_number
+      - custom_attributes
+      - total_price
+      - subtotal_price
+      - total_tax
+      - total_shipping_price
+      - total_discounts
+      properties:
+        id:
+          type: string
+        name:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type:
+          - string
+          - 'null'
+        updated_at:
+          type:
+          - string
+          - 'null'
+        processed_at:
+          type:
+          - string
+          - 'null'
+        cancelled_at:
+          type:
+          - string
+          - 'null'
+        closed_at:
+          type:
+          - string
+          - 'null'
+        display_financial_status:
+          type:
+          - string
+          - 'null'
+        display_fulfillment_status:
+          type:
+          - string
+          - 'null'
+        currency_code:
+          type:
+          - string
+          - 'null'
+        tags:
+          type: array
+          items:
+            type: string
+        note:
+          type:
+          - string
+          - 'null'
+        po_number:
+          type:
+          - string
+          - 'null'
+        custom_attributes:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - key
+            - value
+            properties:
+              key:
+                type:
+                - string
+                - 'null'
+              value:
+                type:
+                - string
+                - 'null'
+        total_price:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - amount
+          - currency_code
+          properties:
+            amount:
+              type:
+              - string
+              - 'null'
+            currency_code:
+              type:
+              - string
+              - 'null'
+        subtotal_price:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - amount
+          - currency_code
+          properties:
+            amount:
+              type:
+              - string
+              - 'null'
+            currency_code:
+              type:
+              - string
+              - 'null'
+        total_tax:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - amount
+          - currency_code
+          properties:
+            amount:
+              type:
+              - string
+              - 'null'
+            currency_code:
+              type:
+              - string
+              - 'null'
+        total_shipping_price:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - amount
+          - currency_code
+          properties:
+            amount:
+              type:
+              - string
+              - 'null'
+            currency_code:
+              type:
+              - string
+              - 'null'
+        total_discounts:
+          type:
+          - object
+          - 'null'
+          additionalProperties: false
+          required:
+          - amount
+          - currency_code
+          properties:
+            amount:
+              type:
+              - string
+              - 'null'
+            currency_code:
+              type:
+              - string
+              - 'null'
+  result_fields:
+  - result.order
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- operation_id: list_order_line_items
+  display_name: List order line items
+  description: Returns one cursor-paginated page of the line items on one order.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_orders
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: order_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Order id
+      description: A gid://shopify/Order/... id.
+  - name: first
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      title: Page size
+      description: How many line items to return, 1 to 250.
+      minimum: 1
+      maximum: 250
+      default: 50
+  - name: after
+    value_type: text
+    required: false
+    schema:
+      type: string
+      title: After cursor
+      description: The end_cursor of the previous page.
+      minLength: 1
+      maxLength: 1024
+  outputs:
+  - name: order_id
+    value_type: text
+    schema:
+      type: string
+  - name: line_items
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - id
+        - product_id
+        - variant_id
+        - title
+        - name
+        - sku
+        - quantity
+        - current_quantity
+        - refundable_quantity
+        - unfulfilled_quantity
+        - requires_shipping
+        - original_unit_price
+        - discounted_unit_price
+        - original_total
+        - discounted_total
+        properties:
+          id:
+            type: string
+          product_id:
+            type:
+            - string
+            - 'null'
+          variant_id:
+            type:
+            - string
+            - 'null'
+          title:
+            type:
+            - string
+            - 'null'
+          name:
+            type:
+            - string
+            - 'null'
+          sku:
+            type:
+            - string
+            - 'null'
+          quantity:
+            type:
+            - integer
+            - 'null'
+          current_quantity:
+            type:
+            - integer
+            - 'null'
+          refundable_quantity:
+            type:
+            - integer
+            - 'null'
+          unfulfilled_quantity:
+            type:
+            - integer
+            - 'null'
+          requires_shipping:
+            type:
+            - boolean
+            - 'null'
+          original_unit_price:
+            type:
+            - object
+            - 'null'
+            additionalProperties: false
+            required:
+            - amount
+            - currency_code
+            properties:
+              amount:
+                type:
+                - string
+                - 'null'
+              currency_code:
+                type:
+                - string
+                - 'null'
+          discounted_unit_price:
+            type:
+            - object
+            - 'null'
+            additionalProperties: false
+            required:
+            - amount
+            - currency_code
+            properties:
+              amount:
+                type:
+                - string
+                - 'null'
+              currency_code:
+                type:
+                - string
+                - 'null'
+          original_total:
+            type:
+            - object
+            - 'null'
+            additionalProperties: false
+            required:
+            - amount
+            - currency_code
+            properties:
+              amount:
+                type:
+                - string
+                - 'null'
+              currency_code:
+                type:
+                - string
+                - 'null'
+          discounted_total:
+            type:
+            - object
+            - 'null'
+            additionalProperties: false
+            required:
+            - amount
+            - currency_code
+            properties:
+              amount:
+                type:
+                - string
+                - 'null'
+              currency_code:
+                type:
+                - string
+                - 'null'
+  - name: page_info
+    value_type: object
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+      - has_next_page
+      - end_cursor
+      properties:
+        has_next_page:
+          type: boolean
+        end_cursor:
+          type:
+          - string
+          - 'null'
+  result_fields:
+  - result.order_id
+  - result.line_items
+  - result.page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- operation_id: list_order_metafields
+  display_name: List order metafields
+  description: Returns one cursor-paginated page of the metafields on one order.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_orders
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: order_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Order id
+      description: A gid://shopify/Order/... id.
+  - name: first
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      title: Page size
+      description: How many metafields to return, 1 to 250.
+      minimum: 1
+      maximum: 250
+      default: 50
+  - name: after
+    value_type: text
+    required: false
+    schema:
+      type: string
+      title: After cursor
+      description: The end_cursor of the previous page.
+      minLength: 1
+      maxLength: 1024
+  outputs:
+  - name: order_id
+    value_type: text
+    schema:
+      type: string
+  - name: metafields
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - id
+        - owner_id
+        - namespace
+        - key
+        - type
+        - value
+        - compare_digest
+        - created_at
+        - updated_at
+        properties:
+          id:
+            type: string
+          owner_id:
+            type:
+            - string
+            - 'null'
+          namespace:
+            type:
+            - string
+            - 'null'
+          key:
+            type:
+            - string
+            - 'null'
+          type:
+            type:
+            - string
+            - 'null'
+          value:
+            type:
+            - string
+            - 'null'
+          compare_digest:
+            type:
+            - string
+            - 'null'
+          created_at:
+            type:
+            - string
+            - 'null'
+          updated_at:
+            type:
+            - string
+            - 'null'
+  - name: page_info
+    value_type: object
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+      - has_next_page
+      - end_cursor
+      properties:
+        has_next_page:
+          type: boolean
+        end_cursor:
+          type:
+          - string
+          - 'null'
+  result_fields:
+  - result.order_id
+  - result.metafields
+  - result.page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- operation_id: list_order_fulfillment_orders
+  display_name: List fulfillment orders
+  description: Returns one cursor-paginated page of the fulfillment orders on one order, each with an explicitly sized page of its own line items.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_orders
+  - write_assigned_fulfillment_orders
+  - write_merchant_managed_fulfillment_orders
+  - write_third_party_fulfillment_orders
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: order_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Order id
+      description: A gid://shopify/Order/... id.
+  - name: first
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      title: Page size
+      description: How many fulfillment orders to return, 1 to 250.
+      minimum: 1
+      maximum: 250
+      default: 50
+  - name: after
+    value_type: text
+    required: false
+    schema:
+      type: string
+      title: After cursor
+      description: The end_cursor of the previous page.
+      minLength: 1
+      maxLength: 1024
+  - name: line_items_first
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      title: Line items per fulfillment order
+      description: How many line items to return inside each fulfillment order, 1 to 250.
+      minimum: 1
+      maximum: 250
+      default: 50
+  outputs:
+  - name: order_id
+    value_type: text
+    schema:
+      type: string
+  - name: fulfillment_orders
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - id
+        - status
+        - request_status
+        - assigned_location_id
+        - assigned_location_name
+        - created_at
+        - updated_at
+        - line_items
+        - line_items_page_info
+        properties:
+          id:
+            type: string
+          status:
+            type:
+            - string
+            - 'null'
+          request_status:
+            type:
+            - string
+            - 'null'
+          assigned_location_id:
+            type:
+            - string
+            - 'null'
+          assigned_location_name:
+            type:
+            - string
+            - 'null'
+          created_at:
+            type:
+            - string
+            - 'null'
+          updated_at:
+            type:
+            - string
+            - 'null'
+          line_items:
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              required:
+              - id
+              - line_item_id
+              - total_quantity
+              - remaining_quantity
+              properties:
+                id:
+                  type: string
+                line_item_id:
+                  type:
+                  - string
+                  - 'null'
+                total_quantity:
+                  type:
+                  - integer
+                  - 'null'
+                remaining_quantity:
+                  type:
+                  - integer
+                  - 'null'
+          line_items_page_info:
+            type: object
+            additionalProperties: false
+            required:
+            - has_next_page
+            - end_cursor
+            properties:
+              has_next_page:
+                type: boolean
+              end_cursor:
+                type:
+                - string
+                - 'null'
+  - name: page_info
+    value_type: object
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+      - has_next_page
+      - end_cursor
+      properties:
+        has_next_page:
+          type: boolean
+        end_cursor:
+          type:
+          - string
+          - 'null'
+  result_fields:
+  - result.order_id
+  - result.fulfillment_orders
+  - result.page_info
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- operation_id: get_fulfillment_order
+  display_name: Get a fulfillment order
+  description: Returns one fulfillment order with an explicitly paginated page of its line items.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_orders
+  - write_assigned_fulfillment_orders
+  - write_merchant_managed_fulfillment_orders
+  - write_third_party_fulfillment_orders
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: fulfillment_order_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Fulfillment order id
+      description: A gid://shopify/FulfillmentOrder/... id.
+  - name: line_items_first
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      title: Line items page size
+      description: How many line items to return, 1 to 250.
+      minimum: 1
+      maximum: 250
+      default: 50
+  - name: line_items_after
+    value_type: text
+    required: false
+    schema:
+      type: string
+      title: After cursor
+      description: The line_items_page_info end_cursor of the previous page.
+      minLength: 1
+      maxLength: 1024
+  outputs:
+  - name: fulfillment_order
+    value_type: object
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - status
+      - request_status
+      - assigned_location_id
+      - assigned_location_name
+      - created_at
+      - updated_at
+      - line_items
+      - line_items_page_info
+      properties:
+        id:
+          type: string
+        status:
+          type:
+          - string
+          - 'null'
+        request_status:
+          type:
+          - string
+          - 'null'
+        assigned_location_id:
+          type:
+          - string
+          - 'null'
+        assigned_location_name:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type:
+          - string
+          - 'null'
+        updated_at:
+          type:
+          - string
+          - 'null'
+        line_items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - id
+            - line_item_id
+            - total_quantity
+            - remaining_quantity
+            properties:
+              id:
+                type: string
+              line_item_id:
+                type:
+                - string
+                - 'null'
+              total_quantity:
+                type:
+                - integer
+                - 'null'
+              remaining_quantity:
+                type:
+                - integer
+                - 'null'
+        line_items_page_info:
+          type: object
+          additionalProperties: false
+          required:
+          - has_next_page
+          - end_cursor
+          properties:
+            has_next_page:
+              type: boolean
+            end_cursor:
+              type:
+              - string
+              - 'null'
+  result_fields:
+  - result.fulfillment_order
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- operation_id: list_order_fulfillments
+  display_name: List order fulfillments
+  description: Returns up to 250 of an order's fulfillments plus the store's own total, so a caller can tell a complete answer from a partial one.
+  operation_kind: source
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_orders
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: order_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Order id
+      description: A gid://shopify/Order/... id.
+  - name: first
+    value_type: integer
+    required: false
+    schema:
+      type: integer
+      title: Page size
+      description: How many fulfillments to return, 1 to 250.
+      minimum: 1
+      maximum: 250
+      default: 50
+  outputs:
+  - name: order_id
+    value_type: text
+    schema:
+      type: string
+  - name: fulfillments
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - id
+        - status
+        - created_at
+        - updated_at
+        - tracking_info
+        properties:
+          id:
+            type: string
+          status:
+            type:
+            - string
+            - 'null'
+          created_at:
+            type:
+            - string
+            - 'null'
+          updated_at:
+            type:
+            - string
+            - 'null'
+          tracking_info:
+            type: array
+            items:
+              type: object
+              additionalProperties: false
+              required:
+              - company
+              - number
+              - url
+              properties:
+                company:
+                  type:
+                  - string
+                  - 'null'
+                number:
+                  type:
+                  - string
+                  - 'null'
+                url:
+                  type:
+                  - string
+                  - 'null'
+  - name: total_count
+    value_type: integer
+    schema:
+      type:
+      - integer
+      - 'null'
+  - name: truncated
+    value_type: boolean
+    schema:
+      type: boolean
+  result_fields:
+  - result.order_id
+  - result.fulfillments
+  - result.total_count
+  - result.truncated
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+- operation_id: update_order_metadata
+  display_name: Update order metadata
+  description: Changes an order's note, PO number, tags or custom attributes. The two replace_ fields overwrite their whole list. Customers, addresses, payments, line items, refunds and order edits are out of reach here.
+  operation_kind: action
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_orders
+  effect_kind: shopify_order_metadata_update
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: order_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Order id
+      description: A gid://shopify/Order/... id.
+  - name: note
+    value_type: text
+    required: false
+    schema:
+      type: string
+      title: Note
+      description: Replaces the order note. Must not be empty.
+      minLength: 1
+      maxLength: 5000
+  - name: po_number
+    value_type: text
+    required: false
+    schema:
+      type: string
+      title: PO number
+      description: Replaces the purchase order number. Must not be empty.
+      minLength: 1
+      maxLength: 255
+  - name: replace_tags
+    value_type: array
+    required: false
+    schema:
+      type: array
+      title: Replace tags
+      maxItems: 250
+      items:
+        type: string
+        minLength: 1
+        maxLength: 255
+      description: Replaces the order's entire tag list. An empty list is refused.
+      minItems: 1
+  - name: replace_custom_attributes
+    value_type: array
+    required: false
+    schema:
+      type: array
+      title: Replace custom attributes
+      description: Replaces the order's entire custom attribute list. An empty list is refused.
+      minItems: 1
+      maxItems: 50
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - key
+        - value
+        properties:
+          key:
+            type: string
+            minLength: 1
+            maxLength: 255
+          value:
+            type: string
+            maxLength: 2048
+  outputs:
+  - name: order
+    value_type: object
+    schema:
+      type:
+      - object
+      - 'null'
+      additionalProperties: false
+      required:
+      - id
+      - name
+      - updated_at
+      - tags
+      - note
+      - po_number
+      - custom_attributes
+      properties:
+        id:
+          type: string
+        name:
+          type:
+          - string
+          - 'null'
+        updated_at:
+          type:
+          - string
+          - 'null'
+        tags:
+          type: array
+          items:
+            type: string
+        note:
+          type:
+          - string
+          - 'null'
+        po_number:
+          type:
+          - string
+          - 'null'
+        custom_attributes:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - key
+            - value
+            properties:
+              key:
+                type:
+                - string
+                - 'null'
+              value:
+                type:
+                - string
+                - 'null'
+  - name: external_effect_status
+    value_type: text
+    schema:
+      type: string
+  - name: definitely_no_external_effect
+    value_type: boolean
+    schema:
+      type: boolean
+  result_fields:
+  - result.order
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- operation_id: set_order_metafields
+  display_name: Set order metafields
+  description: Creates or updates 1 to 25 metafields on orders in one atomic call, with the same compare-and-set protection as the catalog operation.
+  operation_kind: action
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_orders
+  effect_kind: shopify_order_metafields_set
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: metafields
+    value_type: array
+    required: true
+    schema:
+      type: array
+      title: Metafields
+      description: Between 1 and 25 metafields to set.
+      minItems: 1
+      maxItems: 25
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - owner_id
+        - namespace
+        - key
+        - type
+        - value
+        - compare_digest
+        properties:
+          owner_id:
+            type: string
+            minLength: 1
+            maxLength: 128
+            description: An Order id.
+          namespace:
+            type: string
+            minLength: 1
+            maxLength: 255
+          key:
+            type: string
+            minLength: 1
+            maxLength: 64
+          type:
+            type: string
+            minLength: 1
+            maxLength: 64
+          value:
+            type: string
+            maxLength: 524288
+          compare_digest:
+            type:
+            - string
+            - 'null'
+            description: The compare digest you read with the value, or null to create only.
+            maxLength: 512
+  outputs:
+  - name: metafields
+    value_type: array
+    schema:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - id
+        - owner_id
+        - namespace
+        - key
+        - type
+        - value
+        - compare_digest
+        - created_at
+        - updated_at
+        properties:
+          id:
+            type: string
+          owner_id:
+            type:
+            - string
+            - 'null'
+          namespace:
+            type:
+            - string
+            - 'null'
+          key:
+            type:
+            - string
+            - 'null'
+          type:
+            type:
+            - string
+            - 'null'
+          value:
+            type:
+            - string
+            - 'null'
+          compare_digest:
+            type:
+            - string
+            - 'null'
+          created_at:
+            type:
+            - string
+            - 'null'
+          updated_at:
+            type:
+            - string
+            - 'null'
+  - name: external_effect_status
+    value_type: text
+    schema:
+      type: string
+  - name: definitely_no_external_effect
+    value_type: boolean
+    schema:
+      type: boolean
+  result_fields:
+  - result.metafields
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- operation_id: create_fulfillment
+  display_name: Create a fulfillment
+  description: 'Fulfills named line items on named fulfillment orders. Every line item and quantity must be stated: Shopify would otherwise fulfil everything remaining, and that is not a decision an omitted field should make. The customer is not notified.'
+  operation_kind: action
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_assigned_fulfillment_orders
+  - write_merchant_managed_fulfillment_orders
+  - write_third_party_fulfillment_orders
+  effect_kind: shopify_fulfillment_create
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: fulfillment_orders
+    value_type: array
+    required: true
+    schema:
+      type: array
+      title: Fulfillment orders
+      description: The fulfillment orders to fulfil, each with its explicit line items.
+      minItems: 1
+      maxItems: 50
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - fulfillment_order_id
+        - line_items
+        properties:
+          fulfillment_order_id:
+            type: string
+            minLength: 1
+            maxLength: 128
+          line_items:
+            type: array
+            minItems: 1
+            maxItems: 250
+            items:
+              type: object
+              additionalProperties: false
+              required:
+              - fulfillment_order_line_item_id
+              - quantity
+              properties:
+                fulfillment_order_line_item_id:
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                quantity:
+                  type: integer
+                  minimum: 1
+                  maximum: 2147483647
+  - name: tracking
+    value_type: object
+    required: false
+    schema:
+      type: object
+      title: Tracking
+      description: Carrier and tracking details. At least one field must be present.
+      additionalProperties: false
+      properties:
+        company:
+          type: string
+          minLength: 1
+          maxLength: 255
+        numbers:
+          type: array
+          minItems: 1
+          maxItems: 25
+          items:
+            type: string
+            minLength: 1
+            maxLength: 255
+        urls:
+          type: array
+          minItems: 1
+          maxItems: 25
+          items:
+            type: string
+            minLength: 1
+            maxLength: 2048
+  outputs:
+  - name: fulfillment
+    value_type: object
+    schema:
+      type:
+      - object
+      - 'null'
+      additionalProperties: false
+      required:
+      - id
+      - status
+      - created_at
+      - updated_at
+      - tracking_info
+      properties:
+        id:
+          type: string
+        status:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type:
+          - string
+          - 'null'
+        updated_at:
+          type:
+          - string
+          - 'null'
+        tracking_info:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - company
+            - number
+            - url
+            properties:
+              company:
+                type:
+                - string
+                - 'null'
+              number:
+                type:
+                - string
+                - 'null'
+              url:
+                type:
+                - string
+                - 'null'
+  - name: external_effect_status
+    value_type: text
+    schema:
+      type: string
+  - name: definitely_no_external_effect
+    value_type: boolean
+    schema:
+      type: boolean
+  result_fields:
+  - result.fulfillment
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
+- operation_id: update_fulfillment_tracking
+  display_name: Update fulfillment tracking
+  description: 'Replaces the tracking information on one existing fulfillment. At least one tracking value is required: this operation cannot be used to clear tracking. The customer is not notified.'
+  operation_kind: action
+  category: ecommerce
+  connection_type_ids:
+  - shopify_admin
+  contacts_shopify: true
+  workflow_visible: true
+  required_oauth_scopes:
+  - write_assigned_fulfillment_orders
+  - write_merchant_managed_fulfillment_orders
+  - write_third_party_fulfillment_orders
+  effect_kind: shopify_fulfillment_tracking_update
+  inputs:
+  - name: connection_ref
+    value_type: connection_ref
+    required: true
+  - name: fulfillment_id
+    value_type: text
+    required: true
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 128
+      title: Fulfillment id
+      description: A gid://shopify/Fulfillment/... id.
+  - name: tracking
+    value_type: object
+    required: true
+    schema:
+      type: object
+      title: Tracking
+      description: Carrier and tracking details. At least one field must be present.
+      additionalProperties: false
+      properties:
+        company:
+          type: string
+          minLength: 1
+          maxLength: 255
+        numbers:
+          type: array
+          minItems: 1
+          maxItems: 25
+          items:
+            type: string
+            minLength: 1
+            maxLength: 255
+        urls:
+          type: array
+          minItems: 1
+          maxItems: 25
+          items:
+            type: string
+            minLength: 1
+            maxLength: 2048
+  outputs:
+  - name: fulfillment
+    value_type: object
+    schema:
+      type:
+      - object
+      - 'null'
+      additionalProperties: false
+      required:
+      - id
+      - status
+      - created_at
+      - updated_at
+      - tracking_info
+      properties:
+        id:
+          type: string
+        status:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type:
+          - string
+          - 'null'
+        updated_at:
+          type:
+          - string
+          - 'null'
+        tracking_info:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - company
+            - number
+            - url
+            properties:
+              company:
+                type:
+                - string
+                - 'null'
+              number:
+                type:
+                - string
+                - 'null'
+              url:
+                type:
+                - string
+                - 'null'
+  - name: external_effect_status
+    value_type: text
+    schema:
+      type: string
+  - name: definitely_no_external_effect
+    value_type: boolean
+    schema:
+      type: boolean
+  result_fields:
+  - result.fulfillment
+  - result.external_effect_status
+  - result.definitely_no_external_effect
+  error_codes:
+  - invalid_payload
+  - invalid_configuration
+  - invalid_connection
+  - unsupported_operation
+  - authentication_failed
+  - authorization_failed
+  - not_found
+  - rate_limited
+  - shop_inactive
+  - upstream_validation_failed
+  - upstream_failure
+  - invalid_json_response
+  - response_too_large
+  - timeout
+  - connection_failed
+  - redirect_rejected
+  - blocked_address
+  - internal_error
+  - missing_idempotency_key
+  - timeout_unknown
