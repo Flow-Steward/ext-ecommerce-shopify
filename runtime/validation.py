@@ -220,6 +220,12 @@ def _tracking(value: Any, *, field: str) -> dict[str, Any]:
         entry["urls"] = [
             _tracking_url(url, field=f"{field}.urls[{index}]") for index, url in enumerate(urls)
         ]
+        numbers = entry.get("numbers")
+        if numbers is None or len(numbers) != len(urls):
+            raise ExtensionError(
+                errors.INVALID_PAYLOAD,
+                f"{field}.urls requires one corresponding number for every URL",
+            )
     return entry
 
 
@@ -298,7 +304,10 @@ def _variants(payload: dict[str, Any], *, updating: bool) -> dict[str, Any]:
                 )
             seen.add(variant_id)
             entry["variant_id"] = variant_id
-            if not any(name in entry for name in catalog.VARIANT_UPDATE_CHANGE_FIELDS):
+            if not any(
+                name in entry and (name != "inventory_item" or bool(entry[name]))
+                for name in catalog.VARIANT_UPDATE_CHANGE_FIELDS
+            ):
                 raise ExtensionError(
                     errors.INVALID_PAYLOAD, f"{field} names a variant but asks for no change"
                 )

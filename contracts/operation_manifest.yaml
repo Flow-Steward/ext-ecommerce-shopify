@@ -3161,11 +3161,11 @@ operations:
             description: A Product or ProductVariant id.
           namespace:
             type: string
-            minLength: 1
+            minLength: 3
             maxLength: 255
           key:
             type: string
-            minLength: 1
+            minLength: 2
             maxLength: 64
           type:
             type: string
@@ -4863,11 +4863,11 @@ operations:
             description: An Order id.
           namespace:
             type: string
-            minLength: 1
+            minLength: 3
             maxLength: 255
           key:
             type: string
-            minLength: 1
+            minLength: 2
             maxLength: 64
           type:
             type: string

@@ -230,6 +230,13 @@ input schema as written, so a nested `required` list is enforced rather than dec
 the Flow Steward host itself executes is supported, so an operation cannot declare a rule the
 platform would silently ignore.
 
+**Inputs must describe a usable change.** Metafield namespaces must contain 3–255 characters
+and keys 2–64; the explicit compare digest remains required. Fulfillment tracking URLs require
+an equally sized numbers array, matched by position; company-only or numbers-only tracking is
+still supported. An empty `inventory_item` object alone is not a variant update, while
+`tracked: false`, zero cost, and a separate price change remain valid. These checks refuse
+invalid input before any outbound request.
+
 **The token is never observable.** It is a private field on a frozen dataclass with `__repr__` and
 `__str__` overridden, is used only to build the `X-Shopify-Access-Token` header, and appears in no
 result, log line, exception or connection-test diagnostic.

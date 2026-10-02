@@ -50,6 +50,64 @@ def answer(*nodes: dict) -> FakeResponse:
 
 
 class TestCompareAndSet:
+    @pytest.mark.parametrize(
+        "operation_id,owner_id",
+        [("set_catalog_metafields", PRODUCT_A), ("set_order_metafields", ORDER_A)],
+    )
+    @pytest.mark.parametrize("field,value", [("namespace", "x"), ("namespace", "xy"), ("key", "x")])
+    def test_short_metafield_identifiers_are_refused_before_http(
+        self, operation_id: str, owner_id: str, field: str, value: str, http: FakeHttp
+    ) -> None:
+        item = entry(owner_id=owner_id, compare_digest=None)
+        item[field] = value
+
+        response = run_action(operation_id, {"metafields": [item]}, http)
+
+        assert response["error_code"] == errors.INVALID_PAYLOAD
+        assert http.requests == []
+
+    @pytest.mark.parametrize(
+        "operation_id,owner_id,owner_type",
+        [
+            ("set_catalog_metafields", PRODUCT_A, "Product"),
+            ("set_order_metafields", ORDER_A, "Order"),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "namespace,key", [("abc", "xy"), ("n" * 255, "k" * 64), ("$app", "xy")]
+    )
+    def test_metafield_identifier_boundaries_preserve_create_only_cas(
+        self,
+        operation_id: str,
+        owner_id: str,
+        owner_type: str,
+        namespace: str,
+        key: str,
+        http: FakeHttp,
+    ) -> None:
+        http.queue(
+            answer(
+                metafield_node(
+                    namespace=namespace, key=key, owner={"__typename": owner_type, "id": owner_id}
+                )
+            )
+        )
+
+        response = run_action(
+            operation_id,
+            {
+                "metafields": [
+                    entry(owner_id=owner_id, namespace=namespace, key=key, compare_digest=None)
+                ]
+            },
+            http,
+        )
+
+        assert response["ok"] is True
+        assert http.variables()["metafields"][0]["namespace"] == namespace
+        assert http.variables()["metafields"][0]["key"] == key
+        assert http.variables()["metafields"][0]["compareDigest"] is None
+
     def test_the_digest_travels_to_shopify(self, http: FakeHttp) -> None:
         http.queue(answer(metafield_node(owner={"__typename": "Product", "id": PRODUCT_A})))
 
@@ -169,18 +227,18 @@ class TestMetafieldsAreCorrelatedByTheirNaturalKey:
         """A metafield has no caller-supplied id, so owner/namespace/key is it."""
         http.queue(
             answer(
-                metafield_node(key="b", owner={"__typename": "Product", "id": PRODUCT_A}),
-                metafield_node(key="a", owner={"__typename": "Product", "id": PRODUCT_A}),
+                metafield_node(key="bb", owner={"__typename": "Product", "id": PRODUCT_A}),
+                metafield_node(key="aa", owner={"__typename": "Product", "id": PRODUCT_A}),
             )
         )
 
         response = run_action(
             "set_catalog_metafields",
-            {"metafields": [entry(key="a"), entry(key="b")]},
+            {"metafields": [entry(key="aa"), entry(key="bb")]},
             http,
         )
 
-        assert [m["key"] for m in response["result"]["metafields"]] == ["a", "b"]
+        assert [m["key"] for m in response["result"]["metafields"]] == ["aa", "bb"]
 
     def test_every_confirmed_metafield_carries_its_new_digest(self, http: FakeHttp) -> None:
         http.queue(answer(metafield_node(owner={"__typename": "Product", "id": PRODUCT_A})))

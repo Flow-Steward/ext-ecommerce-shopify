@@ -600,6 +600,54 @@ class TestVariantBatches:
         assert response["error_code"] == errors.INVALID_PAYLOAD
         assert http.requests == []
 
+    def test_empty_inventory_item_is_not_an_actual_variant_change(self, http: FakeHttp) -> None:
+        response = run_action(
+            "update_product_variants_batch",
+            {
+                "product_id": PRODUCT_A,
+                "variants": [{"variant_id": VARIANT_A, "inventory_item": {}}],
+            },
+            http,
+        )
+
+        assert response["error_code"] == errors.INVALID_PAYLOAD
+        assert http.requests == []
+
+    @pytest.mark.parametrize("change", [{"tracked": False}, {"cost": "0.00"}, {"sku": "SKU-1"}])
+    def test_inventory_item_values_are_actual_variant_changes(
+        self, change: dict, http: FakeHttp
+    ) -> None:
+        http.queue(self._update_answer([variant_node(VARIANT_A)]))
+
+        response = run_action(
+            "update_product_variants_batch",
+            {
+                "product_id": PRODUCT_A,
+                "variants": [{"variant_id": VARIANT_A, "inventory_item": change}],
+            },
+            http,
+        )
+
+        assert response["ok"] is True
+        assert http.variables()["variants"] == [{"id": VARIANT_A, "inventoryItem": change}]
+
+    def test_an_empty_inventory_item_does_not_discard_a_real_price_change(
+        self, http: FakeHttp
+    ) -> None:
+        http.queue(self._update_answer([variant_node(VARIANT_A)]))
+
+        response = run_action(
+            "update_product_variants_batch",
+            {
+                "product_id": PRODUCT_A,
+                "variants": [{"variant_id": VARIANT_A, "inventory_item": {}, "price": "1.00"}],
+            },
+            http,
+        )
+
+        assert response["ok"] is True
+        assert http.variables()["variants"] == [{"id": VARIANT_A, "price": "1.00"}]
+
     def test_duplicate_variant_ids_are_refused_locally(self, http: FakeHttp) -> None:
         response = run_action(
             "update_product_variants_batch",

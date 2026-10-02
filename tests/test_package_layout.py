@@ -33,6 +33,7 @@ def test_every_task_owned_file_lives_inside_this_bundle() -> None:
         "__init__.py",
         "contracts",
         "dev-wheels",
+        "docs",
         "dispatcher.py",
         "health.py",
         "main.py",

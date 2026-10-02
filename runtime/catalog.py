@@ -373,10 +373,10 @@ def _metafield_entry_schema(owner_description: str) -> dict[str, Any]:
             "owner_id": {**_GID_SCHEMA_BASE, "description": owner_description},
             "namespace": {
                 "type": "string",
-                "minLength": 1,
+                "minLength": 3,
                 "maxLength": MAX_METAFIELD_NAMESPACE_LENGTH,
             },
-            "key": {"type": "string", "minLength": 1, "maxLength": MAX_METAFIELD_KEY_LENGTH},
+            "key": {"type": "string", "minLength": 2, "maxLength": MAX_METAFIELD_KEY_LENGTH},
             "type": {"type": "string", "minLength": 1, "maxLength": MAX_METAFIELD_TYPE_LENGTH},
             "value": {"type": "string", "maxLength": MAX_METAFIELD_VALUE_LENGTH},
             "compare_digest": {

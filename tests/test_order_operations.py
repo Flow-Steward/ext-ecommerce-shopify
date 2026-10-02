@@ -528,6 +528,45 @@ class TestUpdateFulfillmentTracking:
 
         assert response["error_code"] == errors.INVALID_PAYLOAD
 
+    @pytest.mark.parametrize("operation_id", ["create_fulfillment", "update_fulfillment_tracking"])
+    @pytest.mark.parametrize(
+        "tracking",
+        [
+            {"urls": ["https://track.test/1"]},
+            {"company": "DHL", "urls": ["https://track.test/1"]},
+            {"numbers": ["TRK1", "TRK2"], "urls": ["https://track.test/1"]},
+            {"numbers": ["TRK1"], "urls": ["https://track.test/1", "https://track.test/2"]},
+        ],
+    )
+    def test_unpaired_tracking_urls_are_refused_before_http(
+        self, operation_id: str, tracking: dict, http: FakeHttp
+    ) -> None:
+        if operation_id == "create_fulfillment":
+            payload = TestCreateFulfillment()._request(tracking=tracking)
+        else:
+            payload = {"fulfillment_id": FULFILLMENT_A, "tracking": tracking}
+
+        response = run_action(operation_id, payload, http)
+
+        assert response["error_code"] == errors.INVALID_PAYLOAD
+        assert http.requests == []
+
+    def test_multiple_tracking_pairs_keep_their_order(self, http: FakeHttp) -> None:
+        http.queue(self._answer())
+        tracking = {
+            "numbers": ["TRK2", "TRK1"],
+            "urls": ["https://track.test/2", "https://track.test/1"],
+        }
+
+        response = run_action(
+            "update_fulfillment_tracking",
+            {"fulfillment_id": FULFILLMENT_A, "tracking": tracking},
+            http,
+        )
+
+        assert response["ok"] is True
+        assert http.variables()["trackingInfoInput"] == tracking
+
     def test_a_confirmation_for_another_fulfillment_is_not_success(self, http: FakeHttp) -> None:
         http.queue(self._answer("gid://shopify/Fulfillment/9999"))
 
