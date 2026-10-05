@@ -6,7 +6,7 @@ version: 0.4.0
 release_stage: active
 billing_mode: free
 display_name: Shopify
-description: A closed subset of the Shopify Admin GraphQL API 2026-07 for inventory, catalog and order automation, typed and scoped to project-owned Shopify stores.
+description: Shopify Admin GraphQL API 2026-07 for inventory, catalog and order automation, typed and scoped to project-owned Shopify stores. Every endpoint it uses is covered in full, and what is not reachable is listed with the reason.
 vendor:
   name: Flow Steward
   support_url: https://github.com/Flow-Steward/ext-ecommerce-shopify/issues
@@ -14,7 +14,7 @@ vendor:
 listing:
   category: ecommerce
   tags: [shopify, inventory, stock, products, orders, fulfillment, graphql, ecommerce]
-  summary: Read Shopify inventory, products and orders, set absolute stock quantities, and make bounded catalog and fulfillment changes.
+  summary: Create products with variants, SKU, price, stock and images in one step; read and update inventory, catalog and orders; find products with missing or small images and empty fields.
 features: [tool, action]
 required_scopes: [extension:invoke, artifact:read, artifact:write]
 account_scope:
