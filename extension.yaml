@@ -14,7 +14,7 @@ vendor:
 listing:
   category: ecommerce
   tags: [shopify, inventory, stock, products, orders, fulfillment, graphql, ecommerce]
-  summary: Create products with variants, SKU, price, stock and images in one step; read and update inventory, catalog and orders; find products with missing or small images and empty fields.
+  summary: Create products with SKU, price, stock and images in one step; manage inventory, catalog and orders; find products with missing or small images.
 features: [tool, action]
 required_scopes: [extension:invoke, artifact:read, artifact:write]
 account_scope:
