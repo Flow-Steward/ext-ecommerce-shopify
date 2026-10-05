@@ -1,0 +1,7249 @@
+{
+ "version": "2026-07",
+ "source": "Shopify AI Toolkit public Admin GraphQL schema admin_2026-07.json.gz",
+ "roots": {
+  "query": "QueryRoot",
+  "mutation": "Mutation"
+ },
+ "kinds": {
+  "AccessScope": "OBJECT",
+  "AdditionalFee": "OBJECT",
+  "App": "OBJECT",
+  "AppConnection": "OBJECT",
+  "AppCreditConnection": "OBJECT",
+  "AppInstallation": "OBJECT",
+  "AppPurchaseOneTimeConnection": "OBJECT",
+  "AppRevenueAttributionRecordConnection": "OBJECT",
+  "AppRevenueAttributionRecordSortKeys": "ENUM",
+  "AppSubscription": "OBJECT",
+  "AppSubscriptionConnection": "OBJECT",
+  "AppSubscriptionSortKeys": "ENUM",
+  "AppTransactionSortKeys": "ENUM",
+  "Attribute": "OBJECT",
+  "AttributeInput": "INPUT_OBJECT",
+  "Audience": "ENUM",
+  "AvailableChannelDefinitionsByChannel": "OBJECT",
+  "Boolean": "SCALAR",
+  "BulkMutationErrorCode": "ENUM",
+  "BulkMutationUserError": "OBJECT",
+  "BulkOperation": "OBJECT",
+  "BulkOperationErrorCode": "ENUM",
+  "BulkOperationRunMutationPayload": "OBJECT",
+  "BulkOperationStatus": "ENUM",
+  "BulkOperationType": "ENUM",
+  "BusinessEntity": "OBJECT",
+  "CashRoundingAdjustment": "OBJECT",
+  "CatalogType": "ENUM",
+  "Channel": "OBJECT",
+  "ChannelConnection": "OBJECT",
+  "ChannelInformation": "OBJECT",
+  "CollectionConnection": "OBJECT",
+  "CollectionSortKeys": "ENUM",
+  "CombinedListing": "OBJECT",
+  "CombinedListingsRole": "ENUM",
+  "ComponentizedProductsBundleConsolidatedOption": "OBJECT",
+  "ContextualPricingContext": "INPUT_OBJECT",
+  "ContextualPublicationContext": "INPUT_OBJECT",
+  "Count": "OBJECT",
+  "CountPrecision": "ENUM",
+  "CountriesInShippingZones": "OBJECT",
+  "CountryCode": "ENUM",
+  "CountryHarmonizedSystemCodeConnection": "OBJECT",
+  "CountryHarmonizedSystemCodeInput": "INPUT_OBJECT",
+  "CreateMediaInput": "INPUT_OBJECT",
+  "CropRegion": "ENUM",
+  "CurrencyCode": "ENUM",
+  "CurrencyFormats": "OBJECT",
+  "CurrencySettingConnection": "OBJECT",
+  "Customer": "OBJECT",
+  "CustomerAccountsV2": "OBJECT",
+  "CustomerConnection": "OBJECT",
+  "CustomerJourney": "OBJECT",
+  "CustomerJourneySummary": "OBJECT",
+  "CustomerSortKeys": "ENUM",
+  "DateTime": "SCALAR",
+  "Decimal": "SCALAR",
+  "DeliveryLocalPickupSettings": "OBJECT",
+  "DeliveryMethod": "OBJECT",
+  "DeliveryProfile": "OBJECT",
+  "DiscountAllocation": "OBJECT",
+  "DiscountApplicationConnection": "OBJECT",
+  "Domain": "OBJECT",
+  "Duty": "OBJECT",
+  "EditableProperty": "OBJECT",
+  "EntitlementsType": "OBJECT",
+  "EventConnection": "OBJECT",
+  "EventSortKeys": "ENUM",
+  "ExternalVideo": "OBJECT",
+  "File": "INTERFACE",
+  "FileContentType": "ENUM",
+  "FileCreateInputDuplicateResolutionMode": "ENUM",
+  "FileError": "OBJECT",
+  "FileErrorCode": "ENUM",
+  "FileSetInput": "INPUT_OBJECT",
+  "FileStatus": "ENUM",
+  "FileUpdateInput": "INPUT_OBJECT",
+  "FileUpdatePayload": "OBJECT",
+  "FilesErrorCode": "ENUM",
+  "FilesUserError": "OBJECT",
+  "Float": "SCALAR",
+  "Fulfillment": "OBJECT",
+  "FulfillmentConnection": "OBJECT",
+  "FulfillmentCreatePayload": "OBJECT",
+  "FulfillmentDisplayStatus": "ENUM",
+  "FulfillmentEventConnection": "OBJECT",
+  "FulfillmentEventSortKeys": "ENUM",
+  "FulfillmentHold": "OBJECT",
+  "FulfillmentInput": "INPUT_OBJECT",
+  "FulfillmentLineItemConnection": "OBJECT",
+  "FulfillmentOrder": "OBJECT",
+  "FulfillmentOrderAssignedLocation": "OBJECT",
+  "FulfillmentOrderAssignmentStatus": "ENUM",
+  "FulfillmentOrderConnection": "OBJECT",
+  "FulfillmentOrderDestination": "OBJECT",
+  "FulfillmentOrderEdge": "OBJECT",
+  "FulfillmentOrderInternationalDuties": "OBJECT",
+  "FulfillmentOrderLineItem": "OBJECT",
+  "FulfillmentOrderLineItemConnection": "OBJECT",
+  "FulfillmentOrderLineItemEdge": "OBJECT",
+  "FulfillmentOrderLineItemFinancialSummary": "OBJECT",
+  "FulfillmentOrderLineItemInput": "INPUT_OBJECT",
+  "FulfillmentOrderLineItemWarning": "OBJECT",
+  "FulfillmentOrderLineItemsInput": "INPUT_OBJECT",
+  "FulfillmentOrderLocationForMoveConnection": "OBJECT",
+  "FulfillmentOrderMerchantRequestConnection": "OBJECT",
+  "FulfillmentOrderMerchantRequestKind": "ENUM",
+  "FulfillmentOrderRequestStatus": "ENUM",
+  "FulfillmentOrderSortKeys": "ENUM",
+  "FulfillmentOrderStatus": "ENUM",
+  "FulfillmentOrderSupportedAction": "OBJECT",
+  "FulfillmentOriginAddress": "OBJECT",
+  "FulfillmentOriginAddressInput": "INPUT_OBJECT",
+  "FulfillmentService": "OBJECT",
+  "FulfillmentStatus": "ENUM",
+  "FulfillmentTrackingInfo": "OBJECT",
+  "FulfillmentTrackingInfoUpdatePayload": "OBJECT",
+  "FulfillmentTrackingInput": "INPUT_OBJECT",
+  "GenericFile": "OBJECT",
+  "GiftCardProductSettings": "OBJECT",
+  "HTML": "SCALAR",
+  "HasMetafields": "INTERFACE",
+  "ID": "SCALAR",
+  "Image": "OBJECT",
+  "ImageConnection": "OBJECT",
+  "ImageContentType": "ENUM",
+  "ImageTransformInput": "INPUT_OBJECT",
+  "Int": "SCALAR",
+  "InventoryAdjustmentGroup": "OBJECT",
+  "InventoryAdjustmentInput": "INPUT_OBJECT",
+  "InventoryChange": "OBJECT",
+  "InventoryItem": "OBJECT",
+  "InventoryItemConnection": "OBJECT",
+  "InventoryItemEdge": "OBJECT",
+  "InventoryItemInput": "INPUT_OBJECT",
+  "InventoryItemMeasurement": "OBJECT",
+  "InventoryItemMeasurementInput": "INPUT_OBJECT",
+  "InventoryLevel": "OBJECT",
+  "InventoryLevelConnection": "OBJECT",
+  "InventoryLevelEdge": "OBJECT",
+  "InventoryLevelInput": "INPUT_OBJECT",
+  "InventoryQuantity": "OBJECT",
+  "InventoryQuantityInput": "INPUT_OBJECT",
+  "InventoryScheduledChangeConnection": "OBJECT",
+  "InventorySetQuantitiesInput": "INPUT_OBJECT",
+  "InventorySetQuantitiesPayload": "OBJECT",
+  "InventorySetQuantitiesUserError": "OBJECT",
+  "InventorySetQuantitiesUserErrorCode": "ENUM",
+  "JSON": "SCALAR",
+  "LimitedPendingOrderCount": "OBJECT",
+  "LineItem": "OBJECT",
+  "LineItemConnection": "OBJECT",
+  "LineItemEdge": "OBJECT",
+  "LineItemGroup": "OBJECT",
+  "LineItemSellingPlan": "OBJECT",
+  "LinkedMetafield": "OBJECT",
+  "LinkedMetafieldCreateInput": "INPUT_OBJECT",
+  "LocalizationExtensionConnection": "OBJECT",
+  "LocalizationExtensionPurpose": "ENUM",
+  "LocalizedFieldConnection": "OBJECT",
+  "LocalizedFieldInput": "INPUT_OBJECT",
+  "LocalizedFieldKey": "ENUM",
+  "LocalizedFieldPurpose": "ENUM",
+  "Location": "OBJECT",
+  "LocationAddress": "OBJECT",
+  "LocationConnection": "OBJECT",
+  "LocationEdge": "OBJECT",
+  "LocationSortKeys": "ENUM",
+  "LocationSuggestedAddress": "OBJECT",
+  "MailingAddress": "OBJECT",
+  "MailingAddressInput": "INPUT_OBJECT",
+  "Media": "INTERFACE",
+  "MediaConnection": "OBJECT",
+  "MediaContentType": "ENUM",
+  "MediaEdge": "OBJECT",
+  "MediaError": "OBJECT",
+  "MediaErrorCode": "ENUM",
+  "MediaHost": "ENUM",
+  "MediaImage": "OBJECT",
+  "MediaImageOriginalSource": "OBJECT",
+  "MediaPreviewImage": "OBJECT",
+  "MediaPreviewImageStatus": "ENUM",
+  "MediaStatus": "ENUM",
+  "MediaWarning": "OBJECT",
+  "MediaWarningCode": "ENUM",
+  "MerchantApprovalSignals": "OBJECT",
+  "Metafield": "OBJECT",
+  "MetafieldConnection": "OBJECT",
+  "MetafieldDefinition": "OBJECT",
+  "MetafieldDefinitionConnection": "OBJECT",
+  "MetafieldDefinitionPinnedStatus": "ENUM",
+  "MetafieldDefinitionSortKeys": "ENUM",
+  "MetafieldEdge": "OBJECT",
+  "MetafieldInput": "INPUT_OBJECT",
+  "MetafieldOwnerType": "ENUM",
+  "MetafieldReference": "UNION",
+  "MetafieldReferenceConnection": "OBJECT",
+  "MetafieldsSetInput": "INPUT_OBJECT",
+  "MetafieldsSetPayload": "OBJECT",
+  "MetafieldsSetUserError": "OBJECT",
+  "MetafieldsSetUserErrorCode": "ENUM",
+  "Model3d": "OBJECT",
+  "Model3dBoundingBox": "OBJECT",
+  "Model3dSource": "OBJECT",
+  "Money": "SCALAR",
+  "MoneyBag": "OBJECT",
+  "MoneyV2": "OBJECT",
+  "Mutation": "OBJECT",
+  "NavigationItem": "OBJECT",
+  "Node": "INTERFACE",
+  "NotificationUsage": "ENUM",
+  "OptionSetInput": "INPUT_OBJECT",
+  "OptionValueSetInput": "INPUT_OBJECT",
+  "Order": "OBJECT",
+  "OrderApp": "OBJECT",
+  "OrderAttribution": "OBJECT",
+  "OrderCancelReason": "ENUM",
+  "OrderCancellation": "OBJECT",
+  "OrderConnection": "OBJECT",
+  "OrderDisplayFinancialStatus": "ENUM",
+  "OrderDisplayFulfillmentStatus": "ENUM",
+  "OrderDisputeSummary": "OBJECT",
+  "OrderEdge": "OBJECT",
+  "OrderInput": "INPUT_OBJECT",
+  "OrderPaymentCollectionDetails": "OBJECT",
+  "OrderReturnStatus": "ENUM",
+  "OrderRisk": "OBJECT",
+  "OrderRiskLevel": "ENUM",
+  "OrderRiskSummary": "OBJECT",
+  "OrderSortKeys": "ENUM",
+  "OrderTransaction": "OBJECT",
+  "OrderUpdatePayload": "OBJECT",
+  "PageInfo": "OBJECT",
+  "PaymentSettings": "OBJECT",
+  "PaymentTerms": "OBJECT",
+  "Product": "OBJECT",
+  "ProductBundleComponentConnection": "OBJECT",
+  "ProductCategory": "OBJECT",
+  "ProductClaimOwnershipInput": "INPUT_OBJECT",
+  "ProductCompareAtPriceRange": "OBJECT",
+  "ProductComponentTypeConnection": "OBJECT",
+  "ProductConnection": "OBJECT",
+  "ProductContextualPricing": "OBJECT",
+  "ProductEdge": "OBJECT",
+  "ProductImageSortKeys": "ENUM",
+  "ProductMediaSortKeys": "ENUM",
+  "ProductOption": "OBJECT",
+  "ProductOptionValue": "OBJECT",
+  "ProductPriceRange": "OBJECT",
+  "ProductPriceRangeV2": "OBJECT",
+  "ProductPublicationConnection": "OBJECT",
+  "ProductSetIdentifiers": "INPUT_OBJECT",
+  "ProductSetInput": "INPUT_OBJECT",
+  "ProductSetInventoryInput": "INPUT_OBJECT",
+  "ProductSetOperation": "OBJECT",
+  "ProductSetPayload": "OBJECT",
+  "ProductSetUserError": "OBJECT",
+  "ProductSetUserErrorCode": "ENUM",
+  "ProductSortKeys": "ENUM",
+  "ProductStatus": "ENUM",
+  "ProductUpdateIdentifiers": "INPUT_OBJECT",
+  "ProductUpdateInput": "INPUT_OBJECT",
+  "ProductUpdatePayload": "OBJECT",
+  "ProductVariant": "OBJECT",
+  "ProductVariantComponentConnection": "OBJECT",
+  "ProductVariantConnection": "OBJECT",
+  "ProductVariantContextualPricing": "OBJECT",
+  "ProductVariantEdge": "OBJECT",
+  "ProductVariantInventoryPolicy": "ENUM",
+  "ProductVariantPricePairConnection": "OBJECT",
+  "ProductVariantSetInput": "INPUT_OBJECT",
+  "ProductVariantSortKeys": "ENUM",
+  "ProductVariantsBulkCreatePayload": "OBJECT",
+  "ProductVariantsBulkCreateStrategy": "ENUM",
+  "ProductVariantsBulkCreateUserError": "OBJECT",
+  "ProductVariantsBulkCreateUserErrorCode": "ENUM",
+  "ProductVariantsBulkInput": "INPUT_OBJECT",
+  "ProductVariantsBulkUpdatePayload": "OBJECT",
+  "ProductVariantsBulkUpdateUserError": "OBJECT",
+  "ProductVariantsBulkUpdateUserErrorCode": "ENUM",
+  "Publication": "OBJECT",
+  "PublicationConnection": "OBJECT",
+  "PurchasingEntity": "UNION",
+  "QueryRoot": "OBJECT",
+  "Refund": "OBJECT",
+  "RefundDutyInput": "INPUT_OBJECT",
+  "RefundDutyRefundType": "ENUM",
+  "RefundLineItemInput": "INPUT_OBJECT",
+  "RefundLineItemRestockType": "ENUM",
+  "RefundMethodAllocation": "ENUM",
+  "ResourceAlert": "OBJECT",
+  "ResourceFeedback": "OBJECT",
+  "ResourcePublicationConnection": "OBJECT",
+  "ResourcePublicationV2": "OBJECT",
+  "ResourcePublicationV2Connection": "OBJECT",
+  "RestrictedForResource": "OBJECT",
+  "ReturnConnection": "OBJECT",
+  "ReturnReasonDefinitionConnection": "OBJECT",
+  "SEO": "OBJECT",
+  "SEOInput": "INPUT_OBJECT",
+  "SalesAgreementConnection": "OBJECT",
+  "ScheduledChangeSortKeys": "ENUM",
+  "SearchFilterOptions": "OBJECT",
+  "SearchResultConnection": "OBJECT",
+  "SearchResultType": "ENUM",
+  "SelectedOption": "OBJECT",
+  "SellingPlanGroupConnection": "OBJECT",
+  "ShippingLine": "OBJECT",
+  "ShippingLineConnection": "OBJECT",
+  "Shop": "OBJECT",
+  "ShopAddress": "OBJECT",
+  "ShopAlert": "OBJECT",
+  "ShopCustomerAccountsSetting": "ENUM",
+  "ShopFeatures": "OBJECT",
+  "ShopPlan": "OBJECT",
+  "ShopPolicy": "OBJECT",
+  "ShopResourceLimits": "OBJECT",
+  "ShopTagSort": "ENUM",
+  "ShopifyProtectOrderSummary": "OBJECT",
+  "StaffMember": "OBJECT",
+  "StaffMemberConnection": "OBJECT",
+  "StagedMediaUploadTarget": "OBJECT",
+  "StagedUploadHttpMethodType": "ENUM",
+  "StagedUploadInput": "INPUT_OBJECT",
+  "StagedUploadParameter": "OBJECT",
+  "StagedUploadTargetGenerateUploadResource": "ENUM",
+  "StagedUploadsCreatePayload": "OBJECT",
+  "StandardizedProductType": "OBJECT",
+  "StorefrontAccessTokenConnection": "OBJECT",
+  "StorefrontID": "SCALAR",
+  "String": "SCALAR",
+  "StringConnection": "OBJECT",
+  "SubscriptionContract": "OBJECT",
+  "SuggestedRefund": "OBJECT",
+  "TaxLine": "OBJECT",
+  "TaxonomyCategory": "OBJECT",
+  "TaxonomyCategoryAttributeConnection": "OBJECT",
+  "Translation": "OBJECT",
+  "URL": "SCALAR",
+  "UniqueMetafieldValueInput": "INPUT_OBJECT",
+  "UnitPriceMeasurement": "OBJECT",
+  "UnitPriceMeasurementInput": "INPUT_OBJECT",
+  "UnitPriceMeasurementMeasuredType": "ENUM",
+  "UnitPriceMeasurementMeasuredUnit": "ENUM",
+  "UnitSystem": "ENUM",
+  "UnsignedInt64": "SCALAR",
+  "UserError": "OBJECT",
+  "VariantOptionValueInput": "INPUT_OBJECT",
+  "Video": "OBJECT",
+  "VideoSource": "OBJECT",
+  "Weight": "OBJECT",
+  "WeightInput": "INPUT_OBJECT",
+  "WeightUnit": "ENUM"
+ },
+ "objects": {
+  "AccessScope": {
+   "description": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "handle": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "AppInstallation": {
+   "accessScopes": {
+    "type": "[AccessScope!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "activeSubscriptions": {
+    "type": "[AppSubscription!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "allSubscriptions": {
+    "type": "AppSubscriptionConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean",
+     "sortKey": "AppSubscriptionSortKeys"
+    },
+    "deprecated": false
+   },
+   "app": {
+    "type": "App!",
+    "args": {},
+    "deprecated": false
+   },
+   "channel": {
+    "type": "Channel",
+    "args": {},
+    "deprecated": true
+   },
+   "credits": {
+    "type": "AppCreditConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean",
+     "sortKey": "AppTransactionSortKeys"
+    },
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "launchUrl": {
+    "type": "URL!",
+    "args": {},
+    "deprecated": false
+   },
+   "metafield": {
+    "type": "Metafield",
+    "args": {
+     "key": "String!",
+     "namespace": "String"
+    },
+    "deprecated": false
+   },
+   "metafields": {
+    "type": "MetafieldConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "keys": "[String!]",
+     "last": "Int",
+     "namespace": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "oneTimePurchases": {
+    "type": "AppPurchaseOneTimeConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean",
+     "sortKey": "AppTransactionSortKeys"
+    },
+    "deprecated": false
+   },
+   "publication": {
+    "type": "Publication",
+    "args": {},
+    "deprecated": true
+   },
+   "revenueAttributionRecords": {
+    "type": "AppRevenueAttributionRecordConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean",
+     "sortKey": "AppRevenueAttributionRecordSortKeys"
+    },
+    "deprecated": false
+   },
+   "subscriptions": {
+    "type": "[AppSubscription!]!",
+    "args": {},
+    "deprecated": true
+   },
+   "uninstallUrl": {
+    "type": "URL",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "Attribute": {
+   "key": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "value": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "BulkMutationUserError": {
+   "code": {
+    "type": "BulkMutationErrorCode",
+    "args": {},
+    "deprecated": false
+   },
+   "field": {
+    "type": "[String!]",
+    "args": {},
+    "deprecated": false
+   },
+   "message": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "BulkOperation": {
+   "completedAt": {
+    "type": "DateTime",
+    "args": {},
+    "deprecated": false
+   },
+   "createdAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "errorCode": {
+    "type": "BulkOperationErrorCode",
+    "args": {},
+    "deprecated": false
+   },
+   "fileSize": {
+    "type": "UnsignedInt64",
+    "args": {},
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "objectCount": {
+    "type": "UnsignedInt64!",
+    "args": {},
+    "deprecated": false
+   },
+   "partialDataUrl": {
+    "type": "URL",
+    "args": {},
+    "deprecated": false
+   },
+   "query": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "rootObjectCount": {
+    "type": "UnsignedInt64!",
+    "args": {},
+    "deprecated": false
+   },
+   "status": {
+    "type": "BulkOperationStatus!",
+    "args": {},
+    "deprecated": false
+   },
+   "type": {
+    "type": "BulkOperationType!",
+    "args": {},
+    "deprecated": false
+   },
+   "url": {
+    "type": "URL",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "BulkOperationRunMutationPayload": {
+   "bulkOperation": {
+    "type": "BulkOperation",
+    "args": {},
+    "deprecated": false
+   },
+   "userErrors": {
+    "type": "[BulkMutationUserError!]!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "Count": {
+   "count": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "precision": {
+    "type": "CountPrecision!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "ExternalVideo": {
+   "alt": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "createdAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "embedUrl": {
+    "type": "URL!",
+    "args": {},
+    "deprecated": false
+   },
+   "embeddedUrl": {
+    "type": "URL!",
+    "args": {},
+    "deprecated": true
+   },
+   "fileErrors": {
+    "type": "[FileError!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "fileStatus": {
+    "type": "FileStatus!",
+    "args": {},
+    "deprecated": false
+   },
+   "host": {
+    "type": "MediaHost!",
+    "args": {},
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "mediaContentType": {
+    "type": "MediaContentType!",
+    "args": {},
+    "deprecated": false
+   },
+   "mediaErrors": {
+    "type": "[MediaError!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "mediaWarnings": {
+    "type": "[MediaWarning!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "originUrl": {
+    "type": "URL!",
+    "args": {},
+    "deprecated": false
+   },
+   "preview": {
+    "type": "MediaPreviewImage",
+    "args": {},
+    "deprecated": false
+   },
+   "status": {
+    "type": "MediaStatus!",
+    "args": {},
+    "deprecated": false
+   },
+   "updatedAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "File": {
+   "alt": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "createdAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "fileErrors": {
+    "type": "[FileError!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "fileStatus": {
+    "type": "FileStatus!",
+    "args": {},
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "preview": {
+    "type": "MediaPreviewImage",
+    "args": {},
+    "deprecated": false
+   },
+   "updatedAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "FileError": {
+   "code": {
+    "type": "FileErrorCode!",
+    "args": {},
+    "deprecated": false
+   },
+   "details": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "message": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "FileUpdatePayload": {
+   "files": {
+    "type": "[File!]",
+    "args": {},
+    "deprecated": false
+   },
+   "userErrors": {
+    "type": "[FilesUserError!]!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "FilesUserError": {
+   "code": {
+    "type": "FilesErrorCode",
+    "args": {},
+    "deprecated": false
+   },
+   "field": {
+    "type": "[String!]",
+    "args": {},
+    "deprecated": false
+   },
+   "message": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "Fulfillment": {
+   "createdAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "deliveredAt": {
+    "type": "DateTime",
+    "args": {},
+    "deprecated": false
+   },
+   "displayStatus": {
+    "type": "FulfillmentDisplayStatus",
+    "args": {},
+    "deprecated": false
+   },
+   "estimatedDeliveryAt": {
+    "type": "DateTime",
+    "args": {},
+    "deprecated": false
+   },
+   "events": {
+    "type": "FulfillmentEventConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean",
+     "sortKey": "FulfillmentEventSortKeys"
+    },
+    "deprecated": false
+   },
+   "fulfillmentLineItems": {
+    "type": "FulfillmentLineItemConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "fulfillmentOrders": {
+    "type": "FulfillmentOrderConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "inTransitAt": {
+    "type": "DateTime",
+    "args": {},
+    "deprecated": false
+   },
+   "legacyResourceId": {
+    "type": "UnsignedInt64!",
+    "args": {},
+    "deprecated": false
+   },
+   "location": {
+    "type": "Location",
+    "args": {},
+    "deprecated": false
+   },
+   "name": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "order": {
+    "type": "Order!",
+    "args": {},
+    "deprecated": false
+   },
+   "originAddress": {
+    "type": "FulfillmentOriginAddress",
+    "args": {},
+    "deprecated": false
+   },
+   "requiresShipping": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "service": {
+    "type": "FulfillmentService",
+    "args": {},
+    "deprecated": false
+   },
+   "status": {
+    "type": "FulfillmentStatus!",
+    "args": {},
+    "deprecated": false
+   },
+   "totalQuantity": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "trackingInfo": {
+    "type": "[FulfillmentTrackingInfo!]!",
+    "args": {
+     "first": "Int"
+    },
+    "deprecated": false
+   },
+   "updatedAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "FulfillmentCreatePayload": {
+   "fulfillment": {
+    "type": "Fulfillment",
+    "args": {},
+    "deprecated": false
+   },
+   "userErrors": {
+    "type": "[UserError!]!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "FulfillmentOrder": {
+   "assignedLocation": {
+    "type": "FulfillmentOrderAssignedLocation!",
+    "args": {},
+    "deprecated": false
+   },
+   "channelId": {
+    "type": "ID",
+    "args": {},
+    "deprecated": true
+   },
+   "createdAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "deliveryMethod": {
+    "type": "DeliveryMethod",
+    "args": {},
+    "deprecated": false
+   },
+   "destination": {
+    "type": "FulfillmentOrderDestination",
+    "args": {},
+    "deprecated": false
+   },
+   "fulfillAt": {
+    "type": "DateTime",
+    "args": {},
+    "deprecated": false
+   },
+   "fulfillBy": {
+    "type": "DateTime",
+    "args": {},
+    "deprecated": false
+   },
+   "fulfillmentHolds": {
+    "type": "[FulfillmentHold!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "fulfillmentOrdersForMerge": {
+    "type": "FulfillmentOrderConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "fulfillments": {
+    "type": "FulfillmentConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "internationalDuties": {
+    "type": "FulfillmentOrderInternationalDuties",
+    "args": {},
+    "deprecated": false
+   },
+   "lineItems": {
+    "type": "FulfillmentOrderLineItemConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "locationsForMove": {
+    "type": "FulfillmentOrderLocationForMoveConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "lineItemIds": "[ID!]",
+     "locationIds": "[ID!]",
+     "query": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "merchantRequests": {
+    "type": "FulfillmentOrderMerchantRequestConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "kind": "FulfillmentOrderMerchantRequestKind",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "order": {
+    "type": "Order!",
+    "args": {},
+    "deprecated": false
+   },
+   "orderId": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "orderName": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "orderProcessedAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "remainingLineItemsWeight": {
+    "type": "Weight",
+    "args": {},
+    "deprecated": false
+   },
+   "requestStatus": {
+    "type": "FulfillmentOrderRequestStatus!",
+    "args": {},
+    "deprecated": false
+   },
+   "status": {
+    "type": "FulfillmentOrderStatus!",
+    "args": {},
+    "deprecated": false
+   },
+   "supportedActions": {
+    "type": "[FulfillmentOrderSupportedAction!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "updatedAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "FulfillmentOrderAssignedLocation": {
+   "address1": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "address2": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "city": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "countryCode": {
+    "type": "CountryCode!",
+    "args": {},
+    "deprecated": false
+   },
+   "location": {
+    "type": "Location",
+    "args": {},
+    "deprecated": false
+   },
+   "name": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "phone": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "province": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "zip": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "FulfillmentOrderConnection": {
+   "edges": {
+    "type": "[FulfillmentOrderEdge!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "nodes": {
+    "type": "[FulfillmentOrder!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "pageInfo": {
+    "type": "PageInfo!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "FulfillmentOrderLineItem": {
+   "financialSummaries": {
+    "type": "[FulfillmentOrderLineItemFinancialSummary!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "image": {
+    "type": "Image",
+    "args": {},
+    "deprecated": false
+   },
+   "inventoryItemId": {
+    "type": "ID",
+    "args": {},
+    "deprecated": false
+   },
+   "lineItem": {
+    "type": "LineItem!",
+    "args": {},
+    "deprecated": false
+   },
+   "originalUnitPriceSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": true
+   },
+   "productTitle": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "remainingQuantity": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "requiresShipping": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "shippingLine": {
+    "type": "ShippingLine",
+    "args": {},
+    "deprecated": false
+   },
+   "sku": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "totalQuantity": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "variant": {
+    "type": "ProductVariant",
+    "args": {},
+    "deprecated": false
+   },
+   "variantTitle": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "vendor": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "warnings": {
+    "type": "[FulfillmentOrderLineItemWarning!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "weight": {
+    "type": "Weight",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "FulfillmentOrderLineItemConnection": {
+   "edges": {
+    "type": "[FulfillmentOrderLineItemEdge!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "nodes": {
+    "type": "[FulfillmentOrderLineItem!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "pageInfo": {
+    "type": "PageInfo!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "FulfillmentTrackingInfo": {
+   "company": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "number": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "url": {
+    "type": "URL",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "FulfillmentTrackingInfoUpdatePayload": {
+   "fulfillment": {
+    "type": "Fulfillment",
+    "args": {},
+    "deprecated": false
+   },
+   "userErrors": {
+    "type": "[UserError!]!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "GenericFile": {
+   "alt": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "createdAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "fileErrors": {
+    "type": "[FileError!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "fileStatus": {
+    "type": "FileStatus!",
+    "args": {},
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "mimeType": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "originalFileSize": {
+    "type": "Int",
+    "args": {},
+    "deprecated": false
+   },
+   "preview": {
+    "type": "MediaPreviewImage",
+    "args": {},
+    "deprecated": false
+   },
+   "updatedAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "url": {
+    "type": "URL",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "HasMetafields": {
+   "metafield": {
+    "type": "Metafield",
+    "args": {
+     "key": "String!",
+     "namespace": "String"
+    },
+    "deprecated": false
+   },
+   "metafields": {
+    "type": "MetafieldConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "keys": "[String!]",
+     "last": "Int",
+     "namespace": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   }
+  },
+  "Image": {
+   "altText": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "height": {
+    "type": "Int",
+    "args": {},
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID",
+    "args": {},
+    "deprecated": false
+   },
+   "metafield": {
+    "type": "Metafield",
+    "args": {
+     "key": "String!",
+     "namespace": "String"
+    },
+    "deprecated": false
+   },
+   "metafields": {
+    "type": "MetafieldConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "keys": "[String!]",
+     "last": "Int",
+     "namespace": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "originalSrc": {
+    "type": "URL!",
+    "args": {},
+    "deprecated": true
+   },
+   "src": {
+    "type": "URL!",
+    "args": {},
+    "deprecated": true
+   },
+   "thumbhash": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "transformedSrc": {
+    "type": "URL!",
+    "args": {
+     "crop": "CropRegion",
+     "maxHeight": "Int",
+     "maxWidth": "Int",
+     "preferredContentType": "ImageContentType",
+     "scale": "Int"
+    },
+    "deprecated": true
+   },
+   "translations": {
+    "type": "[Translation!]!",
+    "args": {
+     "locale": "String!",
+     "marketId": "ID"
+    },
+    "deprecated": false
+   },
+   "url": {
+    "type": "URL!",
+    "args": {
+     "transform": "ImageTransformInput"
+    },
+    "deprecated": false
+   },
+   "width": {
+    "type": "Int",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "InventoryAdjustmentGroup": {
+   "app": {
+    "type": "App",
+    "args": {},
+    "deprecated": false
+   },
+   "changes": {
+    "type": "[InventoryChange!]!",
+    "args": {
+     "inventoryItemIds": "[ID!]",
+     "locationIds": "[ID!]",
+     "quantityNames": "[String!]"
+    },
+    "deprecated": false
+   },
+   "createdAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "reason": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "referenceDocumentUri": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "staffMember": {
+    "type": "StaffMember",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "InventoryChange": {
+   "delta": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "item": {
+    "type": "InventoryItem",
+    "args": {},
+    "deprecated": false
+   },
+   "ledgerDocumentUri": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "location": {
+    "type": "Location",
+    "args": {},
+    "deprecated": false
+   },
+   "name": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "quantityAfterChange": {
+    "type": "Int",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "InventoryItem": {
+   "countryCodeOfOrigin": {
+    "type": "CountryCode",
+    "args": {},
+    "deprecated": false
+   },
+   "countryHarmonizedSystemCodes": {
+    "type": "CountryHarmonizedSystemCodeConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "createdAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "duplicateSkuCount": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "harmonizedSystemCode": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "inventoryHistoryUrl": {
+    "type": "URL",
+    "args": {},
+    "deprecated": false
+   },
+   "inventoryLevel": {
+    "type": "InventoryLevel",
+    "args": {
+     "includeInactive": "Boolean",
+     "locationId": "ID!"
+    },
+    "deprecated": false
+   },
+   "inventoryLevels": {
+    "type": "InventoryLevelConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "includeInactive": "Boolean",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "legacyResourceId": {
+    "type": "UnsignedInt64!",
+    "args": {},
+    "deprecated": false
+   },
+   "locationsCount": {
+    "type": "Count",
+    "args": {},
+    "deprecated": false
+   },
+   "measurement": {
+    "type": "InventoryItemMeasurement!",
+    "args": {},
+    "deprecated": false
+   },
+   "provinceCodeOfOrigin": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "requiresShipping": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "sku": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "tracked": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "trackedEditable": {
+    "type": "EditableProperty!",
+    "args": {},
+    "deprecated": false
+   },
+   "unitCost": {
+    "type": "MoneyV2",
+    "args": {},
+    "deprecated": false
+   },
+   "updatedAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "variant": {
+    "type": "ProductVariant!",
+    "args": {},
+    "deprecated": true
+   },
+   "variants": {
+    "type": "ProductVariantConnection",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int"
+    },
+    "deprecated": false
+   }
+  },
+  "InventoryItemConnection": {
+   "edges": {
+    "type": "[InventoryItemEdge!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "nodes": {
+    "type": "[InventoryItem!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "pageInfo": {
+    "type": "PageInfo!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "InventoryItemMeasurement": {
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "weight": {
+    "type": "Weight",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "InventoryLevel": {
+   "canDeactivate": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "createdAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "deactivationAlert": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "isActive": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "item": {
+    "type": "InventoryItem!",
+    "args": {},
+    "deprecated": false
+   },
+   "location": {
+    "type": "Location!",
+    "args": {},
+    "deprecated": false
+   },
+   "quantities": {
+    "type": "[InventoryQuantity!]!",
+    "args": {
+     "names": "[String!]!"
+    },
+    "deprecated": false
+   },
+   "scheduledChanges": {
+    "type": "InventoryScheduledChangeConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean",
+     "sortKey": "ScheduledChangeSortKeys"
+    },
+    "deprecated": true
+   },
+   "updatedAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "InventoryLevelConnection": {
+   "edges": {
+    "type": "[InventoryLevelEdge!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "nodes": {
+    "type": "[InventoryLevel!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "pageInfo": {
+    "type": "PageInfo!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "InventoryQuantity": {
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "name": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "quantity": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "updatedAt": {
+    "type": "DateTime",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "InventorySetQuantitiesPayload": {
+   "inventoryAdjustmentGroup": {
+    "type": "InventoryAdjustmentGroup",
+    "args": {},
+    "deprecated": false
+   },
+   "userErrors": {
+    "type": "[InventorySetQuantitiesUserError!]!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "InventorySetQuantitiesUserError": {
+   "code": {
+    "type": "InventorySetQuantitiesUserErrorCode",
+    "args": {},
+    "deprecated": false
+   },
+   "field": {
+    "type": "[String!]",
+    "args": {},
+    "deprecated": false
+   },
+   "message": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "LineItem": {
+   "canRestock": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": true
+   },
+   "contract": {
+    "type": "SubscriptionContract",
+    "args": {},
+    "deprecated": false
+   },
+   "currentQuantity": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "customAttributes": {
+    "type": "[Attribute!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "discountAllocations": {
+    "type": "[DiscountAllocation!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "discountedTotal": {
+    "type": "Money!",
+    "args": {},
+    "deprecated": true
+   },
+   "discountedTotalSet": {
+    "type": "MoneyBag!",
+    "args": {
+     "withCodeDiscounts": "Boolean"
+    },
+    "deprecated": false
+   },
+   "discountedUnitPrice": {
+    "type": "Money!",
+    "args": {},
+    "deprecated": true
+   },
+   "discountedUnitPriceAfterAllDiscountsSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "discountedUnitPriceSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "duties": {
+    "type": "[Duty!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "fulfillableQuantity": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": true
+   },
+   "fulfillmentService": {
+    "type": "FulfillmentService",
+    "args": {},
+    "deprecated": true
+   },
+   "fulfillmentStatus": {
+    "type": "String!",
+    "args": {},
+    "deprecated": true
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "image": {
+    "type": "Image",
+    "args": {},
+    "deprecated": false
+   },
+   "isGiftCard": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "lineItemGroup": {
+    "type": "LineItemGroup",
+    "args": {},
+    "deprecated": false
+   },
+   "merchantEditable": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "name": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "nonFulfillableQuantity": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "originalTotal": {
+    "type": "Money!",
+    "args": {},
+    "deprecated": true
+   },
+   "originalTotalSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "originalUnitPrice": {
+    "type": "Money!",
+    "args": {},
+    "deprecated": true
+   },
+   "originalUnitPriceSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "priceAfterAllDiscountsBeforeTaxesSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "product": {
+    "type": "Product",
+    "args": {},
+    "deprecated": false
+   },
+   "quantity": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "refundableQuantity": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "requiresShipping": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "restockable": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "sellingPlan": {
+    "type": "LineItemSellingPlan",
+    "args": {},
+    "deprecated": false
+   },
+   "sku": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "staffMember": {
+    "type": "StaffMember",
+    "args": {},
+    "deprecated": false
+   },
+   "suggestedReturnReasonDefinitions": {
+    "type": "ReturnReasonDefinitionConnection",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "taxLines": {
+    "type": "[TaxLine!]!",
+    "args": {
+     "first": "Int"
+    },
+    "deprecated": false
+   },
+   "taxable": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "title": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "totalDiscount": {
+    "type": "Money!",
+    "args": {},
+    "deprecated": true
+   },
+   "totalDiscountSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "unfulfilledDiscountedTotal": {
+    "type": "Money!",
+    "args": {},
+    "deprecated": true
+   },
+   "unfulfilledDiscountedTotalSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "unfulfilledOriginalTotal": {
+    "type": "Money!",
+    "args": {},
+    "deprecated": true
+   },
+   "unfulfilledOriginalTotalSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "unfulfilledQuantity": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "variant": {
+    "type": "ProductVariant",
+    "args": {},
+    "deprecated": false
+   },
+   "variantTitle": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "vendor": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "weight": {
+    "type": "Weight",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "LineItemConnection": {
+   "edges": {
+    "type": "[LineItemEdge!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "nodes": {
+    "type": "[LineItem!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "pageInfo": {
+    "type": "PageInfo!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "Location": {
+   "activatable": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "address": {
+    "type": "LocationAddress!",
+    "args": {},
+    "deprecated": false
+   },
+   "addressVerified": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "createdAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "deactivatable": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "deactivatedAt": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "deletable": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "fulfillmentService": {
+    "type": "FulfillmentService",
+    "args": {},
+    "deprecated": false
+   },
+   "fulfillsOnlineOrders": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "hasActiveInventory": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "hasUnfulfilledOrders": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "inventoryLevel": {
+    "type": "InventoryLevel",
+    "args": {
+     "includeInactive": "Boolean",
+     "inventoryItemId": "ID!"
+    },
+    "deprecated": false
+   },
+   "inventoryLevels": {
+    "type": "InventoryLevelConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "includeInactive": "Boolean",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "isActive": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "isFulfillmentService": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "isPrimary": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": true
+   },
+   "legacyResourceId": {
+    "type": "UnsignedInt64!",
+    "args": {},
+    "deprecated": false
+   },
+   "localPickupSettingsV2": {
+    "type": "DeliveryLocalPickupSettings",
+    "args": {},
+    "deprecated": false
+   },
+   "metafield": {
+    "type": "Metafield",
+    "args": {
+     "key": "String!",
+     "namespace": "String"
+    },
+    "deprecated": false
+   },
+   "metafieldDefinitions": {
+    "type": "MetafieldDefinitionConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "namespace": "String",
+     "pinnedStatus": "MetafieldDefinitionPinnedStatus",
+     "query": "String",
+     "reverse": "Boolean",
+     "sortKey": "MetafieldDefinitionSortKeys"
+    },
+    "deprecated": true
+   },
+   "metafields": {
+    "type": "MetafieldConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "keys": "[String!]",
+     "last": "Int",
+     "namespace": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "name": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "shipsInventory": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "suggestedAddresses": {
+    "type": "[LocationSuggestedAddress!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "updatedAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "LocationConnection": {
+   "edges": {
+    "type": "[LocationEdge!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "nodes": {
+    "type": "[Location!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "pageInfo": {
+    "type": "PageInfo!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "Media": {
+   "alt": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "mediaContentType": {
+    "type": "MediaContentType!",
+    "args": {},
+    "deprecated": false
+   },
+   "mediaErrors": {
+    "type": "[MediaError!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "mediaWarnings": {
+    "type": "[MediaWarning!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "preview": {
+    "type": "MediaPreviewImage",
+    "args": {},
+    "deprecated": false
+   },
+   "status": {
+    "type": "MediaStatus!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "MediaConnection": {
+   "edges": {
+    "type": "[MediaEdge!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "nodes": {
+    "type": "[Media!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "pageInfo": {
+    "type": "PageInfo!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "MediaError": {
+   "code": {
+    "type": "MediaErrorCode!",
+    "args": {},
+    "deprecated": false
+   },
+   "details": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "message": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "MediaImage": {
+   "alt": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "createdAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "fileErrors": {
+    "type": "[FileError!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "fileStatus": {
+    "type": "FileStatus!",
+    "args": {},
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "image": {
+    "type": "Image",
+    "args": {},
+    "deprecated": false
+   },
+   "mediaContentType": {
+    "type": "MediaContentType!",
+    "args": {},
+    "deprecated": false
+   },
+   "mediaErrors": {
+    "type": "[MediaError!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "mediaWarnings": {
+    "type": "[MediaWarning!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "metafield": {
+    "type": "Metafield",
+    "args": {
+     "key": "String!",
+     "namespace": "String"
+    },
+    "deprecated": true
+   },
+   "metafields": {
+    "type": "MetafieldConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "keys": "[String!]",
+     "last": "Int",
+     "namespace": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": true
+   },
+   "mimeType": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "originalSource": {
+    "type": "MediaImageOriginalSource",
+    "args": {},
+    "deprecated": false
+   },
+   "preview": {
+    "type": "MediaPreviewImage",
+    "args": {},
+    "deprecated": false
+   },
+   "status": {
+    "type": "MediaStatus!",
+    "args": {},
+    "deprecated": false
+   },
+   "translations": {
+    "type": "[Translation!]!",
+    "args": {
+     "locale": "String!",
+     "marketId": "ID"
+    },
+    "deprecated": false
+   },
+   "updatedAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "MediaPreviewImage": {
+   "image": {
+    "type": "Image",
+    "args": {},
+    "deprecated": false
+   },
+   "status": {
+    "type": "MediaPreviewImageStatus!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "MediaWarning": {
+   "code": {
+    "type": "MediaWarningCode!",
+    "args": {},
+    "deprecated": false
+   },
+   "message": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "Metafield": {
+   "compareDigest": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "createdAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "definition": {
+    "type": "MetafieldDefinition",
+    "args": {},
+    "deprecated": false
+   },
+   "description": {
+    "type": "String",
+    "args": {},
+    "deprecated": true
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "jsonValue": {
+    "type": "JSON!",
+    "args": {},
+    "deprecated": false
+   },
+   "key": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "legacyResourceId": {
+    "type": "UnsignedInt64!",
+    "args": {},
+    "deprecated": false
+   },
+   "namespace": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "owner": {
+    "type": "HasMetafields!",
+    "args": {},
+    "deprecated": false
+   },
+   "ownerType": {
+    "type": "MetafieldOwnerType!",
+    "args": {},
+    "deprecated": false
+   },
+   "reference": {
+    "type": "MetafieldReference",
+    "args": {},
+    "deprecated": false
+   },
+   "references": {
+    "type": "MetafieldReferenceConnection",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int"
+    },
+    "deprecated": false
+   },
+   "sizeInBytes": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "translations": {
+    "type": "[Translation!]!",
+    "args": {
+     "locale": "String!",
+     "marketId": "ID"
+    },
+    "deprecated": false
+   },
+   "type": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "updatedAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "value": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "MetafieldConnection": {
+   "edges": {
+    "type": "[MetafieldEdge!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "nodes": {
+    "type": "[Metafield!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "pageInfo": {
+    "type": "PageInfo!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "MetafieldsSetPayload": {
+   "metafields": {
+    "type": "[Metafield!]",
+    "args": {},
+    "deprecated": false
+   },
+   "userErrors": {
+    "type": "[MetafieldsSetUserError!]!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "MetafieldsSetUserError": {
+   "code": {
+    "type": "MetafieldsSetUserErrorCode",
+    "args": {},
+    "deprecated": false
+   },
+   "elementIndex": {
+    "type": "Int",
+    "args": {},
+    "deprecated": false
+   },
+   "field": {
+    "type": "[String!]",
+    "args": {},
+    "deprecated": false
+   },
+   "message": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "Model3d": {
+   "alt": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "boundingBox": {
+    "type": "Model3dBoundingBox",
+    "args": {},
+    "deprecated": false
+   },
+   "createdAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "fileErrors": {
+    "type": "[FileError!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "fileStatus": {
+    "type": "FileStatus!",
+    "args": {},
+    "deprecated": false
+   },
+   "filename": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "mediaContentType": {
+    "type": "MediaContentType!",
+    "args": {},
+    "deprecated": false
+   },
+   "mediaErrors": {
+    "type": "[MediaError!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "mediaWarnings": {
+    "type": "[MediaWarning!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "originalSource": {
+    "type": "Model3dSource",
+    "args": {},
+    "deprecated": false
+   },
+   "preview": {
+    "type": "MediaPreviewImage",
+    "args": {},
+    "deprecated": false
+   },
+   "sources": {
+    "type": "[Model3dSource!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "status": {
+    "type": "MediaStatus!",
+    "args": {},
+    "deprecated": false
+   },
+   "updatedAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "MoneyBag": {
+   "presentmentMoney": {
+    "type": "MoneyV2!",
+    "args": {},
+    "deprecated": false
+   },
+   "shopMoney": {
+    "type": "MoneyV2!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "MoneyV2": {
+   "amount": {
+    "type": "Decimal!",
+    "args": {},
+    "deprecated": false
+   },
+   "currencyCode": {
+    "type": "CurrencyCode!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "Mutation": {
+   "bulkOperationRunMutation": {
+    "type": "BulkOperationRunMutationPayload",
+    "args": {
+     "clientIdentifier": "String",
+     "mutation": "String!",
+     "stagedUploadPath": "String!"
+    },
+    "deprecated": false
+   },
+   "fileUpdate": {
+    "type": "FileUpdatePayload",
+    "args": {
+     "files": "[FileUpdateInput!]!"
+    },
+    "deprecated": false
+   },
+   "fulfillmentCreate": {
+    "type": "FulfillmentCreatePayload",
+    "args": {
+     "fulfillment": "FulfillmentInput!",
+     "message": "String"
+    },
+    "deprecated": false
+   },
+   "fulfillmentTrackingInfoUpdate": {
+    "type": "FulfillmentTrackingInfoUpdatePayload",
+    "args": {
+     "fulfillmentId": "ID!",
+     "notifyCustomer": "Boolean",
+     "trackingInfoInput": "FulfillmentTrackingInput!"
+    },
+    "deprecated": false
+   },
+   "inventorySetQuantities": {
+    "type": "InventorySetQuantitiesPayload",
+    "args": {
+     "input": "InventorySetQuantitiesInput!"
+    },
+    "deprecated": false
+   },
+   "metafieldsSet": {
+    "type": "MetafieldsSetPayload",
+    "args": {
+     "metafields": "[MetafieldsSetInput!]!"
+    },
+    "deprecated": false
+   },
+   "orderUpdate": {
+    "type": "OrderUpdatePayload",
+    "args": {
+     "input": "OrderInput!"
+    },
+    "deprecated": false
+   },
+   "productSet": {
+    "type": "ProductSetPayload",
+    "args": {
+     "identifier": "ProductSetIdentifiers",
+     "input": "ProductSetInput!",
+     "synchronous": "Boolean"
+    },
+    "deprecated": false
+   },
+   "productUpdate": {
+    "type": "ProductUpdatePayload",
+    "args": {
+     "identifier": "ProductUpdateIdentifiers",
+     "media": "[CreateMediaInput!]",
+     "product": "ProductUpdateInput"
+    },
+    "deprecated": false
+   },
+   "productVariantsBulkCreate": {
+    "type": "ProductVariantsBulkCreatePayload",
+    "args": {
+     "media": "[CreateMediaInput!]",
+     "productId": "ID!",
+     "strategy": "ProductVariantsBulkCreateStrategy",
+     "variants": "[ProductVariantsBulkInput!]!"
+    },
+    "deprecated": false
+   },
+   "productVariantsBulkUpdate": {
+    "type": "ProductVariantsBulkUpdatePayload",
+    "args": {
+     "allowPartialUpdates": "Boolean",
+     "media": "[CreateMediaInput!]",
+     "productId": "ID!",
+     "variants": "[ProductVariantsBulkInput!]!"
+    },
+    "deprecated": false
+   },
+   "stagedUploadsCreate": {
+    "type": "StagedUploadsCreatePayload",
+    "args": {
+     "input": "[StagedUploadInput!]!"
+    },
+    "deprecated": false
+   }
+  },
+  "Node": {
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "Order": {
+   "additionalFees": {
+    "type": "[AdditionalFee!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "agreements": {
+    "type": "SalesAgreementConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "alerts": {
+    "type": "[ResourceAlert!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "app": {
+    "type": "OrderApp",
+    "args": {},
+    "deprecated": false
+   },
+   "attribution": {
+    "type": "OrderAttribution",
+    "args": {},
+    "deprecated": false
+   },
+   "billingAddress": {
+    "type": "MailingAddress",
+    "args": {},
+    "deprecated": false
+   },
+   "billingAddressMatchesShippingAddress": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "canMarkAsPaid": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "canNotifyCustomer": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "cancelReason": {
+    "type": "OrderCancelReason",
+    "args": {},
+    "deprecated": false
+   },
+   "cancellation": {
+    "type": "OrderCancellation",
+    "args": {},
+    "deprecated": false
+   },
+   "cancelledAt": {
+    "type": "DateTime",
+    "args": {},
+    "deprecated": false
+   },
+   "capturable": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "cartDiscountAmount": {
+    "type": "Money",
+    "args": {},
+    "deprecated": true
+   },
+   "cartDiscountAmountSet": {
+    "type": "MoneyBag",
+    "args": {},
+    "deprecated": false
+   },
+   "cartToken": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "channel": {
+    "type": "Channel",
+    "args": {},
+    "deprecated": true
+   },
+   "channelInformation": {
+    "type": "ChannelInformation",
+    "args": {},
+    "deprecated": true
+   },
+   "checkoutToken": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "clientIp": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "closed": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "closedAt": {
+    "type": "DateTime",
+    "args": {},
+    "deprecated": false
+   },
+   "confirmationNumber": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "confirmed": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "createdAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "currencyCode": {
+    "type": "CurrencyCode!",
+    "args": {},
+    "deprecated": false
+   },
+   "currentCartDiscountAmountSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "currentShippingPriceSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "currentSubtotalLineItemsQuantity": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "currentSubtotalPriceSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "currentTaxLines": {
+    "type": "[TaxLine!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "currentTotalAdditionalFeesSet": {
+    "type": "MoneyBag",
+    "args": {},
+    "deprecated": false
+   },
+   "currentTotalDiscountsSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "currentTotalDutiesSet": {
+    "type": "MoneyBag",
+    "args": {},
+    "deprecated": false
+   },
+   "currentTotalPriceSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "currentTotalTaxSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "currentTotalWeight": {
+    "type": "UnsignedInt64!",
+    "args": {},
+    "deprecated": false
+   },
+   "customAttributes": {
+    "type": "[Attribute!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "customer": {
+    "type": "Customer",
+    "args": {},
+    "deprecated": false
+   },
+   "customerAcceptsMarketing": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "customerJourney": {
+    "type": "CustomerJourney",
+    "args": {},
+    "deprecated": true
+   },
+   "customerJourneySummary": {
+    "type": "CustomerJourneySummary",
+    "args": {},
+    "deprecated": false
+   },
+   "customerLocale": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "discountApplications": {
+    "type": "DiscountApplicationConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "discountCode": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "discountCodes": {
+    "type": "[String!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "displayAddress": {
+    "type": "MailingAddress",
+    "args": {},
+    "deprecated": false
+   },
+   "displayFinancialStatus": {
+    "type": "OrderDisplayFinancialStatus",
+    "args": {},
+    "deprecated": false
+   },
+   "displayFulfillmentStatus": {
+    "type": "OrderDisplayFulfillmentStatus!",
+    "args": {},
+    "deprecated": false
+   },
+   "disputes": {
+    "type": "[OrderDisputeSummary!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "dutiesIncluded": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "edited": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "email": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "estimatedTaxes": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "events": {
+    "type": "EventConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean",
+     "sortKey": "EventSortKeys"
+    },
+    "deprecated": false
+   },
+   "fulfillable": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "fulfillmentOrders": {
+    "type": "FulfillmentOrderConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "displayable": "Boolean",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "fulfillments": {
+    "type": "[Fulfillment!]!",
+    "args": {
+     "first": "Int",
+     "query": "String"
+    },
+    "deprecated": false
+   },
+   "fulfillmentsCount": {
+    "type": "Count",
+    "args": {},
+    "deprecated": false
+   },
+   "fullyPaid": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "hasTimelineComment": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "landingPageDisplayText": {
+    "type": "String",
+    "args": {},
+    "deprecated": true
+   },
+   "landingPageUrl": {
+    "type": "URL",
+    "args": {},
+    "deprecated": true
+   },
+   "legacyResourceId": {
+    "type": "UnsignedInt64!",
+    "args": {},
+    "deprecated": false
+   },
+   "lineItems": {
+    "type": "LineItemConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "localizationExtensions": {
+    "type": "LocalizationExtensionConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "countryCodes": "[CountryCode!]",
+     "first": "Int",
+     "last": "Int",
+     "purposes": "[LocalizationExtensionPurpose!]",
+     "reverse": "Boolean"
+    },
+    "deprecated": true
+   },
+   "localizedFields": {
+    "type": "LocalizedFieldConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "countryCodes": "[CountryCode!]",
+     "first": "Int",
+     "last": "Int",
+     "purposes": "[LocalizedFieldPurpose!]",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "merchantBusinessEntity": {
+    "type": "BusinessEntity!",
+    "args": {},
+    "deprecated": false
+   },
+   "merchantEditable": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "merchantEditableErrors": {
+    "type": "[String!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "merchantOfRecordApp": {
+    "type": "OrderApp",
+    "args": {},
+    "deprecated": false
+   },
+   "metafield": {
+    "type": "Metafield",
+    "args": {
+     "key": "String!",
+     "namespace": "String"
+    },
+    "deprecated": false
+   },
+   "metafieldDefinitions": {
+    "type": "MetafieldDefinitionConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "namespace": "String",
+     "pinnedStatus": "MetafieldDefinitionPinnedStatus",
+     "query": "String",
+     "reverse": "Boolean",
+     "sortKey": "MetafieldDefinitionSortKeys"
+    },
+    "deprecated": true
+   },
+   "metafields": {
+    "type": "MetafieldConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "keys": "[String!]",
+     "last": "Int",
+     "namespace": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "name": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "netPayment": {
+    "type": "Money!",
+    "args": {},
+    "deprecated": true
+   },
+   "netPaymentSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "nonFulfillableLineItems": {
+    "type": "LineItemConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "note": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "number": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "originalTotalAdditionalFeesSet": {
+    "type": "MoneyBag",
+    "args": {},
+    "deprecated": false
+   },
+   "originalTotalDutiesSet": {
+    "type": "MoneyBag",
+    "args": {},
+    "deprecated": false
+   },
+   "originalTotalPriceSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "paymentCollectionDetails": {
+    "type": "OrderPaymentCollectionDetails!",
+    "args": {},
+    "deprecated": false
+   },
+   "paymentGatewayNames": {
+    "type": "[String!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "paymentTerms": {
+    "type": "PaymentTerms",
+    "args": {},
+    "deprecated": false
+   },
+   "phone": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "physicalLocation": {
+    "type": "Location",
+    "args": {},
+    "deprecated": true
+   },
+   "poNumber": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "presentmentCurrencyCode": {
+    "type": "CurrencyCode!",
+    "args": {},
+    "deprecated": false
+   },
+   "processedAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "productNetwork": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "publication": {
+    "type": "Publication",
+    "args": {},
+    "deprecated": false
+   },
+   "purchasingEntity": {
+    "type": "PurchasingEntity",
+    "args": {},
+    "deprecated": false
+   },
+   "referralCode": {
+    "type": "String",
+    "args": {},
+    "deprecated": true
+   },
+   "referrerDisplayText": {
+    "type": "String",
+    "args": {},
+    "deprecated": true
+   },
+   "referrerUrl": {
+    "type": "URL",
+    "args": {},
+    "deprecated": true
+   },
+   "refundDiscrepancySet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "refundable": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "refunds": {
+    "type": "[Refund!]!",
+    "args": {
+     "first": "Int"
+    },
+    "deprecated": false
+   },
+   "registeredSourceUrl": {
+    "type": "URL",
+    "args": {},
+    "deprecated": false
+   },
+   "requiresShipping": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "restockable": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "retailLocation": {
+    "type": "Location",
+    "args": {},
+    "deprecated": false
+   },
+   "returnStatus": {
+    "type": "OrderReturnStatus!",
+    "args": {},
+    "deprecated": false
+   },
+   "returns": {
+    "type": "ReturnConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "risk": {
+    "type": "OrderRiskSummary!",
+    "args": {},
+    "deprecated": false
+   },
+   "riskLevel": {
+    "type": "OrderRiskLevel!",
+    "args": {},
+    "deprecated": true
+   },
+   "risks": {
+    "type": "[OrderRisk!]!",
+    "args": {
+     "first": "Int"
+    },
+    "deprecated": true
+   },
+   "shippingAddress": {
+    "type": "MailingAddress",
+    "args": {},
+    "deprecated": false
+   },
+   "shippingLine": {
+    "type": "ShippingLine",
+    "args": {},
+    "deprecated": false
+   },
+   "shippingLines": {
+    "type": "ShippingLineConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "includeRemovals": "Boolean",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "shopifyProtect": {
+    "type": "ShopifyProtectOrderSummary",
+    "args": {},
+    "deprecated": false
+   },
+   "sourceIdentifier": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "sourceName": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "staffMember": {
+    "type": "StaffMember",
+    "args": {},
+    "deprecated": false
+   },
+   "statusPageUrl": {
+    "type": "URL!",
+    "args": {
+     "audience": "Audience",
+     "notificationUsage": "NotificationUsage"
+    },
+    "deprecated": false
+   },
+   "subtotalLineItemsQuantity": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "subtotalPrice": {
+    "type": "Money",
+    "args": {},
+    "deprecated": true
+   },
+   "subtotalPriceSet": {
+    "type": "MoneyBag",
+    "args": {},
+    "deprecated": false
+   },
+   "suggestedRefund": {
+    "type": "SuggestedRefund",
+    "args": {
+     "refundDuties": "[RefundDutyInput!]",
+     "refundLineItems": "[RefundLineItemInput!]",
+     "refundMethodAllocation": "RefundMethodAllocation",
+     "refundShipping": "Boolean",
+     "shippingAmount": "Money",
+     "suggestFullRefund": "Boolean"
+    },
+    "deprecated": false
+   },
+   "tags": {
+    "type": "[String!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "taxExempt": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "taxLines": {
+    "type": "[TaxLine!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "taxesIncluded": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "test": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "totalCapturable": {
+    "type": "Money!",
+    "args": {},
+    "deprecated": true
+   },
+   "totalCapturableSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "totalCashRoundingAdjustment": {
+    "type": "CashRoundingAdjustment!",
+    "args": {},
+    "deprecated": false
+   },
+   "totalDiscounts": {
+    "type": "Money",
+    "args": {},
+    "deprecated": true
+   },
+   "totalDiscountsSet": {
+    "type": "MoneyBag",
+    "args": {},
+    "deprecated": false
+   },
+   "totalOutstandingSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "totalPrice": {
+    "type": "Money!",
+    "args": {},
+    "deprecated": true
+   },
+   "totalPriceSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "totalReceived": {
+    "type": "Money!",
+    "args": {},
+    "deprecated": true
+   },
+   "totalReceivedSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "totalRefunded": {
+    "type": "Money!",
+    "args": {},
+    "deprecated": true
+   },
+   "totalRefundedSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "totalRefundedShippingSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "totalShippingPrice": {
+    "type": "Money!",
+    "args": {},
+    "deprecated": true
+   },
+   "totalShippingPriceSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "totalTax": {
+    "type": "Money",
+    "args": {},
+    "deprecated": true
+   },
+   "totalTaxSet": {
+    "type": "MoneyBag",
+    "args": {},
+    "deprecated": false
+   },
+   "totalTipReceived": {
+    "type": "MoneyV2!",
+    "args": {},
+    "deprecated": true
+   },
+   "totalTipReceivedSet": {
+    "type": "MoneyBag!",
+    "args": {},
+    "deprecated": false
+   },
+   "totalWeight": {
+    "type": "UnsignedInt64",
+    "args": {},
+    "deprecated": false
+   },
+   "transactions": {
+    "type": "[OrderTransaction!]!",
+    "args": {
+     "capturable": "Boolean",
+     "first": "Int",
+     "manuallyResolvable": "Boolean"
+    },
+    "deprecated": false
+   },
+   "transactionsCount": {
+    "type": "Count",
+    "args": {},
+    "deprecated": false
+   },
+   "unpaid": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "updatedAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "OrderConnection": {
+   "edges": {
+    "type": "[OrderEdge!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "nodes": {
+    "type": "[Order!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "pageInfo": {
+    "type": "PageInfo!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "OrderUpdatePayload": {
+   "order": {
+    "type": "Order",
+    "args": {},
+    "deprecated": false
+   },
+   "userErrors": {
+    "type": "[UserError!]!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "PageInfo": {
+   "endCursor": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "hasNextPage": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "hasPreviousPage": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "startCursor": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "Product": {
+   "availablePublicationsCount": {
+    "type": "Count",
+    "args": {},
+    "deprecated": false
+   },
+   "bodyHtml": {
+    "type": "String",
+    "args": {},
+    "deprecated": true
+   },
+   "bundleComponents": {
+    "type": "ProductBundleComponentConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "bundleConsolidatedOptions": {
+    "type": "[ComponentizedProductsBundleConsolidatedOption!]",
+    "args": {},
+    "deprecated": false
+   },
+   "category": {
+    "type": "TaxonomyCategory",
+    "args": {},
+    "deprecated": false
+   },
+   "collections": {
+    "type": "CollectionConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean",
+     "sortKey": "CollectionSortKeys"
+    },
+    "deprecated": false
+   },
+   "combinedListing": {
+    "type": "CombinedListing",
+    "args": {},
+    "deprecated": false
+   },
+   "combinedListingRole": {
+    "type": "CombinedListingsRole",
+    "args": {},
+    "deprecated": false
+   },
+   "compareAtPriceRange": {
+    "type": "ProductCompareAtPriceRange",
+    "args": {},
+    "deprecated": false
+   },
+   "contextualPricing": {
+    "type": "ProductContextualPricing!",
+    "args": {
+     "context": "ContextualPricingContext!"
+    },
+    "deprecated": false
+   },
+   "createdAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "customProductType": {
+    "type": "String",
+    "args": {},
+    "deprecated": true
+   },
+   "defaultCursor": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "description": {
+    "type": "String!",
+    "args": {
+     "truncateAt": "Int"
+    },
+    "deprecated": false
+   },
+   "descriptionHtml": {
+    "type": "HTML!",
+    "args": {},
+    "deprecated": false
+   },
+   "descriptionPlainSummary": {
+    "type": "String!",
+    "args": {},
+    "deprecated": true
+   },
+   "events": {
+    "type": "EventConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean",
+     "sortKey": "EventSortKeys"
+    },
+    "deprecated": false
+   },
+   "featuredImage": {
+    "type": "Image",
+    "args": {},
+    "deprecated": true
+   },
+   "featuredMedia": {
+    "type": "Media",
+    "args": {},
+    "deprecated": false
+   },
+   "feedback": {
+    "type": "ResourceFeedback",
+    "args": {},
+    "deprecated": false
+   },
+   "giftCardSettings": {
+    "type": "GiftCardProductSettings",
+    "args": {},
+    "deprecated": false
+   },
+   "giftCardTemplateSuffix": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "handle": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "hasOnlyDefaultVariant": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "hasOutOfStockVariants": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "hasVariantsThatRequiresComponents": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "images": {
+    "type": "ImageConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean",
+     "sortKey": "ProductImageSortKeys"
+    },
+    "deprecated": true
+   },
+   "inCollection": {
+    "type": "Boolean!",
+    "args": {
+     "id": "ID!"
+    },
+    "deprecated": false
+   },
+   "isGiftCard": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "legacyResourceId": {
+    "type": "UnsignedInt64!",
+    "args": {},
+    "deprecated": false
+   },
+   "media": {
+    "type": "MediaConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean",
+     "sortKey": "ProductMediaSortKeys"
+    },
+    "deprecated": false
+   },
+   "mediaCount": {
+    "type": "Count",
+    "args": {},
+    "deprecated": false
+   },
+   "metafield": {
+    "type": "Metafield",
+    "args": {
+     "key": "String!",
+     "namespace": "String"
+    },
+    "deprecated": false
+   },
+   "metafieldDefinitions": {
+    "type": "MetafieldDefinitionConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "namespace": "String",
+     "pinnedStatus": "MetafieldDefinitionPinnedStatus",
+     "query": "String",
+     "reverse": "Boolean",
+     "sortKey": "MetafieldDefinitionSortKeys"
+    },
+    "deprecated": true
+   },
+   "metafields": {
+    "type": "MetafieldConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "keys": "[String!]",
+     "last": "Int",
+     "namespace": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "onlineStorePreviewUrl": {
+    "type": "URL",
+    "args": {},
+    "deprecated": false
+   },
+   "onlineStoreUrl": {
+    "type": "URL",
+    "args": {},
+    "deprecated": false
+   },
+   "options": {
+    "type": "[ProductOption!]!",
+    "args": {
+     "first": "Int"
+    },
+    "deprecated": false
+   },
+   "priceRange": {
+    "type": "ProductPriceRange!",
+    "args": {},
+    "deprecated": true
+   },
+   "priceRangeV2": {
+    "type": "ProductPriceRangeV2!",
+    "args": {},
+    "deprecated": false
+   },
+   "productCategory": {
+    "type": "ProductCategory",
+    "args": {},
+    "deprecated": true
+   },
+   "productComponents": {
+    "type": "ProductComponentTypeConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "productComponentsCount": {
+    "type": "Count",
+    "args": {},
+    "deprecated": false
+   },
+   "productParents": {
+    "type": "ProductConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "productPublications": {
+    "type": "ProductPublicationConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": true
+   },
+   "productType": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "publicationCount": {
+    "type": "Int!",
+    "args": {
+     "onlyPublished": "Boolean"
+    },
+    "deprecated": true
+   },
+   "publications": {
+    "type": "ProductPublicationConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "onlyPublished": "Boolean",
+     "reverse": "Boolean"
+    },
+    "deprecated": true
+   },
+   "publishedAt": {
+    "type": "DateTime",
+    "args": {},
+    "deprecated": false
+   },
+   "publishedInContext": {
+    "type": "Boolean!",
+    "args": {
+     "context": "ContextualPublicationContext!"
+    },
+    "deprecated": false
+   },
+   "publishedOnChannel": {
+    "type": "Boolean!",
+    "args": {
+     "channelId": "ID!"
+    },
+    "deprecated": true
+   },
+   "publishedOnCurrentChannel": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": true
+   },
+   "publishedOnCurrentPublication": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": true
+   },
+   "publishedOnPublication": {
+    "type": "Boolean!",
+    "args": {
+     "publicationId": "ID!"
+    },
+    "deprecated": false
+   },
+   "requiresSellingPlan": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "resourcePublicationOnCurrentPublication": {
+    "type": "ResourcePublicationV2",
+    "args": {},
+    "deprecated": true
+   },
+   "resourcePublications": {
+    "type": "ResourcePublicationConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "onlyPublished": "Boolean",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "resourcePublicationsCount": {
+    "type": "Count",
+    "args": {
+     "onlyPublished": "Boolean"
+    },
+    "deprecated": false
+   },
+   "resourcePublicationsV2": {
+    "type": "ResourcePublicationV2Connection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "catalogType": "CatalogType",
+     "first": "Int",
+     "last": "Int",
+     "onlyPublished": "Boolean",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "restrictedForResource": {
+    "type": "RestrictedForResource",
+    "args": {
+     "calculatedOrderId": "ID!"
+    },
+    "deprecated": false
+   },
+   "sellingPlanGroupCount": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": true
+   },
+   "sellingPlanGroups": {
+    "type": "SellingPlanGroupConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "sellingPlanGroupsCount": {
+    "type": "Count",
+    "args": {},
+    "deprecated": false
+   },
+   "seo": {
+    "type": "SEO!",
+    "args": {},
+    "deprecated": false
+   },
+   "standardizedProductType": {
+    "type": "StandardizedProductType",
+    "args": {},
+    "deprecated": true
+   },
+   "status": {
+    "type": "ProductStatus!",
+    "args": {},
+    "deprecated": false
+   },
+   "storefrontId": {
+    "type": "StorefrontID!",
+    "args": {},
+    "deprecated": true
+   },
+   "tags": {
+    "type": "[String!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "templateSuffix": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "title": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "totalInventory": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "totalVariants": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": true
+   },
+   "tracksInventory": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "translations": {
+    "type": "[Translation!]!",
+    "args": {
+     "locale": "String!",
+     "marketId": "ID"
+    },
+    "deprecated": false
+   },
+   "unpublishedChannels": {
+    "type": "ChannelConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": true
+   },
+   "unpublishedPublications": {
+    "type": "PublicationConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "updatedAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "variants": {
+    "type": "ProductVariantConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean",
+     "sortKey": "ProductVariantSortKeys"
+    },
+    "deprecated": false
+   },
+   "variantsCount": {
+    "type": "Count",
+    "args": {},
+    "deprecated": false
+   },
+   "variantsInCollection": {
+    "type": "ProductVariantConnection",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "collectionId": "ID!",
+     "first": "Int",
+     "last": "Int"
+    },
+    "deprecated": false
+   },
+   "variantsInCollectionCount": {
+    "type": "Count",
+    "args": {
+     "collectionId": "ID!"
+    },
+    "deprecated": false
+   },
+   "vendor": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "ProductConnection": {
+   "edges": {
+    "type": "[ProductEdge!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "nodes": {
+    "type": "[Product!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "pageInfo": {
+    "type": "PageInfo!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "ProductOption": {
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "linkedMetafield": {
+    "type": "LinkedMetafield",
+    "args": {},
+    "deprecated": false
+   },
+   "name": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "optionValues": {
+    "type": "[ProductOptionValue!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "position": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "translations": {
+    "type": "[Translation!]!",
+    "args": {
+     "locale": "String!",
+     "marketId": "ID"
+    },
+    "deprecated": false
+   },
+   "values": {
+    "type": "[String!]!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "ProductSetPayload": {
+   "product": {
+    "type": "Product",
+    "args": {},
+    "deprecated": false
+   },
+   "productSetOperation": {
+    "type": "ProductSetOperation",
+    "args": {},
+    "deprecated": false
+   },
+   "userErrors": {
+    "type": "[ProductSetUserError!]!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "ProductSetUserError": {
+   "code": {
+    "type": "ProductSetUserErrorCode",
+    "args": {},
+    "deprecated": false
+   },
+   "field": {
+    "type": "[String!]",
+    "args": {},
+    "deprecated": false
+   },
+   "message": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "ProductUpdatePayload": {
+   "product": {
+    "type": "Product",
+    "args": {},
+    "deprecated": false
+   },
+   "userErrors": {
+    "type": "[UserError!]!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "ProductVariant": {
+   "availableForSale": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "availablePublicationsCount": {
+    "type": "Count",
+    "args": {},
+    "deprecated": false
+   },
+   "barcode": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "compareAtPrice": {
+    "type": "Money",
+    "args": {},
+    "deprecated": false
+   },
+   "contextualPricing": {
+    "type": "ProductVariantContextualPricing!",
+    "args": {
+     "context": "ContextualPricingContext!"
+    },
+    "deprecated": false
+   },
+   "createdAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "defaultCursor": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "deliveryProfile": {
+    "type": "DeliveryProfile",
+    "args": {},
+    "deprecated": false
+   },
+   "displayName": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "events": {
+    "type": "EventConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean",
+     "sortKey": "EventSortKeys"
+    },
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "image": {
+    "type": "Image",
+    "args": {},
+    "deprecated": true
+   },
+   "inventoryItem": {
+    "type": "InventoryItem!",
+    "args": {},
+    "deprecated": false
+   },
+   "inventoryPolicy": {
+    "type": "ProductVariantInventoryPolicy!",
+    "args": {},
+    "deprecated": false
+   },
+   "inventoryQuantity": {
+    "type": "Int",
+    "args": {},
+    "deprecated": false
+   },
+   "legacyResourceId": {
+    "type": "UnsignedInt64!",
+    "args": {},
+    "deprecated": false
+   },
+   "media": {
+    "type": "MediaConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "metafield": {
+    "type": "Metafield",
+    "args": {
+     "key": "String!",
+     "namespace": "String"
+    },
+    "deprecated": false
+   },
+   "metafieldDefinitions": {
+    "type": "MetafieldDefinitionConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "namespace": "String",
+     "pinnedStatus": "MetafieldDefinitionPinnedStatus",
+     "query": "String",
+     "reverse": "Boolean",
+     "sortKey": "MetafieldDefinitionSortKeys"
+    },
+    "deprecated": true
+   },
+   "metafields": {
+    "type": "MetafieldConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "keys": "[String!]",
+     "last": "Int",
+     "namespace": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "position": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "presentmentPrices": {
+    "type": "ProductVariantPricePairConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "presentmentCurrencies": "[CurrencyCode!]",
+     "reverse": "Boolean"
+    },
+    "deprecated": true
+   },
+   "price": {
+    "type": "Money!",
+    "args": {},
+    "deprecated": false
+   },
+   "product": {
+    "type": "Product!",
+    "args": {},
+    "deprecated": false
+   },
+   "productParents": {
+    "type": "ProductConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "productVariantComponents": {
+    "type": "ProductVariantComponentConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "publicationCount": {
+    "type": "Int!",
+    "args": {
+     "onlyPublished": "Boolean"
+    },
+    "deprecated": true
+   },
+   "publishedOnChannel": {
+    "type": "Boolean!",
+    "args": {
+     "channelId": "ID!"
+    },
+    "deprecated": true
+   },
+   "publishedOnCurrentChannel": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": true
+   },
+   "publishedOnCurrentPublication": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": true
+   },
+   "publishedOnPublication": {
+    "type": "Boolean!",
+    "args": {
+     "publicationId": "ID!"
+    },
+    "deprecated": false
+   },
+   "requiresComponents": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "resourcePublications": {
+    "type": "ResourcePublicationConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "onlyPublished": "Boolean",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "resourcePublicationsCount": {
+    "type": "Count",
+    "args": {
+     "onlyPublished": "Boolean"
+    },
+    "deprecated": false
+   },
+   "resourcePublicationsV2": {
+    "type": "ResourcePublicationV2Connection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "catalogType": "CatalogType",
+     "first": "Int",
+     "last": "Int",
+     "onlyPublished": "Boolean",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "selectedOptions": {
+    "type": "[SelectedOption!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "sellableOnlineQuantity": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "sellingPlanGroupCount": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": true
+   },
+   "sellingPlanGroups": {
+    "type": "SellingPlanGroupConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "sellingPlanGroupsCount": {
+    "type": "Count",
+    "args": {},
+    "deprecated": false
+   },
+   "showUnitPrice": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "sku": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "storefrontId": {
+    "type": "StorefrontID!",
+    "args": {},
+    "deprecated": true
+   },
+   "taxCode": {
+    "type": "String",
+    "args": {},
+    "deprecated": true
+   },
+   "taxable": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "title": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "translations": {
+    "type": "[Translation!]!",
+    "args": {
+     "locale": "String!",
+     "marketId": "ID"
+    },
+    "deprecated": false
+   },
+   "unitPrice": {
+    "type": "MoneyV2",
+    "args": {},
+    "deprecated": false
+   },
+   "unitPriceMeasurement": {
+    "type": "UnitPriceMeasurement",
+    "args": {},
+    "deprecated": false
+   },
+   "unpublishedChannels": {
+    "type": "ChannelConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": true
+   },
+   "unpublishedPublications": {
+    "type": "PublicationConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "updatedAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "ProductVariantConnection": {
+   "edges": {
+    "type": "[ProductVariantEdge!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "nodes": {
+    "type": "[ProductVariant!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "pageInfo": {
+    "type": "PageInfo!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "ProductVariantsBulkCreatePayload": {
+   "product": {
+    "type": "Product",
+    "args": {},
+    "deprecated": false
+   },
+   "productVariants": {
+    "type": "[ProductVariant!]",
+    "args": {},
+    "deprecated": false
+   },
+   "userErrors": {
+    "type": "[ProductVariantsBulkCreateUserError!]!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "ProductVariantsBulkCreateUserError": {
+   "code": {
+    "type": "ProductVariantsBulkCreateUserErrorCode",
+    "args": {},
+    "deprecated": false
+   },
+   "field": {
+    "type": "[String!]",
+    "args": {},
+    "deprecated": false
+   },
+   "message": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "ProductVariantsBulkUpdatePayload": {
+   "product": {
+    "type": "Product",
+    "args": {},
+    "deprecated": false
+   },
+   "productVariants": {
+    "type": "[ProductVariant!]",
+    "args": {},
+    "deprecated": false
+   },
+   "userErrors": {
+    "type": "[ProductVariantsBulkUpdateUserError!]!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "ProductVariantsBulkUpdateUserError": {
+   "code": {
+    "type": "ProductVariantsBulkUpdateUserErrorCode",
+    "args": {},
+    "deprecated": false
+   },
+   "field": {
+    "type": "[String!]",
+    "args": {},
+    "deprecated": false
+   },
+   "message": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "QueryRoot": {
+   "currentAppInstallation": {
+    "type": "AppInstallation!",
+    "args": {},
+    "deprecated": false
+   },
+   "fulfillmentOrder": {
+    "type": "FulfillmentOrder",
+    "args": {
+     "id": "ID!"
+    },
+    "deprecated": false
+   },
+   "inventoryItem": {
+    "type": "InventoryItem",
+    "args": {
+     "id": "ID!"
+    },
+    "deprecated": false
+   },
+   "inventoryItems": {
+    "type": "InventoryItemConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "locations": {
+    "type": "LocationConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "includeInactive": "Boolean",
+     "includeLegacy": "Boolean",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean",
+     "sortKey": "LocationSortKeys"
+    },
+    "deprecated": false
+   },
+   "node": {
+    "type": "Node",
+    "args": {
+     "id": "ID!"
+    },
+    "deprecated": false
+   },
+   "nodes": {
+    "type": "[Node]!",
+    "args": {
+     "ids": "[ID!]!"
+    },
+    "deprecated": false
+   },
+   "order": {
+    "type": "Order",
+    "args": {
+     "id": "ID!"
+    },
+    "deprecated": false
+   },
+   "orders": {
+    "type": "OrderConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean",
+     "savedSearchId": "ID",
+     "sortKey": "OrderSortKeys"
+    },
+    "deprecated": false
+   },
+   "product": {
+    "type": "Product",
+    "args": {
+     "id": "ID!"
+    },
+    "deprecated": false
+   },
+   "productVariant": {
+    "type": "ProductVariant",
+    "args": {
+     "id": "ID!"
+    },
+    "deprecated": false
+   },
+   "productVariants": {
+    "type": "ProductVariantConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean",
+     "savedSearchId": "ID",
+     "sortKey": "ProductVariantSortKeys"
+    },
+    "deprecated": false
+   },
+   "products": {
+    "type": "ProductConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean",
+     "savedSearchId": "ID",
+     "sortKey": "ProductSortKeys"
+    },
+    "deprecated": false
+   },
+   "shop": {
+    "type": "Shop!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "SEO": {
+   "description": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "title": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "SelectedOption": {
+   "name": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "optionValue": {
+    "type": "ProductOptionValue!",
+    "args": {},
+    "deprecated": false
+   },
+   "value": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "Shop": {
+   "accountOwner": {
+    "type": "StaffMember!",
+    "args": {},
+    "deprecated": false
+   },
+   "alerts": {
+    "type": "[ShopAlert!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "allProductCategories": {
+    "type": "[ProductCategory!]!",
+    "args": {},
+    "deprecated": true
+   },
+   "allProductCategoriesList": {
+    "type": "[TaxonomyCategory!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "analyticsToken": {
+    "type": "String!",
+    "args": {},
+    "deprecated": true
+   },
+   "assignedFulfillmentOrders": {
+    "type": "FulfillmentOrderConnection!",
+    "args": {
+     "after": "String",
+     "assignmentStatus": "FulfillmentOrderAssignmentStatus",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "locationIds": "[ID!]",
+     "reverse": "Boolean",
+     "sortKey": "FulfillmentOrderSortKeys"
+    },
+    "deprecated": true
+   },
+   "availableChannelApps": {
+    "type": "AppConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "billingAddress": {
+    "type": "ShopAddress!",
+    "args": {},
+    "deprecated": true
+   },
+   "channelDefinitionsForInstalledChannels": {
+    "type": "[AvailableChannelDefinitionsByChannel!]!",
+    "args": {},
+    "deprecated": true
+   },
+   "channels": {
+    "type": "ChannelConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": true
+   },
+   "checkoutApiSupported": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "collections": {
+    "type": "CollectionConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean",
+     "savedSearchId": "ID",
+     "sortKey": "CollectionSortKeys"
+    },
+    "deprecated": true
+   },
+   "contactEmail": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "countriesInShippingZones": {
+    "type": "CountriesInShippingZones!",
+    "args": {},
+    "deprecated": false
+   },
+   "createdAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "currencyCode": {
+    "type": "CurrencyCode!",
+    "args": {},
+    "deprecated": false
+   },
+   "currencyFormats": {
+    "type": "CurrencyFormats!",
+    "args": {},
+    "deprecated": false
+   },
+   "currencySettings": {
+    "type": "CurrencySettingConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "customerAccounts": {
+    "type": "ShopCustomerAccountsSetting!",
+    "args": {},
+    "deprecated": false
+   },
+   "customerAccountsV2": {
+    "type": "CustomerAccountsV2!",
+    "args": {},
+    "deprecated": false
+   },
+   "customerTags": {
+    "type": "StringConnection!",
+    "args": {
+     "first": "Int!"
+    },
+    "deprecated": false
+   },
+   "customers": {
+    "type": "CustomerConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean",
+     "sortKey": "CustomerSortKeys"
+    },
+    "deprecated": true
+   },
+   "description": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "domains": {
+    "type": "[Domain!]!",
+    "args": {},
+    "deprecated": true
+   },
+   "draftOrderTags": {
+    "type": "StringConnection!",
+    "args": {
+     "first": "Int!"
+    },
+    "deprecated": false
+   },
+   "email": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "enabledPresentmentCurrencies": {
+    "type": "[CurrencyCode!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "entitlements": {
+    "type": "EntitlementsType!",
+    "args": {},
+    "deprecated": false
+   },
+   "features": {
+    "type": "ShopFeatures!",
+    "args": {},
+    "deprecated": false
+   },
+   "fulfillmentOrders": {
+    "type": "FulfillmentOrderConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "includeClosed": "Boolean",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean",
+     "sortKey": "FulfillmentOrderSortKeys"
+    },
+    "deprecated": true
+   },
+   "fulfillmentServices": {
+    "type": "[FulfillmentService!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "ianaTimezone": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "inventoryItems": {
+    "type": "InventoryItemConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": true
+   },
+   "limitedPendingOrderCount": {
+    "type": "LimitedPendingOrderCount!",
+    "args": {},
+    "deprecated": true
+   },
+   "locations": {
+    "type": "LocationConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "includeInactive": "Boolean",
+     "includeLegacy": "Boolean",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean",
+     "sortKey": "LocationSortKeys"
+    },
+    "deprecated": true
+   },
+   "marketingSmsConsentEnabledAtCheckout": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "merchantApprovalSignals": {
+    "type": "MerchantApprovalSignals",
+    "args": {},
+    "deprecated": false
+   },
+   "metafield": {
+    "type": "Metafield",
+    "args": {
+     "key": "String!",
+     "namespace": "String"
+    },
+    "deprecated": false
+   },
+   "metafieldDefinitions": {
+    "type": "MetafieldDefinitionConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "namespace": "String",
+     "pinnedStatus": "MetafieldDefinitionPinnedStatus",
+     "query": "String",
+     "reverse": "Boolean",
+     "sortKey": "MetafieldDefinitionSortKeys"
+    },
+    "deprecated": true
+   },
+   "metafields": {
+    "type": "MetafieldConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "keys": "[String!]",
+     "last": "Int",
+     "namespace": "String",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "myshopifyDomain": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "name": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "navigationSettings": {
+    "type": "[NavigationItem!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "orderNumberFormatPrefix": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "orderNumberFormatSuffix": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "orderTags": {
+    "type": "StringConnection!",
+    "args": {
+     "first": "Int!",
+     "sort": "ShopTagSort"
+    },
+    "deprecated": false
+   },
+   "orders": {
+    "type": "OrderConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean",
+     "sortKey": "OrderSortKeys"
+    },
+    "deprecated": true
+   },
+   "paymentSettings": {
+    "type": "PaymentSettings!",
+    "args": {},
+    "deprecated": false
+   },
+   "plan": {
+    "type": "ShopPlan!",
+    "args": {},
+    "deprecated": false
+   },
+   "primaryDomain": {
+    "type": "Domain!",
+    "args": {},
+    "deprecated": false
+   },
+   "productImages": {
+    "type": "ImageConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean",
+     "sortKey": "ProductImageSortKeys"
+    },
+    "deprecated": true
+   },
+   "productTags": {
+    "type": "StringConnection!",
+    "args": {
+     "first": "Int!"
+    },
+    "deprecated": true
+   },
+   "productTypes": {
+    "type": "StringConnection!",
+    "args": {
+     "first": "Int!"
+    },
+    "deprecated": true
+   },
+   "productVariants": {
+    "type": "ProductVariantConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean",
+     "sortKey": "ProductVariantSortKeys"
+    },
+    "deprecated": true
+   },
+   "productVendors": {
+    "type": "StringConnection!",
+    "args": {
+     "first": "Int!"
+    },
+    "deprecated": true
+   },
+   "products": {
+    "type": "ProductConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "query": "String",
+     "reverse": "Boolean",
+     "savedSearchId": "ID",
+     "sortKey": "ProductSortKeys"
+    },
+    "deprecated": true
+   },
+   "publicationCount": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": true
+   },
+   "resourceLimits": {
+    "type": "ShopResourceLimits!",
+    "args": {},
+    "deprecated": false
+   },
+   "richTextEditorUrl": {
+    "type": "URL!",
+    "args": {},
+    "deprecated": false
+   },
+   "search": {
+    "type": "SearchResultConnection!",
+    "args": {
+     "after": "String",
+     "first": "Int!",
+     "query": "String!",
+     "types": "[SearchResultType!]"
+    },
+    "deprecated": false
+   },
+   "searchFilters": {
+    "type": "SearchFilterOptions!",
+    "args": {},
+    "deprecated": false
+   },
+   "setupRequired": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "shipsToCountries": {
+    "type": "[CountryCode!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "shopAddress": {
+    "type": "ShopAddress!",
+    "args": {},
+    "deprecated": false
+   },
+   "shopOwnerName": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "shopPolicies": {
+    "type": "[ShopPolicy!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "staffMembers": {
+    "type": "StaffMemberConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": true
+   },
+   "storefrontAccessTokens": {
+    "type": "StorefrontAccessTokenConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int",
+     "reverse": "Boolean"
+    },
+    "deprecated": false
+   },
+   "storefrontUrl": {
+    "type": "URL!",
+    "args": {},
+    "deprecated": true
+   },
+   "taxShipping": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "taxesIncluded": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "timezoneAbbreviation": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "timezoneOffset": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "timezoneOffsetMinutes": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "transactionalSmsDisabled": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "translations": {
+    "type": "[Translation!]!",
+    "args": {
+     "locale": "String!",
+     "marketId": "ID"
+    },
+    "deprecated": false
+   },
+   "unitSystem": {
+    "type": "UnitSystem!",
+    "args": {},
+    "deprecated": false
+   },
+   "updatedAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "url": {
+    "type": "URL!",
+    "args": {},
+    "deprecated": false
+   },
+   "weightUnit": {
+    "type": "WeightUnit!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "StagedMediaUploadTarget": {
+   "parameters": {
+    "type": "[StagedUploadParameter!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "resourceUrl": {
+    "type": "URL",
+    "args": {},
+    "deprecated": false
+   },
+   "url": {
+    "type": "URL",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "StagedUploadParameter": {
+   "name": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "value": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "StagedUploadsCreatePayload": {
+   "stagedTargets": {
+    "type": "[StagedMediaUploadTarget!]",
+    "args": {},
+    "deprecated": false
+   },
+   "userErrors": {
+    "type": "[UserError!]!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "TaxonomyCategory": {
+   "ancestorIds": {
+    "type": "[ID!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "attributes": {
+    "type": "TaxonomyCategoryAttributeConnection!",
+    "args": {
+     "after": "String",
+     "before": "String",
+     "first": "Int",
+     "last": "Int"
+    },
+    "deprecated": false
+   },
+   "childrenIds": {
+    "type": "[ID!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "fullName": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "isArchived": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "isLeaf": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "isRoot": {
+    "type": "Boolean!",
+    "args": {},
+    "deprecated": false
+   },
+   "level": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   },
+   "name": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "parentId": {
+    "type": "ID",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "UnitPriceMeasurement": {
+   "measuredType": {
+    "type": "UnitPriceMeasurementMeasuredType",
+    "args": {},
+    "deprecated": false
+   },
+   "quantityUnit": {
+    "type": "UnitPriceMeasurementMeasuredUnit",
+    "args": {},
+    "deprecated": false
+   },
+   "quantityValue": {
+    "type": "Float!",
+    "args": {},
+    "deprecated": false
+   },
+   "referenceUnit": {
+    "type": "UnitPriceMeasurementMeasuredUnit",
+    "args": {},
+    "deprecated": false
+   },
+   "referenceValue": {
+    "type": "Int!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "UserError": {
+   "field": {
+    "type": "[String!]",
+    "args": {},
+    "deprecated": false
+   },
+   "message": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "Video": {
+   "alt": {
+    "type": "String",
+    "args": {},
+    "deprecated": false
+   },
+   "createdAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   },
+   "duration": {
+    "type": "Int",
+    "args": {},
+    "deprecated": false
+   },
+   "fileErrors": {
+    "type": "[FileError!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "fileStatus": {
+    "type": "FileStatus!",
+    "args": {},
+    "deprecated": false
+   },
+   "filename": {
+    "type": "String!",
+    "args": {},
+    "deprecated": false
+   },
+   "id": {
+    "type": "ID!",
+    "args": {},
+    "deprecated": false
+   },
+   "mediaContentType": {
+    "type": "MediaContentType!",
+    "args": {},
+    "deprecated": false
+   },
+   "mediaErrors": {
+    "type": "[MediaError!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "mediaWarnings": {
+    "type": "[MediaWarning!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "originalSource": {
+    "type": "VideoSource",
+    "args": {},
+    "deprecated": false
+   },
+   "preview": {
+    "type": "MediaPreviewImage",
+    "args": {},
+    "deprecated": false
+   },
+   "sources": {
+    "type": "[VideoSource!]!",
+    "args": {},
+    "deprecated": false
+   },
+   "status": {
+    "type": "MediaStatus!",
+    "args": {},
+    "deprecated": false
+   },
+   "updatedAt": {
+    "type": "DateTime!",
+    "args": {},
+    "deprecated": false
+   }
+  },
+  "Weight": {
+   "unit": {
+    "type": "WeightUnit!",
+    "args": {},
+    "deprecated": false
+   },
+   "value": {
+    "type": "Float!",
+    "args": {},
+    "deprecated": false
+   }
+  }
+ },
+ "inputs": {
+  "AttributeInput": {
+   "key": "String!",
+   "value": "String!"
+  },
+  "ContextualPricingContext": {
+   "companyLocationId": "ID",
+   "country": "CountryCode",
+   "locationId": "ID"
+  },
+  "ContextualPublicationContext": {
+   "companyLocationId": "ID",
+   "country": "CountryCode",
+   "locationId": "ID"
+  },
+  "CountryHarmonizedSystemCodeInput": {
+   "countryCode": "CountryCode",
+   "harmonizedSystemCode": "String!"
+  },
+  "CreateMediaInput": {
+   "alt": "String",
+   "mediaContentType": "MediaContentType!",
+   "originalSource": "String!"
+  },
+  "FileSetInput": {
+   "alt": "String",
+   "contentType": "FileContentType",
+   "duplicateResolutionMode": "FileCreateInputDuplicateResolutionMode",
+   "filename": "String",
+   "id": "ID",
+   "originalSource": "String"
+  },
+  "FileUpdateInput": {
+   "alt": "String",
+   "filename": "String",
+   "id": "ID!",
+   "originalSource": "String",
+   "previewImageSource": "String",
+   "referencesToAdd": "[ID!]",
+   "referencesToRemove": "[ID!]"
+  },
+  "FulfillmentInput": {
+   "lineItemsByFulfillmentOrder": "[FulfillmentOrderLineItemsInput!]!",
+   "notifyCustomer": "Boolean",
+   "originAddress": "FulfillmentOriginAddressInput",
+   "trackingInfo": "FulfillmentTrackingInput"
+  },
+  "FulfillmentOrderLineItemInput": {
+   "id": "ID!",
+   "quantity": "Int!"
+  },
+  "FulfillmentOrderLineItemsInput": {
+   "fulfillmentOrderId": "ID!",
+   "fulfillmentOrderLineItems": "[FulfillmentOrderLineItemInput!]"
+  },
+  "FulfillmentOriginAddressInput": {
+   "address1": "String",
+   "address2": "String",
+   "city": "String",
+   "countryCode": "String!",
+   "provinceCode": "String",
+   "zip": "String"
+  },
+  "FulfillmentTrackingInput": {
+   "company": "String",
+   "number": "String",
+   "numbers": "[String!]",
+   "url": "URL",
+   "urls": "[URL!]"
+  },
+  "ImageTransformInput": {
+   "crop": "CropRegion",
+   "maxHeight": "Int",
+   "maxWidth": "Int",
+   "preferredContentType": "ImageContentType",
+   "scale": "Int"
+  },
+  "InventoryAdjustmentInput": {
+   "adjustment": "Int",
+   "changeFromQuantity": "Int",
+   "locationId": "ID!"
+  },
+  "InventoryItemInput": {
+   "cost": "Decimal",
+   "countryCodeOfOrigin": "CountryCode",
+   "countryHarmonizedSystemCodes": "[CountryHarmonizedSystemCodeInput!]",
+   "harmonizedSystemCode": "String",
+   "measurement": "InventoryItemMeasurementInput",
+   "provinceCodeOfOrigin": "String",
+   "requiresShipping": "Boolean",
+   "sku": "String",
+   "tracked": "Boolean"
+  },
+  "InventoryItemMeasurementInput": {
+   "shippingPackageId": "ID",
+   "weight": "WeightInput"
+  },
+  "InventoryLevelInput": {
+   "availableQuantity": "Int!",
+   "locationId": "ID!"
+  },
+  "InventoryQuantityInput": {
+   "changeFromQuantity": "Int",
+   "inventoryItemId": "ID!",
+   "locationId": "ID!",
+   "quantity": "Int!"
+  },
+  "InventorySetQuantitiesInput": {
+   "name": "String!",
+   "quantities": "[InventoryQuantityInput!]!",
+   "reason": "String!",
+   "referenceDocumentUri": "String"
+  },
+  "LinkedMetafieldCreateInput": {
+   "key": "String!",
+   "namespace": "String!",
+   "values": "[String!]"
+  },
+  "LocalizedFieldInput": {
+   "key": "LocalizedFieldKey!",
+   "value": "String!"
+  },
+  "MailingAddressInput": {
+   "address1": "String",
+   "address2": "String",
+   "city": "String",
+   "company": "String",
+   "countryCode": "CountryCode",
+   "firstName": "String",
+   "lastName": "String",
+   "phone": "String",
+   "provinceCode": "String",
+   "zip": "String"
+  },
+  "MetafieldInput": {
+   "id": "ID",
+   "key": "String",
+   "namespace": "String",
+   "type": "String",
+   "value": "String"
+  },
+  "MetafieldsSetInput": {
+   "compareDigest": "String",
+   "key": "String!",
+   "namespace": "String",
+   "ownerId": "ID!",
+   "type": "String",
+   "value": "String!"
+  },
+  "OptionSetInput": {
+   "id": "ID",
+   "linkedMetafield": "LinkedMetafieldCreateInput",
+   "name": "String",
+   "position": "Int",
+   "values": "[OptionValueSetInput!]"
+  },
+  "OptionValueSetInput": {
+   "id": "ID",
+   "name": "String"
+  },
+  "OrderInput": {
+   "customAttributes": "[AttributeInput!]",
+   "email": "String",
+   "id": "ID!",
+   "localizedFields": "[LocalizedFieldInput!]",
+   "metafields": "[MetafieldInput!]",
+   "note": "String",
+   "phone": "String",
+   "poNumber": "String",
+   "shippingAddress": "MailingAddressInput",
+   "tags": "[String!]"
+  },
+  "ProductClaimOwnershipInput": {
+   "bundles": "Boolean"
+  },
+  "ProductSetIdentifiers": {
+   "customId": "UniqueMetafieldValueInput",
+   "handle": "String",
+   "id": "ID"
+  },
+  "ProductSetInput": {
+   "category": "ID",
+   "claimOwnership": "ProductClaimOwnershipInput",
+   "collections": "[ID!]",
+   "combinedListingRole": "CombinedListingsRole",
+   "descriptionHtml": "String",
+   "files": "[FileSetInput!]",
+   "giftCard": "Boolean",
+   "giftCardTemplateSuffix": "String",
+   "handle": "String",
+   "metafields": "[MetafieldInput!]",
+   "productOptions": "[OptionSetInput!]",
+   "productType": "String",
+   "redirectNewHandle": "Boolean",
+   "requiresSellingPlan": "Boolean",
+   "seo": "SEOInput",
+   "status": "ProductStatus",
+   "tags": "[String!]",
+   "templateSuffix": "String",
+   "title": "String",
+   "variants": "[ProductVariantSetInput!]",
+   "vendor": "String"
+  },
+  "ProductSetInventoryInput": {
+   "locationId": "ID!",
+   "name": "String!",
+   "quantity": "Int!"
+  },
+  "ProductUpdateIdentifiers": {
+   "customId": "UniqueMetafieldValueInput",
+   "handle": "String",
+   "id": "ID"
+  },
+  "ProductUpdateInput": {
+   "category": "ID",
+   "collectionsToJoin": "[ID!]",
+   "collectionsToLeave": "[ID!]",
+   "deleteConflictingConstrainedMetafields": "Boolean",
+   "descriptionHtml": "String",
+   "giftCardTemplateSuffix": "String",
+   "handle": "String",
+   "id": "ID",
+   "metafields": "[MetafieldInput!]",
+   "productType": "String",
+   "redirectNewHandle": "Boolean",
+   "requiresSellingPlan": "Boolean",
+   "seo": "SEOInput",
+   "status": "ProductStatus",
+   "tags": "[String!]",
+   "templateSuffix": "String",
+   "title": "String",
+   "vendor": "String"
+  },
+  "ProductVariantSetInput": {
+   "barcode": "String",
+   "compareAtPrice": "Money",
+   "file": "FileSetInput",
+   "id": "ID",
+   "inventoryItem": "InventoryItemInput",
+   "inventoryPolicy": "ProductVariantInventoryPolicy",
+   "inventoryQuantities": "[ProductSetInventoryInput!]",
+   "metafields": "[MetafieldInput!]",
+   "optionValues": "[VariantOptionValueInput!]!",
+   "position": "Int",
+   "price": "Money",
+   "published": "Boolean",
+   "requiresComponents": "Boolean",
+   "showUnitPrice": "Boolean",
+   "sku": "String",
+   "taxCode": "String",
+   "taxable": "Boolean",
+   "unitPriceMeasurement": "UnitPriceMeasurementInput"
+  },
+  "ProductVariantsBulkInput": {
+   "barcode": "String",
+   "compareAtPrice": "Money",
+   "id": "ID",
+   "inventoryItem": "InventoryItemInput",
+   "inventoryPolicy": "ProductVariantInventoryPolicy",
+   "inventoryQuantities": "[InventoryLevelInput!]",
+   "mediaId": "ID",
+   "mediaSrc": "[String!]",
+   "metafields": "[MetafieldInput!]",
+   "optionValues": "[VariantOptionValueInput!]",
+   "price": "Money",
+   "published": "Boolean",
+   "quantityAdjustments": "[InventoryAdjustmentInput!]",
+   "requiresComponents": "Boolean",
+   "showUnitPrice": "Boolean",
+   "taxCode": "String",
+   "taxable": "Boolean",
+   "unitPriceMeasurement": "UnitPriceMeasurementInput"
+  },
+  "RefundDutyInput": {
+   "dutyId": "ID!",
+   "refundType": "RefundDutyRefundType"
+  },
+  "RefundLineItemInput": {
+   "lineItemId": "ID!",
+   "locationId": "ID",
+   "quantity": "Int!",
+   "restockType": "RefundLineItemRestockType"
+  },
+  "SEOInput": {
+   "description": "String",
+   "title": "String"
+  },
+  "StagedUploadInput": {
+   "fileSize": "UnsignedInt64",
+   "filename": "String!",
+   "httpMethod": "StagedUploadHttpMethodType",
+   "mimeType": "String!",
+   "resource": "StagedUploadTargetGenerateUploadResource!"
+  },
+  "UniqueMetafieldValueInput": {
+   "key": "String!",
+   "namespace": "String",
+   "value": "String!"
+  },
+  "UnitPriceMeasurementInput": {
+   "quantityUnit": "UnitPriceMeasurementMeasuredUnit",
+   "quantityValue": "Float",
+   "referenceUnit": "UnitPriceMeasurementMeasuredUnit",
+   "referenceValue": "Int"
+  },
+  "VariantOptionValueInput": {
+   "id": "ID",
+   "linkedMetafieldValue": "String",
+   "name": "String",
+   "optionId": "ID",
+   "optionName": "String"
+  },
+  "WeightInput": {
+   "unit": "WeightUnit!",
+   "value": "Float!"
+  }
+ },
+ "enums": {
+  "AppRevenueAttributionRecordSortKeys": [
+   "CREATED_AT",
+   "ID"
+  ],
+  "AppSubscriptionSortKeys": [
+   "CREATED_AT",
+   "ID"
+  ],
+  "AppTransactionSortKeys": [
+   "CREATED_AT",
+   "ID"
+  ],
+  "Audience": [
+   "CUSTOMERVIEW",
+   "MERCHANTVIEW"
+  ],
+  "BulkMutationErrorCode": [
+   "INTERNAL_FILE_SERVER_ERROR",
+   "INVALID_MUTATION",
+   "INVALID_STAGED_UPLOAD_FILE",
+   "LIMIT_REACHED",
+   "NO_SUCH_FILE",
+   "OPERATION_IN_PROGRESS"
+  ],
+  "BulkOperationErrorCode": [
+   "ACCESS_DENIED",
+   "INTERNAL_SERVER_ERROR",
+   "TIMEOUT"
+  ],
+  "BulkOperationStatus": [
+   "CANCELED",
+   "CANCELING",
+   "COMPLETED",
+   "CREATED",
+   "EXPIRED",
+   "FAILED",
+   "RUNNING"
+  ],
+  "BulkOperationType": [
+   "MUTATION",
+   "QUERY"
+  ],
+  "CatalogType": [
+   "APP",
+   "COMPANY_LOCATION",
+   "MARKET",
+   "NONE"
+  ],
+  "CollectionSortKeys": [
+   "ID",
+   "RELEVANCE",
+   "TITLE",
+   "UPDATED_AT"
+  ],
+  "CombinedListingsRole": [
+   "CHILD",
+   "PARENT"
+  ],
+  "CountPrecision": [
+   "AT_LEAST",
+   "EXACT"
+  ],
+  "CountryCode": [
+   "AC",
+   "AD",
+   "AE",
+   "AF",
+   "AG",
+   "AI",
+   "AL",
+   "AM",
+   "AN",
+   "AO",
+   "AR",
+   "AT",
+   "AU",
+   "AW",
+   "AX",
+   "AZ",
+   "BA",
+   "BB",
+   "BD",
+   "BE",
+   "BF",
+   "BG",
+   "BH",
+   "BI",
+   "BJ",
+   "BL",
+   "BM",
+   "BN",
+   "BO",
+   "BQ",
+   "BR",
+   "BS",
+   "BT",
+   "BV",
+   "BW",
+   "BY",
+   "BZ",
+   "CA",
+   "CC",
+   "CD",
+   "CF",
+   "CG",
+   "CH",
+   "CI",
+   "CK",
+   "CL",
+   "CM",
+   "CN",
+   "CO",
+   "CR",
+   "CU",
+   "CV",
+   "CW",
+   "CX",
+   "CY",
+   "CZ",
+   "DE",
+   "DJ",
+   "DK",
+   "DM",
+   "DO",
+   "DZ",
+   "EC",
+   "EE",
+   "EG",
+   "EH",
+   "ER",
+   "ES",
+   "ET",
+   "FI",
+   "FJ",
+   "FK",
+   "FO",
+   "FR",
+   "GA",
+   "GB",
+   "GD",
+   "GE",
+   "GF",
+   "GG",
+   "GH",
+   "GI",
+   "GL",
+   "GM",
+   "GN",
+   "GP",
+   "GQ",
+   "GR",
+   "GS",
+   "GT",
+   "GW",
+   "GY",
+   "HK",
+   "HM",
+   "HN",
+   "HR",
+   "HT",
+   "HU",
+   "ID",
+   "IE",
+   "IL",
+   "IM",
+   "IN",
+   "IO",
+   "IQ",
+   "IR",
+   "IS",
+   "IT",
+   "JE",
+   "JM",
+   "JO",
+   "JP",
+   "KE",
+   "KG",
+   "KH",
+   "KI",
+   "KM",
+   "KN",
+   "KP",
+   "KR",
+   "KW",
+   "KY",
+   "KZ",
+   "LA",
+   "LB",
+   "LC",
+   "LI",
+   "LK",
+   "LR",
+   "LS",
+   "LT",
+   "LU",
+   "LV",
+   "LY",
+   "MA",
+   "MC",
+   "MD",
+   "ME",
+   "MF",
+   "MG",
+   "MK",
+   "ML",
+   "MM",
+   "MN",
+   "MO",
+   "MQ",
+   "MR",
+   "MS",
+   "MT",
+   "MU",
+   "MV",
+   "MW",
+   "MX",
+   "MY",
+   "MZ",
+   "NA",
+   "NC",
+   "NE",
+   "NF",
+   "NG",
+   "NI",
+   "NL",
+   "NO",
+   "NP",
+   "NR",
+   "NU",
+   "NZ",
+   "OM",
+   "PA",
+   "PE",
+   "PF",
+   "PG",
+   "PH",
+   "PK",
+   "PL",
+   "PM",
+   "PN",
+   "PS",
+   "PT",
+   "PY",
+   "QA",
+   "RE",
+   "RO",
+   "RS",
+   "RU",
+   "RW",
+   "SA",
+   "SB",
+   "SC",
+   "SD",
+   "SE",
+   "SG",
+   "SH",
+   "SI",
+   "SJ",
+   "SK",
+   "SL",
+   "SM",
+   "SN",
+   "SO",
+   "SR",
+   "SS",
+   "ST",
+   "SV",
+   "SX",
+   "SY",
+   "SZ",
+   "TA",
+   "TC",
+   "TD",
+   "TF",
+   "TG",
+   "TH",
+   "TJ",
+   "TK",
+   "TL",
+   "TM",
+   "TN",
+   "TO",
+   "TR",
+   "TT",
+   "TV",
+   "TW",
+   "TZ",
+   "UA",
+   "UG",
+   "UM",
+   "US",
+   "UY",
+   "UZ",
+   "VA",
+   "VC",
+   "VE",
+   "VG",
+   "VN",
+   "VU",
+   "WF",
+   "WS",
+   "XK",
+   "YE",
+   "YT",
+   "ZA",
+   "ZM",
+   "ZW",
+   "ZZ"
+  ],
+  "CropRegion": [
+   "BOTTOM",
+   "CENTER",
+   "LEFT",
+   "RIGHT",
+   "TOP"
+  ],
+  "CurrencyCode": [
+   "AED",
+   "AFN",
+   "ALL",
+   "AMD",
+   "ANG",
+   "AOA",
+   "ARS",
+   "AUD",
+   "AWG",
+   "AZN",
+   "BAM",
+   "BBD",
+   "BDT",
+   "BGN",
+   "BHD",
+   "BIF",
+   "BMD",
+   "BND",
+   "BOB",
+   "BRL",
+   "BSD",
+   "BTN",
+   "BWP",
+   "BYN",
+   "BZD",
+   "CAD",
+   "CDF",
+   "CHF",
+   "CLP",
+   "CNY",
+   "COP",
+   "CRC",
+   "CVE",
+   "CZK",
+   "DJF",
+   "DKK",
+   "DOP",
+   "DZD",
+   "EGP",
+   "ERN",
+   "ETB",
+   "EUR",
+   "FJD",
+   "FKP",
+   "GBP",
+   "GEL",
+   "GHS",
+   "GIP",
+   "GMD",
+   "GNF",
+   "GTQ",
+   "GYD",
+   "HKD",
+   "HNL",
+   "HRK",
+   "HTG",
+   "HUF",
+   "IDR",
+   "ILS",
+   "INR",
+   "IQD",
+   "IRR",
+   "ISK",
+   "JEP",
+   "JMD",
+   "JOD",
+   "JPY",
+   "KES",
+   "KGS",
+   "KHR",
+   "KID",
+   "KMF",
+   "KRW",
+   "KWD",
+   "KYD",
+   "KZT",
+   "LAK",
+   "LBP",
+   "LKR",
+   "LRD",
+   "LSL",
+   "LTL",
+   "LVL",
+   "LYD",
+   "MAD",
+   "MDL",
+   "MGA",
+   "MKD",
+   "MMK",
+   "MNT",
+   "MOP",
+   "MRU",
+   "MUR",
+   "MVR",
+   "MWK",
+   "MXN",
+   "MYR",
+   "MZN",
+   "NAD",
+   "NGN",
+   "NIO",
+   "NOK",
+   "NPR",
+   "NZD",
+   "OMR",
+   "PAB",
+   "PEN",
+   "PGK",
+   "PHP",
+   "PKR",
+   "PLN",
+   "PYG",
+   "QAR",
+   "RON",
+   "RSD",
+   "RUB",
+   "RWF",
+   "SAR",
+   "SBD",
+   "SCR",
+   "SDG",
+   "SEK",
+   "SGD",
+   "SHP",
+   "SLL",
+   "SOS",
+   "SRD",
+   "SSP",
+   "STN",
+   "SYP",
+   "SZL",
+   "THB",
+   "TJS",
+   "TMT",
+   "TND",
+   "TOP",
+   "TRY",
+   "TTD",
+   "TWD",
+   "TZS",
+   "UAH",
+   "UGX",
+   "USD",
+   "USDC",
+   "UYU",
+   "UZS",
+   "VED",
+   "VES",
+   "VND",
+   "VUV",
+   "WST",
+   "XAF",
+   "XCD",
+   "XOF",
+   "XPF",
+   "XXX",
+   "YER",
+   "ZAR",
+   "ZMW"
+  ],
+  "CustomerSortKeys": [
+   "CREATED_AT",
+   "ID",
+   "LOCATION",
+   "NAME",
+   "RELEVANCE",
+   "UPDATED_AT"
+  ],
+  "EventSortKeys": [
+   "CREATED_AT",
+   "ID"
+  ],
+  "FileContentType": [
+   "EXTERNAL_VIDEO",
+   "FILE",
+   "IMAGE",
+   "MODEL_3D",
+   "VIDEO"
+  ],
+  "FileCreateInputDuplicateResolutionMode": [
+   "APPEND_UUID",
+   "RAISE_ERROR",
+   "REPLACE"
+  ],
+  "FileErrorCode": [
+   "DUPLICATE_FILENAME_ERROR",
+   "EXTERNAL_VIDEO_EMBED_DISABLED",
+   "EXTERNAL_VIDEO_EMBED_NOT_FOUND_OR_TRANSCODING",
+   "EXTERNAL_VIDEO_INVALID_ASPECT_RATIO",
+   "EXTERNAL_VIDEO_NOT_FOUND",
+   "EXTERNAL_VIDEO_UNLISTED",
+   "FILE_STORAGE_LIMIT_EXCEEDED",
+   "GENERIC_FILE_DOWNLOAD_FAILURE",
+   "GENERIC_FILE_INVALID_SIZE",
+   "IMAGE_DOWNLOAD_FAILURE",
+   "IMAGE_PROCESSING_FAILURE",
+   "INVALID_IMAGE_ASPECT_RATIO",
+   "INVALID_IMAGE_FILE_SIZE",
+   "INVALID_IMAGE_RESOLUTION",
+   "INVALID_SIGNED_URL",
+   "MEDIA_TIMEOUT_ERROR",
+   "MODEL3D_GLB_OUTPUT_CREATION_ERROR",
+   "MODEL3D_GLB_TO_USDZ_CONVERSION_ERROR",
+   "MODEL3D_PROCESSING_FAILURE",
+   "MODEL3D_THUMBNAIL_GENERATION_ERROR",
+   "MODEL3D_THUMBNAIL_REGENERATION_ERROR",
+   "MODEL3D_VALIDATION_ERROR",
+   "UNKNOWN",
+   "UNSUPPORTED_IMAGE_FILE_TYPE",
+   "VIDEO_INVALID_FILETYPE_ERROR",
+   "VIDEO_MAX_DURATION_ERROR",
+   "VIDEO_MAX_HEIGHT_ERROR",
+   "VIDEO_MAX_WIDTH_ERROR",
+   "VIDEO_METADATA_READ_ERROR",
+   "VIDEO_MIN_DURATION_ERROR",
+   "VIDEO_MIN_HEIGHT_ERROR",
+   "VIDEO_MIN_WIDTH_ERROR",
+   "VIDEO_VALIDATION_ERROR"
+  ],
+  "FileStatus": [
+   "FAILED",
+   "PROCESSING",
+   "READY",
+   "UPLOADED"
+  ],
+  "FilesErrorCode": [
+   "ALT_VALUE_LIMIT_EXCEEDED",
+   "BLANK_SEARCH",
+   "FILENAME_ALREADY_EXISTS",
+   "FILE_DOES_NOT_EXIST",
+   "FILE_LOCKED",
+   "INVALID",
+   "INVALID_DUPLICATE_MODE_FOR_TYPE",
+   "INVALID_DUPLICATE_RESOLUTION_MODE",
+   "INVALID_FAILED_MEDIA_STATE",
+   "INVALID_FILENAME",
+   "INVALID_FILENAME_EXTENSION",
+   "INVALID_IMAGE_SOURCE_URL",
+   "INVALID_QUERY",
+   "MEDIA_CANNOT_BE_MODIFIED",
+   "MISMATCHED_FILENAME_AND_ORIGINAL_SOURCE",
+   "MISSING_ARGUMENTS",
+   "MISSING_FILENAME_FOR_DUPLICATE_MODE_REPLACE",
+   "NON_IMAGE_MEDIA_PER_SHOP_LIMIT_EXCEEDED",
+   "NON_READY_STATE",
+   "PRODUCT_MEDIA_LIMIT_EXCEEDED",
+   "PRODUCT_SUSPENDED",
+   "REFERENCE_TARGET_DOES_NOT_EXIST",
+   "TOO_MANY_ARGUMENTS",
+   "TOO_MANY_FILE_REFERENCE",
+   "UNACCEPTABLE_ASSET",
+   "UNACCEPTABLE_TRIAL_ASSET",
+   "UNACCEPTABLE_UNVERIFIED_TRIAL_ASSET",
+   "UNSUPPORTED_FILE_REFERENCE",
+   "UNSUPPORTED_MEDIA_TYPE_FOR_FILENAME_UPDATE"
+  ],
+  "FulfillmentDisplayStatus": [
+   "ATTEMPTED_DELIVERY",
+   "CANCELED",
+   "CARRIER_PICKED_UP",
+   "CONFIRMED",
+   "DELAYED",
+   "DELIVERED",
+   "FAILURE",
+   "FULFILLED",
+   "IN_TRANSIT",
+   "LABEL_PRINTED",
+   "LABEL_PURCHASED",
+   "LABEL_VOIDED",
+   "MARKED_AS_FULFILLED",
+   "NOT_DELIVERED",
+   "OUT_FOR_DELIVERY",
+   "PICKED_UP",
+   "READY_FOR_PICKUP",
+   "SUBMITTED"
+  ],
+  "FulfillmentEventSortKeys": [
+   "HAPPENED_AT",
+   "ID"
+  ],
+  "FulfillmentOrderAssignmentStatus": [
+   "CANCELLATION_REQUESTED",
+   "FULFILLMENT_ACCEPTED",
+   "FULFILLMENT_REQUESTED",
+   "FULFILLMENT_UNSUBMITTED"
+  ],
+  "FulfillmentOrderMerchantRequestKind": [
+   "CANCELLATION_REQUEST",
+   "FULFILLMENT_REQUEST"
+  ],
+  "FulfillmentOrderRequestStatus": [
+   "ACCEPTED",
+   "CANCELLATION_ACCEPTED",
+   "CANCELLATION_REJECTED",
+   "CANCELLATION_REQUESTED",
+   "CLOSED",
+   "REJECTED",
+   "SUBMITTED",
+   "UNSUBMITTED"
+  ],
+  "FulfillmentOrderSortKeys": [
+   "ID",
+   "UPDATED_AT"
+  ],
+  "FulfillmentOrderStatus": [
+   "CANCELLED",
+   "CLOSED",
+   "INCOMPLETE",
+   "IN_PROGRESS",
+   "ON_HOLD",
+   "OPEN",
+   "SCHEDULED"
+  ],
+  "FulfillmentStatus": [
+   "CANCELLED",
+   "ERROR",
+   "FAILURE",
+   "SUCCESS"
+  ],
+  "ImageContentType": [
+   "JPG",
+   "PNG",
+   "WEBP"
+  ],
+  "InventorySetQuantitiesUserErrorCode": [
+   "CHANGE_FROM_QUANTITY_STALE",
+   "COMPARE_QUANTITY_REQUIRED",
+   "COMPARE_QUANTITY_STALE",
+   "IDEMPOTENCY_CONCURRENT_REQUEST",
+   "IDEMPOTENCY_KEY_PARAMETER_MISMATCH",
+   "IDEMPOTENCY_PREVIOUS_ATTEMPT_FAILED",
+   "INVALID_INVENTORY_ITEM",
+   "INVALID_LOCATION",
+   "INVALID_NAME",
+   "INVALID_QUANTITY_NEGATIVE",
+   "INVALID_QUANTITY_TOO_HIGH",
+   "INVALID_QUANTITY_TOO_LOW",
+   "INVALID_REASON",
+   "INVALID_REFERENCE_DOCUMENT",
+   "ITEM_NOT_STOCKED_AT_LOCATION",
+   "NON_MUTABLE_INVENTORY_ITEM",
+   "NO_DUPLICATE_INVENTORY_ITEM_ID_GROUP_ID_PAIR"
+  ],
+  "LocalizationExtensionPurpose": [
+   "SHIPPING",
+   "TAX"
+  ],
+  "LocalizedFieldKey": [
+   "SHIPPING_CREDENTIAL_BR",
+   "SHIPPING_CREDENTIAL_CL",
+   "SHIPPING_CREDENTIAL_CN",
+   "SHIPPING_CREDENTIAL_CO",
+   "SHIPPING_CREDENTIAL_CR",
+   "SHIPPING_CREDENTIAL_EC",
+   "SHIPPING_CREDENTIAL_ES",
+   "SHIPPING_CREDENTIAL_GT",
+   "SHIPPING_CREDENTIAL_ID",
+   "SHIPPING_CREDENTIAL_KR",
+   "SHIPPING_CREDENTIAL_MX",
+   "SHIPPING_CREDENTIAL_MY",
+   "SHIPPING_CREDENTIAL_PE",
+   "SHIPPING_CREDENTIAL_PT",
+   "SHIPPING_CREDENTIAL_PY",
+   "SHIPPING_CREDENTIAL_TR",
+   "SHIPPING_CREDENTIAL_TW",
+   "SHIPPING_CREDENTIAL_TYPE_CO",
+   "TAX_CREDENTIAL_BR",
+   "TAX_CREDENTIAL_CL",
+   "TAX_CREDENTIAL_CO",
+   "TAX_CREDENTIAL_CR",
+   "TAX_CREDENTIAL_EC",
+   "TAX_CREDENTIAL_ES",
+   "TAX_CREDENTIAL_GT",
+   "TAX_CREDENTIAL_ID",
+   "TAX_CREDENTIAL_IT",
+   "TAX_CREDENTIAL_MX",
+   "TAX_CREDENTIAL_MY",
+   "TAX_CREDENTIAL_PE",
+   "TAX_CREDENTIAL_PT",
+   "TAX_CREDENTIAL_PY",
+   "TAX_CREDENTIAL_TR",
+   "TAX_CREDENTIAL_TYPE_CO",
+   "TAX_CREDENTIAL_TYPE_MX",
+   "TAX_CREDENTIAL_USE_MX",
+   "TAX_EMAIL_IT"
+  ],
+  "LocalizedFieldPurpose": [
+   "SHIPPING",
+   "TAX"
+  ],
+  "LocationSortKeys": [
+   "ID",
+   "NAME",
+   "RELEVANCE"
+  ],
+  "MediaContentType": [
+   "EXTERNAL_VIDEO",
+   "IMAGE",
+   "MODEL_3D",
+   "VIDEO"
+  ],
+  "MediaErrorCode": [
+   "DUPLICATE_FILENAME_ERROR",
+   "EXTERNAL_VIDEO_EMBED_DISABLED",
+   "EXTERNAL_VIDEO_EMBED_NOT_FOUND_OR_TRANSCODING",
+   "EXTERNAL_VIDEO_INVALID_ASPECT_RATIO",
+   "EXTERNAL_VIDEO_NOT_FOUND",
+   "EXTERNAL_VIDEO_UNLISTED",
+   "FILE_STORAGE_LIMIT_EXCEEDED",
+   "GENERIC_FILE_DOWNLOAD_FAILURE",
+   "GENERIC_FILE_INVALID_SIZE",
+   "IMAGE_DOWNLOAD_FAILURE",
+   "IMAGE_PROCESSING_FAILURE",
+   "INVALID_IMAGE_ASPECT_RATIO",
+   "INVALID_IMAGE_FILE_SIZE",
+   "INVALID_IMAGE_RESOLUTION",
+   "INVALID_SIGNED_URL",
+   "MEDIA_TIMEOUT_ERROR",
+   "MODEL3D_GLB_OUTPUT_CREATION_ERROR",
+   "MODEL3D_GLB_TO_USDZ_CONVERSION_ERROR",
+   "MODEL3D_PROCESSING_FAILURE",
+   "MODEL3D_THUMBNAIL_GENERATION_ERROR",
+   "MODEL3D_THUMBNAIL_REGENERATION_ERROR",
+   "MODEL3D_VALIDATION_ERROR",
+   "UNKNOWN",
+   "UNSUPPORTED_IMAGE_FILE_TYPE",
+   "VIDEO_INVALID_FILETYPE_ERROR",
+   "VIDEO_MAX_DURATION_ERROR",
+   "VIDEO_MAX_HEIGHT_ERROR",
+   "VIDEO_MAX_WIDTH_ERROR",
+   "VIDEO_METADATA_READ_ERROR",
+   "VIDEO_MIN_DURATION_ERROR",
+   "VIDEO_MIN_HEIGHT_ERROR",
+   "VIDEO_MIN_WIDTH_ERROR",
+   "VIDEO_VALIDATION_ERROR"
+  ],
+  "MediaHost": [
+   "VIMEO",
+   "YOUTUBE"
+  ],
+  "MediaPreviewImageStatus": [
+   "FAILED",
+   "PROCESSING",
+   "READY",
+   "UPLOADED"
+  ],
+  "MediaStatus": [
+   "FAILED",
+   "PROCESSING",
+   "READY",
+   "UPLOADED"
+  ],
+  "MediaWarningCode": [
+   "MODEL_LARGE_PHYSICAL_SIZE",
+   "MODEL_PREVIEW_IMAGE_FAIL",
+   "MODEL_SMALL_PHYSICAL_SIZE"
+  ],
+  "MetafieldDefinitionPinnedStatus": [
+   "ANY",
+   "PINNED",
+   "UNPINNED"
+  ],
+  "MetafieldDefinitionSortKeys": [
+   "ID",
+   "NAME",
+   "PINNED_POSITION",
+   "RELEVANCE"
+  ],
+  "MetafieldOwnerType": [
+   "API_PERMISSION",
+   "ARTICLE",
+   "BLOG",
+   "CARTTRANSFORM",
+   "COLLECTION",
+   "COMPANY",
+   "COMPANY_LOCATION",
+   "CUSTOMER",
+   "DELIVERY_CUSTOMIZATION",
+   "DISCOUNT",
+   "DRAFTORDER",
+   "FULFILLMENT_CONSTRAINT_RULE",
+   "GIFT_CARD_TRANSACTION",
+   "LOCATION",
+   "MARKET",
+   "ORDER",
+   "ORDER_ROUTING_LOCATION_RULE",
+   "PAGE",
+   "PAYMENT_CUSTOMIZATION",
+   "PRODUCT",
+   "PRODUCTVARIANT",
+   "SELLING_PLAN",
+   "SHOP",
+   "TRANSFER",
+   "VALIDATION"
+  ],
+  "MetafieldsSetUserErrorCode": [
+   "APP_NOT_AUTHORIZED",
+   "BLANK",
+   "CAPABILITY_VIOLATION",
+   "INCLUSION",
+   "INTERNAL_ERROR",
+   "INVALID",
+   "INVALID_COMPARE_DIGEST",
+   "INVALID_TYPE",
+   "INVALID_VALUE",
+   "LESS_THAN_OR_EQUAL_TO",
+   "PRESENT",
+   "STALE_OBJECT",
+   "TAKEN",
+   "TOO_LONG",
+   "TOO_SHORT"
+  ],
+  "NotificationUsage": [
+   "SMS",
+   "WEB"
+  ],
+  "OrderCancelReason": [
+   "CUSTOMER",
+   "DECLINED",
+   "FRAUD",
+   "INVENTORY",
+   "OTHER",
+   "STAFF"
+  ],
+  "OrderDisplayFinancialStatus": [
+   "AUTHORIZED",
+   "EXPIRED",
+   "PAID",
+   "PARTIALLY_PAID",
+   "PARTIALLY_REFUNDED",
+   "PENDING",
+   "REFUNDED",
+   "VOIDED"
+  ],
+  "OrderDisplayFulfillmentStatus": [
+   "FULFILLED",
+   "IN_PROGRESS",
+   "ON_HOLD",
+   "OPEN",
+   "PARTIALLY_FULFILLED",
+   "PENDING_FULFILLMENT",
+   "REQUEST_DECLINED",
+   "RESTOCKED",
+   "SCHEDULED",
+   "UNFULFILLED"
+  ],
+  "OrderReturnStatus": [
+   "INSPECTION_COMPLETE",
+   "IN_PROGRESS",
+   "NO_RETURN",
+   "RETURNED",
+   "RETURN_FAILED",
+   "RETURN_REQUESTED"
+  ],
+  "OrderRiskLevel": [
+   "HIGH",
+   "LOW",
+   "MEDIUM"
+  ],
+  "OrderSortKeys": [
+   "CREATED_AT",
+   "CURRENT_TOTAL_PRICE",
+   "CUSTOMER_NAME",
+   "DESTINATION",
+   "FINANCIAL_STATUS",
+   "FULFILLMENT_STATUS",
+   "ID",
+   "ORDER_NUMBER",
+   "PO_NUMBER",
+   "PROCESSED_AT",
+   "RELEVANCE",
+   "TOTAL_ITEMS_QUANTITY",
+   "TOTAL_PRICE",
+   "UPDATED_AT"
+  ],
+  "ProductImageSortKeys": [
+   "CREATED_AT",
+   "ID",
+   "POSITION"
+  ],
+  "ProductMediaSortKeys": [
+   "ID",
+   "POSITION"
+  ],
+  "ProductSetUserErrorCode": [
+   "CANNOT_COMBINE_LINKED_AND_NONLINKED_OPTION_VALUES",
+   "CAPABILITY_VIOLATION",
+   "DUPLICATED_METAFIELD_VALUE",
+   "DUPLICATED_OPTION_NAME",
+   "DUPLICATED_OPTION_VALUE",
+   "DUPLICATED_VALUE",
+   "DUPLICATE_LINKED_OPTION",
+   "GENERIC_ERROR",
+   "GIFT_CARDS_NOT_ACTIVATED",
+   "GIFT_CARD_ATTRIBUTE_CANNOT_BE_CHANGED",
+   "HANDLE_NOT_UNIQUE",
+   "ID_NOT_ALLOWED",
+   "INPUT_MISMATCH",
+   "INVALID_INPUT",
+   "INVALID_METAFIELD",
+   "INVALID_METAFIELD_VALUE_FOR_LINKED_OPTION",
+   "INVALID_PRODUCT",
+   "INVALID_VARIANT",
+   "INVENTORY_QUANTITIES_LIMIT_EXCEEDED",
+   "JOB_ERROR",
+   "LINKED_METAFIELD_DEFINITION_NOT_FOUND",
+   "LINKED_OPTIONS_NOT_SUPPORTED_FOR_SHOP",
+   "METAFIELD_MISMATCH",
+   "MISSING_FIELD_REQUIRED",
+   "NOT_FOUND",
+   "OPTIONS_OVER_LIMIT",
+   "OPTION_DOES_NOT_EXIST",
+   "OPTION_VALUES_MISSING",
+   "OPTION_VALUES_OVER_LIMIT",
+   "OPTION_VALUE_DOES_NOT_EXIST",
+   "PRODUCT_DOES_NOT_EXIST",
+   "PRODUCT_OPTIONS_INPUT_MISSING",
+   "PRODUCT_SUSPENDED",
+   "PRODUCT_VARIANT_DOES_NOT_EXIST",
+   "VARIANTS_INPUT_MISSING",
+   "VARIANTS_OVER_LIMIT"
+  ],
+  "ProductSortKeys": [
+   "CREATED_AT",
+   "ID",
+   "INVENTORY_TOTAL",
+   "PRODUCT_TYPE",
+   "PUBLISHED_AT",
+   "RELEVANCE",
+   "TITLE",
+   "UPDATED_AT",
+   "VENDOR"
+  ],
+  "ProductStatus": [
+   "ACTIVE",
+   "ARCHIVED",
+   "DRAFT",
+   "UNLISTED"
+  ],
+  "ProductVariantInventoryPolicy": [
+   "CONTINUE",
+   "DENY"
+  ],
+  "ProductVariantSortKeys": [
+   "FULL_TITLE",
+   "ID",
+   "INVENTORY_LEVELS_AVAILABLE",
+   "INVENTORY_MANAGEMENT",
+   "INVENTORY_POLICY",
+   "INVENTORY_QUANTITY",
+   "NAME",
+   "POPULAR",
+   "POSITION",
+   "RELEVANCE",
+   "SKU",
+   "TITLE"
+  ],
+  "ProductVariantsBulkCreateStrategy": [
+   "DEFAULT",
+   "PRESERVE_STANDALONE_VARIANT",
+   "REMOVE_STANDALONE_VARIANT"
+  ],
+  "ProductVariantsBulkCreateUserErrorCode": [
+   "CANNOT_SET_NAME_FOR_LINKED_OPTION_VALUE",
+   "GREATER_THAN_OR_EQUAL_TO",
+   "INVALID",
+   "INVALID_INPUT",
+   "INVENTORY_QUANTITIES_LIMIT_EXCEEDED",
+   "LOCAL_CURRENCY_GIFT_CARD_PRICE_MUST_BE_ZERO",
+   "MUST_BE_FOR_THIS_PRODUCT",
+   "NEED_TO_ADD_OPTION_VALUES",
+   "NEGATIVE_PRICE_VALUE",
+   "NOT_DEFINED_FOR_SHOP",
+   "NO_KEY_ON_CREATE",
+   "OPTION_VALUES_FOR_NUMBER_OF_UNKNOWN_OPTIONS",
+   "PRODUCT_DOES_NOT_EXIST",
+   "PRODUCT_SUSPENDED",
+   "SUBSCRIPTION_VIOLATION",
+   "TOO_MANY_INVENTORY_LOCATIONS",
+   "TRACKED_VARIANT_LOCATION_NOT_FOUND",
+   "UNSUPPORTED_COMBINED_LISTING_PARENT_OPERATION",
+   "VARIANT_ALREADY_EXISTS",
+   "VARIANT_ALREADY_EXISTS_CHANGE_OPTION_VALUE"
+  ],
+  "ProductVariantsBulkUpdateUserErrorCode": [
+   "BLANK",
+   "CANNOT_SET_NAME_FOR_LINKED_OPTION_VALUE",
+   "CANNOT_SPECIFY_BOTH",
+   "GREATER_THAN_OR_EQUAL_TO",
+   "INVALID_INPUT",
+   "INVALID_VALUE",
+   "INVENTORY_QUANTITIES_LIMIT_EXCEEDED",
+   "LOCAL_CURRENCY_GIFT_CARD_PRICE_MUST_BE_ZERO",
+   "MUST_BE_FOR_THIS_PRODUCT",
+   "MUST_SPECIFY_ONE_OF_PAIR",
+   "NEED_TO_ADD_OPTION_VALUES",
+   "NEGATIVE_PRICE_VALUE",
+   "NOT_DEFINED_FOR_SHOP",
+   "NO_INVENTORY_QUANTITES_DURING_UPDATE",
+   "NO_INVENTORY_QUANTITIES_ON_VARIANTS_UPDATE",
+   "OPTION_DOES_NOT_EXIST",
+   "OPTION_VALUES_FOR_NUMBER_OF_UNKNOWN_OPTIONS",
+   "OPTION_VALUE_DOES_NOT_EXIST",
+   "OPTION_VALUE_NAME_TOO_LONG",
+   "PRODUCT_DOES_NOT_EXIST",
+   "PRODUCT_SUSPENDED",
+   "PRODUCT_VARIANT_DOES_NOT_EXIST",
+   "PRODUCT_VARIANT_ID_MISSING",
+   "SUBSCRIPTION_VIOLATION",
+   "TOO_LONG",
+   "TOO_SHORT",
+   "UNSUPPORTED_COMBINED_LISTING_PARENT_OPERATION",
+   "VARIANT_ALREADY_EXISTS"
+  ],
+  "RefundDutyRefundType": [
+   "FULL",
+   "PROPORTIONAL"
+  ],
+  "RefundLineItemRestockType": [
+   "CANCEL",
+   "LEGACY_RESTOCK",
+   "NO_RESTOCK",
+   "RETURN"
+  ],
+  "RefundMethodAllocation": [
+   "ORIGINAL_PAYMENT_METHODS",
+   "STORE_CREDIT"
+  ],
+  "ScheduledChangeSortKeys": [
+   "EXPECTED_AT",
+   "ID"
+  ],
+  "SearchResultType": [
+   "ARTICLE",
+   "BALANCE_TRANSACTION",
+   "BLOG",
+   "COLLECTION",
+   "CUSTOMER",
+   "DISCOUNT_REDEEM_CODE",
+   "DRAFT_ORDER",
+   "FILE",
+   "INVENTORY_TRANSFER",
+   "ORDER",
+   "PAGE",
+   "PRICE_RULE",
+   "PRODUCT",
+   "URL_REDIRECT"
+  ],
+  "ShopCustomerAccountsSetting": [
+   "DISABLED",
+   "OPTIONAL",
+   "REQUIRED"
+  ],
+  "ShopTagSort": [
+   "ALPHABETICAL",
+   "POPULAR"
+  ],
+  "StagedUploadHttpMethodType": [
+   "POST",
+   "PUT"
+  ],
+  "StagedUploadTargetGenerateUploadResource": [
+   "BULK_MUTATION_VARIABLES",
+   "COLLECTION_IMAGE",
+   "DISPUTE_FILE_UPLOAD",
+   "FILE",
+   "IMAGE",
+   "MODEL_3D",
+   "RETURN_LABEL",
+   "SHOP_IMAGE",
+   "URL_REDIRECT_IMPORT",
+   "VIDEO"
+  ],
+  "UnitPriceMeasurementMeasuredType": [
+   "AREA",
+   "COUNT",
+   "LENGTH",
+   "UNKNOWN",
+   "VOLUME",
+   "WEIGHT"
+  ],
+  "UnitPriceMeasurementMeasuredUnit": [
+   "CL",
+   "CM",
+   "FLOZ",
+   "FT",
+   "FT2",
+   "G",
+   "GAL",
+   "IN",
+   "ITEM",
+   "KG",
+   "L",
+   "LB",
+   "M",
+   "M2",
+   "M3",
+   "MG",
+   "ML",
+   "MM",
+   "OZ",
+   "PT",
+   "QT",
+   "UNKNOWN",
+   "YD"
+  ],
+  "UnitSystem": [
+   "IMPERIAL_SYSTEM",
+   "METRIC_SYSTEM"
+  ],
+  "WeightUnit": [
+   "GRAMS",
+   "KILOGRAMS",
+   "OUNCES",
+   "POUNDS"
+  ]
+ },
+ "deprecated_input_fields": {
+  "MailingAddressInput": [
+   "country",
+   "id",
+   "province"
+  ],
+  "OrderInput": [
+   "localizationExtensions"
+  ],
+  "ProductSetInput": [
+   "id"
+  ]
+ }
+}

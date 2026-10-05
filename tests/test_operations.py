@@ -17,6 +17,7 @@ from conftest import (
     inventory_item_node,
     inventory_level,
 )
+
 from runtime import documents, errors
 from runtime.catalog import DEFAULT_PAGE_SIZE, OPERATIONS, OPERATIONS_BY_ID
 from runtime.operations import handle_runtime
@@ -212,14 +213,14 @@ class TestTestConnection:
         assert rows["create_fulfillment"]["scope_eligible"] is False
         assert rows["update_fulfillment_tracking"]["scope_eligible"] is False
 
-    def test_media_alt_uses_one_canonical_documented_scope(self, http: FakeHttp) -> None:
+    def test_media_file_updates_use_one_canonical_documented_scope(self, http: FakeHttp) -> None:
         http.queue(self._answer(scopes=["write_themes"]))
 
         response = run("test_connection", {}, http)
 
         rows = response["result"]["capability_scope_matrix"]
-        assert rows["update_product_media_alt"]["scope_eligible"] is False
-        assert rows["update_product_media_alt"]["missing_required_oauth_scopes"] == ["write_files"]
+        assert rows["update_product_media"]["scope_eligible"] is False
+        assert rows["update_product_media"]["missing_required_oauth_scopes"] == ["write_files"]
 
     def test_product_only_grant_keeps_create_product_eligible(self, http: FakeHttp) -> None:
         """InventoryItem is readable with read_products or read_inventory."""
@@ -265,26 +266,23 @@ class TestGetShop:
 
         response = run("get_shop", {}, http)
 
-        assert response["result"]["shop"] == {
+        shop = response["result"]["shop"]
+        assert {key: shop[key] for key in (
+            "id", "name", "myshopify_domain", "currency_code", "iana_timezone"
+        )} == {
             "id": "gid://shopify/Shop/42",
             "name": "Flow Steward Test",
             "myshopify_domain": SHOP_DOMAIN,
             "currency_code": "EUR",
             "iana_timezone": "Europe/Amsterdam",
-        }
+        }  # fmt: skip
+        assert shop["weight_unit"] is None
 
-    def test_the_document_asks_for_nothing_sensitive(self) -> None:
-        """No owner email, no billing, no unrelated store configuration."""
-        document = documents.GET_SHOP
-        for forbidden in (
-            "email",
-            "billingAddress",
-            "contactEmail",
-            "customerAccounts",
-            "plan",
-            "taxesIncluded",
-        ):
-            assert forbidden not in document
+    def test_the_document_asks_for_nothing_personal(self) -> None:
+        """No owner email or name, no billing address."""
+        selected = set(documents.GET_SHOP.split())
+        for forbidden in ("email", "shopOwnerName", "billingAddress", "accountOwner"):
+            assert forbidden not in selected
 
     def test_a_store_that_returns_nothing_still_yields_the_declared_shape(
         self, http: FakeHttp
@@ -294,7 +292,10 @@ class TestGetShop:
         response = run("get_shop", {}, http)
 
         assert response["result"]["shop"] == {
+            **dict.fromkeys(response["result"]["shop"]),
             "id": "",
+            "enabled_presentment_currencies": [],
+            "ships_to_countries": [],
             "name": None,
             "myshopify_domain": None,
             "currency_code": None,
@@ -330,16 +331,21 @@ class TestListLocations:
             "first": DEFAULT_PAGE_SIZE,
             "after": None,
             "includeInactive": False,
+            "includeLegacy": False,
+            "query": None,
+            "sortKey": "NAME",
+            "reverse": False,
         }
-        assert response["result"]["locations"] == [
-            {
-                "id": LOCATION_A,
-                "name": "Warehouse",
-                "is_active": True,
-                "fulfills_online_orders": True,
-                "ships_inventory": True,
-            }
-        ]
+        location = response["result"]["locations"][0]
+        assert {key: location[key] for key in (
+            "id", "name", "is_active", "fulfills_online_orders", "ships_inventory"
+        )} == {
+            "id": LOCATION_A,
+            "name": "Warehouse",
+            "is_active": True,
+            "fulfills_online_orders": True,
+            "ships_inventory": True,
+        }  # fmt: skip
 
     def test_shopify_authorization_denial_is_still_reported(self, http: FakeHttp) -> None:
         http.queue(
@@ -362,9 +368,7 @@ class TestListLocations:
     def test_document_uses_only_fields_and_arguments_verified_in_2026_07(self) -> None:
         document = documents.LIST_LOCATIONS
 
-        assert (
-            "locations(first: $first, after: $after, includeInactive: $includeInactive)" in document
-        )
+        assert "includeInactive: $includeInactive" in document
         for field in ("id", "name", "isActive", "fulfillsOnlineOrders", "shipsInventory"):
             assert field in document
 
@@ -429,15 +433,17 @@ class TestListInventoryItems:
 
         response = run("list_inventory_items", {}, http)
 
-        assert response["result"]["inventory_items"] == [
-            {
-                "id": ITEM_A,
-                "sku": "SKU-1",
-                "tracked": True,
-                "requires_shipping": True,
-                "updated_at": "2026-08-27T12:00:00Z",
-            }
-        ]
+        item = response["result"]["inventory_items"][0]
+        assert {key: item[key] for key in (
+            "id", "sku", "tracked", "requires_shipping", "updated_at"
+        )} == {
+            "id": ITEM_A,
+            "sku": "SKU-1",
+            "tracked": True,
+            "requires_shipping": True,
+            "updated_at": "2026-08-27T12:00:00Z",
+        }  # fmt: skip
+        assert item["unit_cost"] is None
 
     def test_without_a_sku_no_search_string_is_sent(self, http: FakeHttp) -> None:
         http.queue(self._page())
@@ -620,8 +626,19 @@ class TestGetInventoryLevelsBatch:
                     "id": "gid://shopify/InventoryLevel/9001?inventory_item_id=1001",
                     "location_id": LOCATION_A,
                     "is_active": True,
+                    "level_is_active": None,
+                    "can_deactivate": None,
+                    "deactivation_alert": None,
+                    "created_at": None,
+                    "updated_at": None,
                     "available": 4,
                     "on_hand": 6,
+                    "committed": None,
+                    "incoming": None,
+                    "reserved": None,
+                    "damaged": None,
+                    "safety_stock": None,
+                    "quality_control": None,
                 },
             }
         ]
@@ -790,10 +807,9 @@ class TestGetInventoryLevelsBatch:
         assert response["result"]["items"][0]["level"]["available"] == 3
         assert response["result"]["items"][0]["level"]["on_hand"] is None
 
-    def test_the_two_quantity_names_are_fixed_in_the_document(self) -> None:
-        assert 'quantities(names: ["available", "on_hand"])' in (
-            documents.GET_INVENTORY_LEVELS_BATCH
-        )
+    def test_every_quantity_name_is_fixed_in_the_document(self) -> None:
+        names = ", ".join(f'"{name}"' for name in documents.READ_QUANTITY_NAMES)
+        assert f"quantities(names: [{names}])" in documents.GET_INVENTORY_LEVELS_BATCH
 
     @pytest.mark.parametrize(
         "ids",
@@ -832,7 +848,7 @@ class TestUnknownInputsAreRefused:
             ("get_shop", {"fields": "id"}),
             ("list_locations", {"query": "name:Warehouse"}),
             ("list_inventory_items", {"query": "sku:X"}),
-            ("list_inventory_items", {"reverse": True}),
+            ("list_inventory_items", {"sort_key": "SKU"}),
             ("test_connection", {"api_version": "2024-01"}),
             (
                 "get_inventory_levels_batch",

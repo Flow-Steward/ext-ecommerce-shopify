@@ -39,7 +39,34 @@ def _upload_url(value: Any) -> str:
 def upload_jsonl(
     target: Mapping[str, Any], body: bytes, *, opener: Callable[..., Any] = open_pinned_url
 ) -> str:
-    """Upload once to a Shopify-issued signed target; return its staged key."""
+    """Upload a bulk JSONL body once; return its staged key."""
+    return upload_staged(
+        target,
+        body,
+        filename="products.jsonl",
+        content_type="text/jsonl",
+        key_marker="/bulk/",
+        purpose="Shopify bulk staged upload",
+        opener=opener,
+    )
+
+
+def upload_staged(
+    target: Mapping[str, Any],
+    body: bytes,
+    *,
+    filename: str,
+    content_type: str,
+    key_marker: str,
+    purpose: str,
+    opener: Callable[..., Any] = open_pinned_url,
+) -> str:
+    """Upload once to a Shopify-issued signed target; return its staged key.
+
+    The target URL must be Shopify's staged-upload storage host, and the form
+    parameters are exactly the ones Shopify issued — the file itself is the only
+    part this side adds.
+    """
     url = _upload_url(target.get("url"))
     params = target.get("parameters")
     if not isinstance(params, list) or not 1 <= len(params) <= 30:
@@ -65,11 +92,11 @@ def upload_jsonl(
             f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{value}\r\n'.encode()
         )
     key = values.get("key", "")
-    if not key.startswith("tmp/") or "/bulk/" not in key or len(key) > 2048:
+    if not key.startswith("tmp/") or key_marker not in key or ".." in key or len(key) > 2048:
         raise ExtensionError(errors.UPSTREAM_FAILURE, "Shopify returned an invalid staged path")
     prefix = (
         b"".join(parts)
-        + f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="products.jsonl"\r\nContent-Type: text/jsonl\r\n\r\n'.encode()
+        + f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="{filename}"\r\nContent-Type: {content_type}\r\n\r\n'.encode()
     )
     suffix = f"\r\n--{boundary}--\r\n".encode()
     request = Request(
@@ -82,9 +109,7 @@ def upload_jsonl(
         },
     )
     try:
-        with opener(
-            request, timeout_seconds=60.0, purpose="Shopify bulk staged upload"
-        ) as response:
+        with opener(request, timeout_seconds=60.0, purpose=purpose) as response:
             if int(response.status) not in (200, 201, 204):
                 raise ExtensionError(
                     errors.UPSTREAM_FAILURE, "Shopify staged upload was not accepted"
@@ -99,3 +124,8 @@ def upload_jsonl(
             retryable=True,
         ) from exc
     return key
+
+
+def staged_resource_url(value: Any) -> str:
+    """The ``resourceUrl`` Shopify returned, held to the same storage host."""
+    return _upload_url(value)

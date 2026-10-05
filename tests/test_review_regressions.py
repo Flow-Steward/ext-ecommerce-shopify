@@ -28,6 +28,7 @@ from conftest import (
     run_operation,
     variant_node,
 )
+
 from runtime import catalog, errors, gids
 from runtime.catalog import OPERATIONS_BY_ID
 from runtime.errors import ExtensionError
@@ -62,7 +63,7 @@ class TestTaxonomyCategoryIdsAreNotNumeric:
         http.queue(
             graphql_response(
                 {
-                    "productCreate": {
+                    "productSet": {
                         "product": product_node(variants=connection([variant_node()])),
                         "userErrors": [],
                     }
@@ -77,7 +78,7 @@ class TestTaxonomyCategoryIdsAreNotNumeric:
         )
 
         assert response["ok"] is True
-        assert http.variables()["product"]["category"] == REAL_CATEGORY
+        assert http.variables()["input"]["category"] == REAL_CATEGORY
 
     @pytest.mark.parametrize(
         "category_id",
@@ -121,7 +122,7 @@ class TestLongTextIsNotSilentlyTruncated:
         http.queue(
             graphql_response(
                 {
-                    "productCreate": {
+                    "productSet": {
                         "product": product_node(
                             descriptionHtml=description,
                             variants=connection([variant_node()]),

@@ -9,6 +9,22 @@ artifact_policies:
     field: artifact_handle
     required: false
     max_size_bytes: 100000000
+- operation_id: create_product
+  inputs:
+  - kind: artifact
+    value_type: artifact_handle
+    binding_key: product_image_files
+    field: image_files
+    required: false
+    max_size_bytes: 20971520
+- operation_id: update_product
+  inputs:
+  - kind: artifact
+    value_type: artifact_handle
+    binding_key: product_image_files
+    field: image_files
+    required: false
+    max_size_bytes: 20971520
 - operation_id: export_products
   outputs:
   - kind: artifact

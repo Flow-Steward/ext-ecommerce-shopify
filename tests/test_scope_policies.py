@@ -5,6 +5,7 @@ from __future__ import annotations
 import pathlib
 
 import pytest
+
 from runtime import scopes
 from runtime.catalog import OPERATIONS, OPERATIONS_BY_ID
 
@@ -32,7 +33,7 @@ EXPECTED_REQUIRED_SCOPES: dict[str, tuple[str, ...]] = {
     "create_product_variants_batch": ("write_products",),
     "update_product_variants_batch": ("write_products",),
     "set_catalog_metafields": ("write_products",),
-    "update_product_media_alt": ("write_files",),
+    "update_product_media": ("write_files",),
     "list_orders": ("write_orders",),
     "get_order": ("write_orders",),
     "list_order_line_items": ("write_orders",),

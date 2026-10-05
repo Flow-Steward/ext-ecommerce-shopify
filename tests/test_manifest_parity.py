@@ -21,9 +21,11 @@ from build_contracts import (
     operation_manifest,
     step_ui_manifest,
 )
+
 from runtime import schema
 from runtime.catalog import (
     ACTION_OPERATION_IDS,
+    MAX_CREATE_VARIANTS,
     NETWORK_OPERATION_IDS,
     OPERATIONS,
     OPERATIONS_BY_ID,
@@ -140,7 +142,7 @@ class TestTheManifestAndTheRegistryAgree:
 
     def test_the_manifest_identity_is_the_declared_one(self) -> None:
         assert MANIFEST["extension_id"] == "flowsteward.shopify"
-        assert MANIFEST["version"] == "0.3.0"
+        assert MANIFEST["version"] == "0.4.0"
         assert MANIFEST["manifest_version"] == 2
         assert MANIFEST["kind"] == "tool_provider"
         assert MANIFEST["features"] == ["tool", "action"]
@@ -326,7 +328,7 @@ class TestTheActionManifestMirrorsTheOperations:
         inventory_item = variant["properties"]["inventory_item"]
 
         assert result["type"] == "array"
-        assert result["maxItems"] == 1
+        assert result["maxItems"] == MAX_CREATE_VARIANTS
         assert "minItems" not in result  # a suppressed test-mode action returns an empty list
         assert variant["type"] == "object"
         assert variant["properties"]["id"] == {"type": "string"}

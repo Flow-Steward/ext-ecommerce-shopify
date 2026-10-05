@@ -1,20 +1,5 @@
 # Changelog
 
-## Unreleased — bulk product creation
-
-### Added
-
-- Optional `images` (HTTPS URL and alt text) on `create_product` and every `create_products_bulk` row. Shopify downloads images during asynchronous media processing; no separate manual upload is needed.
-
-- `create_products_bulk`: asynchronous draft product creation from an inline batch or JSONL artifact,
-  using staged upload and a fixed Shopify bulk mutation. Validates all rows before submission.
-- Product bulk uploads use existing external-effect suppression and identity; unknown outcomes
-  are not automatically replayed. Shopify clientIdentifier is correlation, not deduplication.
-
-### Security
-
-- Mutation errors retain the error code and field path without echoing free-form Shopify messages that can contain customer data.
-
 All notable changes to the Shopify extension are recorded here.
 
 Entries use these sections where they apply: **Added**, **Changed**, **Deprecated**,
@@ -30,6 +15,89 @@ integrator can read it:
 - Added the ability to read stock for one item at every location.
   Query: `inventoryItem.inventoryLevels`.
 ```
+
+## 0.4.0
+
+Every endpoint this extension uses now covers Shopify's official Admin GraphQL `2026-07` schema
+completely: every input field of every mutation, every list argument, and every scalar and money
+field of every record. What is deliberately not reachable is listed, with the reason, on the new
+**Shopify API coverage** page, and the extension's tests compare each operation with the official
+schema field by field so nothing can silently fall behind.
+
+### Added
+
+- **A product is created whole in one step: SKU, price, barcode, weight and starting stock
+  included.** `create_product` now runs Mutation: `productSet` and takes `variants`, each with
+  `sku`, `price`, `compare_at_price`, `barcode`, `inventory_item` (cost, tracking, weight,
+  country of origin, HS codes), `inventory_quantities`, `image`, `metafields` and the rest of
+  Shopify's variant fields. No follow-up `update_product_variants_batch` or
+  `set_inventory_quantities` step is needed any more. The call is atomic: the product and all its
+  variants are created together or not at all.
+- **Images from Flow Steward files.** `create_product` and `update_product` accept `image_files`:
+  workflow artifacts (JPEG, PNG, GIF or WEBP, up to 20 MB each) are uploaded through Shopify's
+  staged upload (Mutation: `stagedUploadsCreate`) and attached to the product. `media` attaches
+  images, videos, external videos and 3D models by public URL or existing Shopify file id.
+- **Bulk creation of new products.** `create_products_bulk` submits up to 10 000 products — inline
+  or as a JSONL artifact — for asynchronous creation (Mutation: `bulkOperationRunMutation`, running
+  `productSet` per row). Rows take the same fields as `create_product`, variants included, and
+  are all validated before anything is uploaded. Submission success is not per-row success, an
+  unknown outcome is never replayed automatically, and Shopify's `clientIdentifier` is a
+  correlation hint, not deduplication.
+- **Find products that need attention.** `export_products` takes `quality_filter`: products
+  without images, with images below a minimum size (or below Shopify's recommended 2048 × 2048),
+  without alt text, with an empty or too-short description, or with empty fields (vendor, type,
+  category, tags, SEO title or description, and on any variant SKU, barcode, weight or price).
+  Each exported product lists its `quality_issues`; `scanned_count` reports how many were checked.
+  Exported images now carry `width`, `height` and processing `status`.
+- `update_product`: status, collections to join and leave, metafields, theme template suffixes,
+  selling-plan requirement, new media, an opt-out from the handle redirect, and naming the
+  product by `product_handle` or `product_custom_id` instead of its id.
+- Variant batches: weight, country of origin and HS codes, tax code, unit price measurement,
+  metafields, media, starting quantities and quantity adjustments, `requires_components`,
+  `published`; `strategy` and `allow_partial_updates` are now inputs, with the previous behaviour
+  as their defaults.
+- `update_order_metadata`: contact email and phone, shipping address, metafields and localized
+  fields — everything Mutation: `orderUpdate` accepts.
+- `create_fulfillment`: origin address and message; `create_fulfillment` and
+  `update_fulfillment_tracking`: `notify_customer` (default false).
+- `set_inventory_quantities`: `name` (`available` or `on_hand`) and Shopify `reason` code.
+- Every list takes Shopify's own filter, sort and order arguments: `filter`, `sort_key`,
+  `reverse` and `saved_search_id` on orders, products and variants; `filter`, `sort_key`,
+  `reverse` and `include_legacy` on locations; namespace and key filters on metafield lists.
+  `list_orders` can finally be filtered — by status, date, tag or anything Shopify's order search
+  supports.
+- Records carry every scalar and money field of their Shopify type: an order now reports all 25
+  money totals, its source, return status and editability; a product its plain-text description,
+  total inventory and online store URL; a variant its SKU, position, unit price and stock; an
+  inventory item its unit cost, origin and weight; an inventory level all eight quantity states.
+
+### Changed
+
+- `update_product_media_alt` is now `update_product_media`: alt text, replacement source,
+  preview image, filename and product attachment of any file (Mutation: `fileUpdate`).
+- `create_product`'s `images` input is replaced by `media` and `image_files`.
+- Defaults that were previously fixed are now inputs with the same cautious defaults: products
+  are created as DRAFT, customers are not notified, a variant batch preserves the standalone
+  variant and applies all-or-nothing, a handle change keeps a redirect.
+- Clearing is allowed where Shopify allows it: `replace_tags: []`, an empty note.
+- Page sizes are bounded per operation so that no request can exceed Shopify's 1000-point query
+  cost limit; `list_orders` returns at most 15 orders per page because each carries every money
+  total, and `list_order_fulfillment_orders` bounds `first` × `line_items_first`.
+
+### Fixed
+
+- `list_orders`, `list_order_line_items`, `list_order_fulfillment_orders` and the product and
+  variant lists could request more than Shopify's single-query cost limit at their previous
+  maximum page size of 250 and be refused by Shopify.
+
+### Security
+
+- Order reads still never request customer names, emails, phone numbers, addresses or IP
+  addresses; selecting protected customer data would make Shopify refuse the whole request for an
+  app without that access. Writing contact details is possible only through the explicit
+  `update_order_metadata` inputs.
+- Artifact images are read, size-checked and identified by their file signature before anything
+  is staged; staging targets must be Shopify's own storage host.
 
 ## 0.3.0
 

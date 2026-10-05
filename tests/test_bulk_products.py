@@ -10,6 +10,7 @@ from conftest import (
     connection_payload,
     graphql_response,
 )
+
 from runtime.operations import handle_runtime
 from runtime.transport import ShopifyGraphQLTransport
 
@@ -87,7 +88,8 @@ def test_bulk_uploads_one_jsonl_file_and_returns_submission_not_created_products
         {"products": PRODUCTS, "artifact_handle": "artifact:x"},
         {"products": [{"title": "No handle"}]},
         {"products": PRODUCTS * 2},
-        {"products": [{"title": "X", "handle": "x", "status": "ACTIVE"}]},
+        {"products": [{"title": "X", "handle": "x", "status": "LIVE"}]},
+        {"products": [{"title": "X", "handle": "x", "image_files": [{"artifact_handle": "a"}]}]},
     ],
 )
 def test_invalid_batches_fail_before_shopify_io(http, inputs):

@@ -1,7 +1,9 @@
 """Orders, fulfillment orders and fulfillments.
 
 The recurring theme: an order is full of other people's personal data, and this
-extension is built so that none of it can leave the shop through here.
+extension is built so that none of it is read out of the shop through here.
+Contact details can be *written* — Shopify's OrderInput allows it — but no read
+ever asks for them.
 """
 
 from __future__ import annotations
@@ -26,6 +28,8 @@ from conftest import (
     run_action,
     run_operation,
 )
+from graphql_selection import Field, parse
+
 from runtime import documents, errors
 
 
@@ -38,7 +42,8 @@ class TestOrdersCarryNoPersonalData:
         "billingAddress",
         "shippingAddress",
         "customerJourney",
-        "paymentGatewayNames",
+        "customerJourneySummary",
+        "displayAddress",
         "transactions",
         "clientIp",
         "browserIp",
@@ -56,8 +61,19 @@ class TestOrdersCarryNoPersonalData:
         ],
     )
     def test_no_order_document_asks_for_contact_or_payment_data(self, document: str) -> None:
-        for field in self.FORBIDDEN_FIELDS:
-            assert field not in document, field
+        """Checked on the parsed selection, so a field merely named alike passes."""
+
+        def names(fields: list[Field]) -> set[str]:
+            found: set[str] = set()
+            for field in fields:
+                found.add(field.name)
+                found |= names(field.selections)
+                for inner in field.fragments.values():
+                    found |= names(inner)
+            return found
+
+        selected = names(parse(document).selections)
+        assert not selected & set(self.FORBIDDEN_FIELDS)
 
     def test_the_shaped_order_carries_only_the_declared_keys(self, http: FakeHttp) -> None:
         """Even if a future document over-asked, the shape would drop it."""
@@ -177,7 +193,7 @@ class TestOrderSources:
         )
 
         group = response["result"]["fulfillment_orders"][0]
-        assert group["assigned_location_id"] == "gid://shopify/Location/2001"
+        assert group["assigned_location"]["location_id"] == "gid://shopify/Location/2001"
         assert group["line_items_page_info"] == {"has_next_page": True, "end_cursor": "lc1"}
         assert http.variables()["lineItemsFirst"] == 1
 
@@ -264,44 +280,57 @@ class TestUpdateOrderMetadata:
         assert response["error_code"] == errors.INVALID_PAYLOAD
         assert http.requests == []
 
-    @pytest.mark.parametrize(
-        "field",
-        ["email", "phone", "shippingAddress", "customer", "metafields", "localizedFields"],
-    )
-    def test_customer_and_address_inputs_are_unreachable(self, field: str, http: FakeHttp) -> None:
+    def test_contact_and_shipping_address_map_onto_order_input(self, http: FakeHttp) -> None:
+        http.queue(self._answer())
+
+        run_action(
+            "update_order_metadata",
+            {
+                "order_id": ORDER_A,
+                "email": "buyer@example.test",
+                "shipping_address": {"address1": "1 Main St", "country_code": "LV"},
+            },
+            http,
+        )
+
+        sent = http.variables()["input"]
+        assert sent["email"] == "buyer@example.test"
+        assert sent["shippingAddress"] == {"address1": "1 Main St", "countryCode": "LV"}
+
+    @pytest.mark.parametrize("field", ["shippingAddress", "customer", "localizedFields"])
+    def test_shopify_spelled_or_unknown_fields_are_refused(
+        self, field: str, http: FakeHttp
+    ) -> None:
         response = run_action("update_order_metadata", {"order_id": ORDER_A, field: "x"}, http)
 
         assert response["error_code"] == errors.INVALID_PAYLOAD
         assert http.requests == []
 
     @pytest.mark.parametrize(
-        "operation_input",
+        ("operation_input", "sent"),
         [
-            {"order_id": ORDER_A, "note": ""},
-            {"order_id": ORDER_A, "po_number": ""},
-            {"order_id": ORDER_A, "replace_tags": []},
-            {"order_id": ORDER_A, "replace_custom_attributes": []},
+            ({"note": ""}, {"note": ""}),
+            ({"replace_tags": []}, {"tags": []}),
+            ({"replace_custom_attributes": []}, {"customAttributes": []}),
         ],
     )
-    def test_an_empty_replacement_is_refused(self, operation_input: dict, http: FakeHttp) -> None:
-        response = run_action("update_order_metadata", operation_input, http)
+    def test_an_empty_replacement_clears_the_field(
+        self, operation_input: dict, sent: dict, http: FakeHttp
+    ) -> None:
+        http.queue(self._answer())
 
-        assert response["error_code"] == errors.INVALID_PAYLOAD
+        run_action("update_order_metadata", {"order_id": ORDER_A, **operation_input}, http)
 
-    def test_the_result_is_only_what_the_mutation_could_change(self, http: FakeHttp) -> None:
+        assert http.variables()["input"] == {"id": ORDER_A, **sent}
+
+    def test_the_result_is_the_order_record_without_contact_data(self, http: FakeHttp) -> None:
         http.queue(self._answer())
 
         response = run_action("update_order_metadata", {"order_id": ORDER_A, "note": "x"}, http)
 
-        assert set(response["result"]["order"]) == {
-            "id",
-            "name",
-            "updated_at",
-            "tags",
-            "note",
-            "po_number",
-            "custom_attributes",
-        }
+        order = response["result"]["order"]
+        assert order["note"] == "leave at door"
+        assert not {"email", "phone", "customer", "shipping_address"} & set(order)
 
 
 class TestCreateFulfillment:
@@ -345,27 +374,28 @@ class TestCreateFulfillment:
             }
         ]
 
-    def test_the_customer_is_never_notified(self, http: FakeHttp) -> None:
+    def test_the_customer_is_notified_only_when_asked(self, http: FakeHttp) -> None:
         """`notifyCustomer` lives in the input object Shopify's schema defines.
 
-        The tracking mutation takes it as an argument instead, so the two
-        operations hard-code it in different places. Both are false, and both
-        are pinned — this is the difference a reader would otherwise trip over.
+        The tracking mutation takes it as an argument instead. Both default to
+        false and both are always sent explicitly.
         """
-        http.queue(self._answer())
+        http.queue(self._answer(), self._answer())
 
         run_action("create_fulfillment", self._request(), http)
+        run_action("create_fulfillment", self._request(notify_customer=True), http)
 
-        assert http.variables()["fulfillment"]["notifyCustomer"] is False
-        assert "notifyCustomer" not in documents.CREATE_FULFILLMENT
+        assert http.variables(0)["fulfillment"]["notifyCustomer"] is False
+        assert http.variables(1)["fulfillment"]["notifyCustomer"] is True
 
-    def test_no_message_or_origin_address_is_sent(self, http: FakeHttp) -> None:
+    def test_an_omitted_message_or_origin_address_is_not_sent(self, http: FakeHttp) -> None:
         http.queue(self._answer())
 
         run_action("create_fulfillment", self._request(), http)
 
         sent = http.variables()["fulfillment"]
         assert set(sent) == {"lineItemsByFulfillmentOrder", "notifyCustomer"}
+        assert http.variables()["message"] is None
 
     @pytest.mark.parametrize(
         "line_items",
@@ -495,8 +525,7 @@ class TestUpdateFulfillmentTracking:
             http,
         )
 
-        assert documents.FULFILLMENT_NOTIFY_CUSTOMER in documents.UPDATE_FULFILLMENT_TRACKING
-        assert "notifyCustomer" not in http.variables()
+        assert http.variables()["notifyCustomer"] is documents.NOTIFY_CUSTOMER is False
 
     def test_only_the_documented_tracking_fields_are_sent(self, http: FakeHttp) -> None:
         http.queue(self._answer())

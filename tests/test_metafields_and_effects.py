@@ -22,6 +22,7 @@ from conftest import (
     metafield_node,
     run_action,
 )
+
 from runtime import errors
 from runtime.catalog import ACTION_OPERATION_IDS, OPERATIONS_BY_ID
 from runtime.transport import MAX_REQUEST_BODY_BYTES
@@ -296,7 +297,7 @@ class TestEveryActionSuppressesInTestMode:
             "variants": [{"variant_id": VARIANT_A, "price": "1.00"}],
         },
         "set_catalog_metafields": {"metafields": [entry()]},
-        "update_product_media_alt": {"media_id": "gid://shopify/MediaImage/6001", "alt": "a"},
+        "update_product_media": {"media_id": "gid://shopify/MediaImage/6001", "alt": "a"},
         "update_order_metadata": {"order_id": ORDER_A, "note": "x"},
         "set_order_metafields": {"metafields": [entry(owner_id=ORDER_A)]},
         "create_fulfillment": {
@@ -336,6 +337,7 @@ class TestEveryActionSuppressesInTestMode:
     @pytest.mark.parametrize("operation_id", ACTION_OPERATION_IDS)
     def test_it_suppresses_before_a_transport_is_constructed(self, operation_id: str) -> None:
         from conftest import action_payload
+
         from runtime.operations import handle_runtime
 
         def explode(connection: object) -> object:  # pragma: no cover - must never run

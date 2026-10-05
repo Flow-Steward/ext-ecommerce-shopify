@@ -6,6 +6,7 @@ import json
 
 import pytest
 from conftest import FakeHttp, connection, connection_payload, graphql_response, product_node
+
 from runtime.catalog_export import export_products
 from runtime.errors import ExtensionError
 from runtime.transport import ShopifyGraphQLTransport
@@ -57,8 +58,22 @@ def test_images_include_all_pages_and_keep_processing_image(http: FakeHttp):
     row = export(http, include_images=True)[0]
     assert row["image_count"] == 2
     assert row["images"] == [
-        {"id": "image-1", "alt": "Front", "url": "https://cdn.example/front.jpg"},
-        {"id": "image-2", "alt": "Back", "url": None},
+        {
+            "id": "image-1",
+            "alt": "Front",
+            "status": None,
+            "url": "https://cdn.example/front.jpg",
+            "width": None,
+            "height": None,
+        },
+        {
+            "id": "image-2",
+            "alt": "Back",
+            "status": None,
+            "url": None,
+            "width": None,
+            "height": None,
+        },
     ]
     assert http.variables(2)["after"] == "next"
     assert "variants" not in row
@@ -142,7 +157,7 @@ def test_variants_paginate_without_fetching_inventory(http):
     parents(http, "variants", [{"id": "v2", "sku": "B", "price": "2.00"}])
     variants = export(http, include_variants=True)[0]["variants"]
     assert [v["sku"] for v in variants] == ["A", "B"]
-    assert all("inventory_item" not in v for v in variants)
+    assert all(v["inventory_item"] is None for v in variants)
     assert len(http.requests) == 3
 
 

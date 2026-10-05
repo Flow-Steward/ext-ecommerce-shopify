@@ -22,6 +22,7 @@ from conftest import (
     quantity,
     set_quantities_payload,
 )
+
 from runtime import documents
 from runtime.operations import handle_runtime
 
@@ -61,6 +62,7 @@ FORBIDDEN_MODULES = {
 ALLOWED_SDK_NAMES = {
     "PinnedPeerError",
     "assert_safe_remote_http_url",
+    "find_artifact_descriptor",
     "open_pinned_url",
     "parse_retry_after",
     "write_artifact_stream",

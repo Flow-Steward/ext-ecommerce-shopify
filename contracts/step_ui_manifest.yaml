@@ -29,6 +29,22 @@ forms:
     label: Include deactivated locations
     widget_type: boolean
     required: false
+  - name: include_legacy
+    label: Include legacy locations
+    widget_type: boolean
+    required: false
+  - name: filter
+    label: Shopify search query
+    widget_type: text
+    required: false
+  - name: sort_key
+    label: Sort by
+    widget_type: text
+    required: false
+  - name: reverse
+    label: Reverse order
+    widget_type: boolean
+    required: false
 - operation_id: list_inventory_items
   title: List inventory items
   fields:
@@ -43,6 +59,14 @@ forms:
   - name: sku
     label: SKU
     widget_type: text
+    required: false
+  - name: filter
+    label: Shopify search query
+    widget_type: text
+    required: false
+  - name: reverse
+    label: Reverse order
+    widget_type: boolean
     required: false
 - operation_id: get_inventory_item
   title: Get an inventory item
@@ -73,6 +97,14 @@ forms:
     label: Quantities
     widget_type: json
     required: true
+  - name: name
+    label: Quantity state
+    widget_type: text
+    required: false
+  - name: reason
+    label: Reason
+    widget_type: text
+    required: false
 - operation_id: list_products
   title: List products
   fields:
@@ -86,6 +118,18 @@ forms:
     required: false
   - name: filter
     label: Shopify search query
+    widget_type: text
+    required: false
+  - name: sort_key
+    label: Sort by
+    widget_type: text
+    required: false
+  - name: reverse
+    label: Reverse order
+    widget_type: boolean
+    required: false
+  - name: saved_search_id
+    label: Saved search id
     widget_type: text
     required: false
 - operation_id: export_products
@@ -111,6 +155,22 @@ forms:
     label: Shopify search query
     widget_type: text
     required: false
+  - name: sort_key
+    label: Sort by
+    widget_type: text
+    required: false
+  - name: reverse
+    label: Reverse order
+    widget_type: boolean
+    required: false
+  - name: saved_search_id
+    label: Saved search id
+    widget_type: text
+    required: false
+  - name: quality_filter
+    label: Only products that need attention
+    widget_type: json
+    required: false
 - operation_id: get_product
   title: Get a product
   fields:
@@ -127,6 +187,22 @@ forms:
     required: false
   - name: after
     label: After cursor
+    widget_type: text
+    required: false
+  - name: filter
+    label: Shopify search query
+    widget_type: text
+    required: false
+  - name: sort_key
+    label: Sort by
+    widget_type: text
+    required: false
+  - name: reverse
+    label: Reverse order
+    widget_type: boolean
+    required: false
+  - name: saved_search_id
+    label: Saved search id
     widget_type: text
     required: false
 - operation_id: get_product_variant
@@ -155,6 +231,18 @@ forms:
     label: After cursor
     widget_type: text
     required: false
+  - name: namespace
+    label: Namespace
+    widget_type: text
+    required: false
+  - name: keys
+    label: Keys
+    widget_type: json
+    required: false
+  - name: reverse
+    label: Reverse order
+    widget_type: boolean
+    required: false
 - operation_id: list_product_media
   title: List product media
   fields:
@@ -169,6 +257,18 @@ forms:
   - name: after
     label: After cursor
     widget_type: text
+    required: false
+  - name: filter
+    label: Shopify search query
+    widget_type: text
+    required: false
+  - name: sort_key
+    label: Sort by
+    widget_type: text
+    required: false
+  - name: reverse
+    label: Reverse order
+    widget_type: boolean
     required: false
 - operation_id: create_product
   title: Create a product
@@ -193,10 +293,6 @@ forms:
     label: Product type
     widget_type: text
     required: false
-  - name: tags
-    label: Tags
-    widget_type: json
-    required: false
   - name: category_id
     label: Category id
     widget_type: text
@@ -209,12 +305,60 @@ forms:
     label: SEO description
     widget_type: text
     required: false
+  - name: template_suffix
+    label: Theme template suffix
+    widget_type: text
+    required: false
+  - name: gift_card_template_suffix
+    label: Gift card template suffix
+    widget_type: text
+    required: false
+  - name: requires_selling_plan
+    label: Sold only by subscription
+    widget_type: boolean
+    required: false
+  - name: tags
+    label: Tags
+    widget_type: json
+    required: false
+  - name: status
+    label: Status
+    widget_type: text
+    required: false
+  - name: gift_card
+    label: Gift card
+    widget_type: boolean
+    required: false
+  - name: collection_ids
+    label: Collections
+    widget_type: json
+    required: false
+  - name: combined_listing_role
+    label: Combined listing role
+    widget_type: text
+    required: false
+  - name: claim_ownership
+    label: Claim ownership
+    widget_type: json
+    required: false
+  - name: metafields
+    label: Metafields
+    widget_type: json
+    required: false
   - name: options
     label: Options
     widget_type: json
     required: false
-  - name: images
-    label: Images
+  - name: variants
+    label: Variants
+    widget_type: json
+    required: false
+  - name: media
+    label: Media
+    widget_type: json
+    required: false
+  - name: image_files
+    label: Image files
     widget_type: json
     required: false
 - operation_id: create_products_bulk
@@ -234,10 +378,26 @@ forms:
   - name: product_id
     label: Product id
     widget_type: text
-    required: true
+    required: false
+  - name: product_handle
+    label: Product handle
+    widget_type: text
+    required: false
+  - name: product_custom_id
+    label: Product custom id
+    widget_type: json
+    required: false
   - name: title
     label: Title
     widget_type: text
+    required: false
+  - name: handle
+    label: Handle
+    widget_type: text
+    required: false
+  - name: redirect_new_handle
+    label: Redirect the old handle
+    widget_type: boolean
     required: false
   - name: description_html
     label: Description HTML
@@ -251,14 +411,6 @@ forms:
     label: Product type
     widget_type: text
     required: false
-  - name: handle
-    label: Handle
-    widget_type: text
-    required: false
-  - name: replace_tags
-    label: Replace tags
-    widget_type: json
-    required: false
   - name: category_id
     label: Category id
     widget_type: text
@@ -271,6 +423,50 @@ forms:
     label: SEO description
     widget_type: text
     required: false
+  - name: template_suffix
+    label: Theme template suffix
+    widget_type: text
+    required: false
+  - name: gift_card_template_suffix
+    label: Gift card template suffix
+    widget_type: text
+    required: false
+  - name: requires_selling_plan
+    label: Sold only by subscription
+    widget_type: boolean
+    required: false
+  - name: replace_tags
+    label: Replace tags
+    widget_type: json
+    required: false
+  - name: status
+    label: Status
+    widget_type: text
+    required: false
+  - name: join_collection_ids
+    label: Add to collections
+    widget_type: json
+    required: false
+  - name: leave_collection_ids
+    label: Remove from collections
+    widget_type: json
+    required: false
+  - name: delete_conflicting_constrained_metafields
+    label: Delete metafields the new category does not allow
+    widget_type: boolean
+    required: false
+  - name: metafields
+    label: Metafields
+    widget_type: json
+    required: false
+  - name: media
+    label: Media
+    widget_type: json
+    required: false
+  - name: image_files
+    label: Image files
+    widget_type: json
+    required: false
 - operation_id: create_product_variants_batch
   title: Create product variants
   fields:
@@ -282,6 +478,14 @@ forms:
     label: Variants
     widget_type: json
     required: true
+  - name: media
+    label: Media
+    widget_type: json
+    required: false
+  - name: strategy
+    label: Standalone variant
+    widget_type: text
+    required: false
 - operation_id: update_product_variants_batch
   title: Update product variants
   fields:
@@ -293,6 +497,14 @@ forms:
     label: Variants
     widget_type: json
     required: true
+  - name: media
+    label: Media
+    widget_type: json
+    required: false
+  - name: allow_partial_updates
+    label: Allow partial updates
+    widget_type: boolean
+    required: false
 - operation_id: set_catalog_metafields
   title: Set catalog metafields
   fields:
@@ -300,8 +512,8 @@ forms:
     label: Metafields
     widget_type: json
     required: true
-- operation_id: update_product_media_alt
-  title: Update media alt text
+- operation_id: update_product_media
+  title: Update a media file
   fields:
   - name: media_id
     label: Media id
@@ -310,7 +522,27 @@ forms:
   - name: alt
     label: Alt text
     widget_type: text
-    required: true
+    required: false
+  - name: source_url
+    label: Replacement source URL
+    widget_type: text
+    required: false
+  - name: preview_image_url
+    label: Preview image URL
+    widget_type: text
+    required: false
+  - name: filename
+    label: Filename
+    widget_type: text
+    required: false
+  - name: add_to_product_ids
+    label: Attach to products
+    widget_type: json
+    required: false
+  - name: remove_from_product_ids
+    label: Detach from products
+    widget_type: json
+    required: false
 - operation_id: list_orders
   title: List orders
   fields:
@@ -320,6 +552,22 @@ forms:
     required: false
   - name: after
     label: After cursor
+    widget_type: text
+    required: false
+  - name: filter
+    label: Shopify search query
+    widget_type: text
+    required: false
+  - name: sort_key
+    label: Sort by
+    widget_type: text
+    required: false
+  - name: reverse
+    label: Reverse order
+    widget_type: boolean
+    required: false
+  - name: saved_search_id
+    label: Saved search id
     widget_type: text
     required: false
 - operation_id: get_order
@@ -344,6 +592,10 @@ forms:
     label: After cursor
     widget_type: text
     required: false
+  - name: reverse
+    label: Reverse order
+    widget_type: boolean
+    required: false
 - operation_id: list_order_metafields
   title: List order metafields
   fields:
@@ -358,6 +610,18 @@ forms:
   - name: after
     label: After cursor
     widget_type: text
+    required: false
+  - name: namespace
+    label: Namespace
+    widget_type: text
+    required: false
+  - name: keys
+    label: Keys
+    widget_type: json
+    required: false
+  - name: reverse
+    label: Reverse order
+    widget_type: boolean
     required: false
 - operation_id: list_order_fulfillment_orders
   title: List fulfillment orders
@@ -377,6 +641,18 @@ forms:
   - name: line_items_first
     label: Line items per fulfillment order
     widget_type: number
+    required: false
+  - name: reverse
+    label: Reverse order
+    widget_type: boolean
+    required: false
+  - name: displayable
+    label: Only displayable
+    widget_type: boolean
+    required: false
+  - name: filter
+    label: Shopify search query
+    widget_type: text
     required: false
 - operation_id: get_fulfillment_order
   title: Get a fulfillment order
@@ -404,8 +680,12 @@ forms:
     label: Page size
     widget_type: number
     required: false
+  - name: filter
+    label: Shopify search query
+    widget_type: text
+    required: false
 - operation_id: update_order_metadata
-  title: Update order metadata
+  title: Update an order
   fields:
   - name: order_id
     label: Order id
@@ -427,6 +707,26 @@ forms:
     label: Replace custom attributes
     widget_type: json
     required: false
+  - name: email
+    label: Contact email
+    widget_type: text
+    required: false
+  - name: phone
+    label: Contact phone
+    widget_type: text
+    required: false
+  - name: shipping_address
+    label: Shipping address
+    widget_type: json
+    required: false
+  - name: metafields
+    label: Metafields
+    widget_type: json
+    required: false
+  - name: localized_fields
+    label: Localized fields
+    widget_type: json
+    required: false
 - operation_id: set_order_metafields
   title: Set order metafields
   fields:
@@ -445,6 +745,18 @@ forms:
     label: Tracking
     widget_type: json
     required: false
+  - name: notify_customer
+    label: Notify the customer
+    widget_type: boolean
+    required: false
+  - name: origin_address
+    label: Shipped from
+    widget_type: json
+    required: false
+  - name: message
+    label: Message
+    widget_type: text
+    required: false
 - operation_id: update_fulfillment_tracking
   title: Update fulfillment tracking
   fields:
@@ -456,3 +768,7 @@ forms:
     label: Tracking
     widget_type: json
     required: true
+  - name: notify_customer
+    label: Notify the customer
+    widget_type: boolean
+    required: false

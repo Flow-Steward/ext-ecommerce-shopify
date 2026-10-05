@@ -17,9 +17,9 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from . import errors, models, scopes
+from . import errors, inputs, models, scopes
 from .connection import CONNECTION_TYPE_ID
-from .documents import DOCUMENTS
+from .documents import DOCUMENTS, READ_QUANTITY_NAMES
 from .gids import MAX_GID_LENGTH
 
 _MESSAGE_THE_END_CURSOR_OF_THE_PREVIOUS_PAGE = "The end_cursor of the previous page."
@@ -60,65 +60,39 @@ _CONNECTION_REF_SCHEMA: dict[str, Any] = {
 
 _GID_SCHEMA_BASE: dict[str, Any] = {"type": "string", "minLength": 1, "maxLength": MAX_GID_LENGTH}
 
-_PAGE_INFO_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["has_next_page", "end_cursor"],
-    "properties": {
-        "has_next_page": {"type": "boolean"},
-        "end_cursor": {"type": ["string", "null"]},
-    },
-}
+_PAGE_INFO_SCHEMA: dict[str, Any] = models.PAGE_INFO
 
-_SHOP_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["id", "name", "myshopify_domain", "currency_code", "iana_timezone"],
-    "properties": {
-        "id": {"type": "string"},
-        "name": {"type": ["string", "null"]},
-        "myshopify_domain": {"type": ["string", "null"]},
-        "currency_code": {"type": ["string", "null"]},
-        "iana_timezone": {"type": ["string", "null"]},
-    },
-}
-
-_LOCATION_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["id", "name", "is_active", "fulfills_online_orders", "ships_inventory"],
-    "properties": {
-        "id": {"type": "string"},
-        "name": {"type": ["string", "null"]},
-        "is_active": {"type": ["boolean", "null"]},
-        "fulfills_online_orders": {"type": ["boolean", "null"]},
-        "ships_inventory": {"type": ["boolean", "null"]},
-    },
-}
-
-_INVENTORY_ITEM_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["id", "sku", "tracked", "requires_shipping", "updated_at"],
-    "properties": {
-        "id": {"type": "string"},
-        "sku": {"type": ["string", "null"]},
-        "tracked": {"type": ["boolean", "null"]},
-        "requires_shipping": {"type": ["boolean", "null"]},
-        "updated_at": {"type": ["string", "null"]},
-    },
-}
-
+#: Every quantity state an inventory level reports, each under its own key.
 _INVENTORY_LEVEL_SCHEMA: dict[str, Any] = {
     "type": ["object", "null"],
     "additionalProperties": False,
-    "required": ["id", "location_id", "is_active", "available", "on_hand"],
+    "required": [
+        "id",
+        "location_id",
+        "is_active",
+        "level_is_active",
+        "can_deactivate",
+        "deactivation_alert",
+        "created_at",
+        "updated_at",
+        *READ_QUANTITY_NAMES,
+    ],
     "properties": {
         "id": {"type": "string"},
         "location_id": {"type": ["string", "null"]},
-        "is_active": {"type": ["boolean", "null"]},
-        "available": {"type": ["integer", "null"]},
-        "on_hand": {"type": ["integer", "null"]},
+        "is_active": {
+            "type": ["boolean", "null"],
+            "description": "Whether the location is active.",
+        },
+        "level_is_active": {
+            "type": ["boolean", "null"],
+            "description": "Whether the item is still stocked at this location.",
+        },
+        "can_deactivate": {"type": ["boolean", "null"]},
+        "deactivation_alert": {"type": ["string", "null"]},
+        "created_at": {"type": ["string", "null"]},
+        "updated_at": {"type": ["string", "null"]},
+        **{name: {"type": ["integer", "null"]} for name in READ_QUANTITY_NAMES},
     },
 }
 
@@ -132,32 +106,6 @@ _INVENTORY_LEVEL_ROW_SCHEMA: dict[str, Any] = {
         "sku": {"type": ["string", "null"]},
         "tracked": {"type": ["boolean", "null"]},
         "level": _INVENTORY_LEVEL_SCHEMA,
-    },
-}
-
-_ADJUSTMENT_CHANGE_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["inventory_item_id", "location_id", "name", "delta", "quantity_after_change"],
-    "properties": {
-        "inventory_item_id": {"type": ["string", "null"]},
-        "location_id": {"type": ["string", "null"]},
-        "name": {"type": ["string", "null"]},
-        "delta": {"type": ["integer", "null"]},
-        "quantity_after_change": {"type": ["integer", "null"]},
-    },
-}
-
-_ADJUSTMENT_GROUP_SCHEMA: dict[str, Any] = {
-    "type": ["object", "null"],
-    "additionalProperties": False,
-    "required": ["id", "created_at", "reason", "reference_document_uri", "changes"],
-    "properties": {
-        "id": {"type": ["string", "null"]},
-        "created_at": {"type": ["string", "null"]},
-        "reason": {"type": ["string", "null"]},
-        "reference_document_uri": {"type": ["string", "null"]},
-        "changes": {"type": "array", "items": _ADJUSTMENT_CHANGE_SCHEMA},
     },
 }
 
@@ -227,131 +175,48 @@ _TAGS_SCHEMA: dict[str, Any] = {
     "maxItems": MAX_TAGS,
     "items": {"type": "string", "minLength": 1, "maxLength": MAX_TAG_LENGTH},
 }
-_DECIMAL_SCHEMA: dict[str, Any] = {
-    "type": "string",
-    "description": 'A decimal amount as a string, for example "19.99".',
-    "minLength": 1,
-    "maxLength": MAX_DECIMAL_LENGTH,
-}
-_PRODUCT_OPTIONS_SCHEMA: dict[str, Any] = {
-    "type": "array",
-    "title": "Options",
-    "description": (
-        "Up to three product options. Shopify builds the initial variant from the first "
-        "value of each."
-    ),
-    "maxItems": MAX_PRODUCT_OPTIONS,
-    "items": {
-        "type": "object",
-        "additionalProperties": False,
-        "required": ["name", "values"],
-        "properties": {
-            "name": {"type": "string", "minLength": 1, "maxLength": MAX_TITLE_LENGTH},
-            "values": {
-                "type": "array",
-                "minItems": 1,
-                "maxItems": MAX_OPTION_VALUES,
-                "items": {"type": "string", "minLength": 1, "maxLength": MAX_TITLE_LENGTH},
-            },
-        },
+#: A variant created through ``productVariantsBulkCreate``.
+_VARIANT_CREATE_ITEM_SCHEMA: dict[str, Any] = inputs.obj(
+    {
+        "option_values": inputs.OPTION_VALUES,
+        **inputs.VARIANT_COMMON_FIELDS,
+        **inputs.VARIANT_BULK_FIELDS,
     },
-}
+    required=("option_values",),
+)
 
-_OPTION_VALUE_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["option_name", "value"],
-    "properties": {
-        "option_name": {"type": "string", "minLength": 1, "maxLength": MAX_TITLE_LENGTH},
-        "value": {"type": "string", "minLength": 1, "maxLength": MAX_TITLE_LENGTH},
-    },
-}
-
-#: The inventory facts that belong to a variant's identity rather than to its
-#: stock level. Quantities are deliberately absent: they are set by
-#: `set_inventory_quantities`, which is the only operation that moves stock.
-_VARIANT_INVENTORY_ITEM_INPUT: dict[str, Any] = {
-    "type": "object",
-    "additionalProperties": False,
-    "properties": {
-        "sku": {"type": "string", "minLength": 1, "maxLength": MAX_SKU_LENGTH},
-        "cost": dict(_DECIMAL_SCHEMA),
-        "tracked": {"type": "boolean"},
-        "requires_shipping": {"type": "boolean"},
-    },
-}
-
-_VARIANT_FIELDS: dict[str, Any] = {
-    "price": dict(_DECIMAL_SCHEMA),
-    "compare_at_price": dict(_DECIMAL_SCHEMA),
-    "barcode": {"type": "string", "maxLength": MAX_BARCODE_LENGTH},
-    "inventory_policy": {"type": "string", "enum": ["DENY", "CONTINUE"]},
-    "taxable": {"type": "boolean"},
-    "inventory_item": _VARIANT_INVENTORY_ITEM_INPUT,
-}
-
-_VARIANT_CREATE_ITEM_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["option_values"],
-    "properties": {
-        "option_values": {
-            "type": "array",
-            "minItems": 1,
-            "maxItems": MAX_PRODUCT_OPTIONS,
-            "items": _OPTION_VALUE_SCHEMA,
-        },
-        **_VARIANT_FIELDS,
-    },
-}
-
-_VARIANT_UPDATE_ITEM_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["variant_id"],
-    "properties": {
+#: A variant changed through ``productVariantsBulkUpdate``.
+_VARIANT_UPDATE_ITEM_SCHEMA: dict[str, Any] = inputs.obj(
+    {
         "variant_id": dict(_GID_SCHEMA_BASE),
-        "option_values": {
-            "type": "array",
-            "minItems": 1,
-            "maxItems": MAX_PRODUCT_OPTIONS,
-            "items": _OPTION_VALUE_SCHEMA,
-        },
-        **_VARIANT_FIELDS,
+        "option_values": inputs.OPTION_VALUES,
+        **inputs.VARIANT_COMMON_FIELDS,
+        **inputs.VARIANT_BULK_FIELDS,
     },
-}
+    required=("variant_id",),
+)
+
+#: A variant of a product created whole through ``productSet``.
+_VARIANT_SET_ITEM_SCHEMA: dict[str, Any] = inputs.obj(
+    {
+        "option_values": {
+            **inputs.OPTION_VALUES,
+            "description": "Required when the product has options; omit for a single-variant "
+            "product without options.",
+        },
+        **inputs.VARIANT_COMMON_FIELDS,
+        **inputs.VARIANT_SET_FIELDS,
+    },
+)
+
+#: The most variants one ``create_product`` call creates. Bounded by Shopify's
+#: per-query cost limit: every created variant is confirmed in the same answer.
+MAX_CREATE_VARIANTS = 100
 
 #: Every field a variant entry may change, other than the id itself. Used to
 #: refuse an update entry that names a variant and asks for nothing.
-VARIANT_UPDATE_CHANGE_FIELDS: tuple[str, ...] = (
-    "option_values",
-    "price",
-    "compare_at_price",
-    "barcode",
-    "inventory_policy",
-    "taxable",
-    "inventory_item",
-)
-
-#: Every field `update_product` may change. One of them must be present.
-PRODUCT_UPDATE_CHANGE_FIELDS: tuple[str, ...] = (
-    "title",
-    "description_html",
-    "vendor",
-    "product_type",
-    "handle",
-    "replace_tags",
-    "category_id",
-    "seo_title",
-    "seo_description",
-)
-
-#: Every field `update_order_metadata` may change. One of them must be present.
-ORDER_METADATA_CHANGE_FIELDS: tuple[str, ...] = (
-    "note",
-    "po_number",
-    "replace_tags",
-    "replace_custom_attributes",
+VARIANT_UPDATE_CHANGE_FIELDS: tuple[str, ...] = tuple(
+    name for name in _VARIANT_UPDATE_ITEM_SCHEMA["properties"] if name != "variant_id"
 )
 
 
@@ -460,16 +325,71 @@ _CAPABILITY_SCOPE_MATRIX_SCHEMA: dict[str, Any] = {
 }
 
 
-def _first(title: str, description: str) -> dict[str, Any]:
-    """The forward page-size input every paginated source publishes."""
+def _first(
+    title: str,
+    description: str,
+    *,
+    maximum: int = MAX_PAGE_SIZE,
+    default: int = DEFAULT_PAGE_SIZE,
+) -> dict[str, Any]:
+    """The forward page-size input every paginated source publishes.
+
+    ``maximum`` is per operation: Shopify refuses any single query whose
+    requested cost exceeds 1000 points, so a wide record allows fewer per page.
+    """
     return {
         "type": "integer",
         "title": title,
         "description": description,
         "minimum": 1,
-        "maximum": MAX_PAGE_SIZE,
-        "default": DEFAULT_PAGE_SIZE,
+        "maximum": maximum,
+        "default": min(default, maximum),
     }
+
+
+def _filter(example: str) -> dict[str, Any]:
+    return {
+        "type": "string",
+        "title": "Shopify search query",
+        "description": f"An optional Shopify search expression, for example {example}.",
+        "minLength": 1,
+        "maxLength": MAX_SEARCH_QUERY_LENGTH,
+    }
+
+
+def _sort_key(values: tuple[str, ...], default: str) -> dict[str, Any]:
+    return {"type": "string", "title": "Sort by", "enum": list(values), "default": default}
+
+
+_REVERSE: dict[str, Any] = {
+    "type": "boolean",
+    "title": "Reverse order",
+    "description": "Return the results in reverse order.",
+    "default": False,
+}
+
+_SAVED_SEARCH: dict[str, Any] = {
+    **_GID_SCHEMA_BASE,
+    "title": "Saved search id",
+    "description": "A gid://shopify/SavedSearch/... id whose query to apply.",
+}
+
+_METAFIELD_NAMESPACE_FILTER: dict[str, Any] = {
+    "type": "string",
+    "title": "Namespace",
+    "description": "Only metafields in this namespace.",
+    "minLength": 1,
+    "maxLength": MAX_METAFIELD_NAMESPACE_LENGTH,
+}
+
+_METAFIELD_KEYS_FILTER: dict[str, Any] = {
+    "type": "array",
+    "title": "Keys",
+    "description": 'Only these metafields, each written "namespace.key".',
+    "minItems": 1,
+    "maxItems": MAX_PAGE_SIZE,
+    "items": {"type": "string", "minLength": 3, "maxLength": 320},
+}
 
 
 def _after(description: str = _MESSAGE_THE_END_CURSOR_OF_THE_PREVIOUS_PAGE) -> dict[str, Any]:
@@ -606,44 +526,153 @@ _EXTERNAL_EFFECT_OUTPUTS: tuple[Output, ...] = (
 )
 
 
-_CREATE_PRODUCT_INPUT_SCHEMA = _connection_input(
-    title={**_TITLE_SCHEMA, "title": "Title", "_required": True},
-    handle={
+#: ``create_product`` mirrors Shopify's ``ProductSetInput`` for a new product.
+#: ``status`` defaults to DRAFT: publishing stays a deliberate choice.
+_PRODUCT_CREATE_FIELDS: dict[str, Any] = {
+    "title": {**_TITLE_SCHEMA, "title": "Title", "_required": True},
+    "handle": {
         **_HANDLE_SCHEMA,
         "title": "Handle",
-        "description": "The URL handle. Shopify rejects the call if it is already taken.",
+        "description": (
+            "The URL handle. Required here so a product is found again by a known handle; "
+            "Shopify refuses one that is already taken."
+        ),
         "_required": True,
     },
-    description_html=_DESCRIPTION_SCHEMA,
-    vendor={**_SHORT_TEXT_SCHEMA, "title": "Vendor"},
-    product_type={**_SHORT_TEXT_SCHEMA, "title": "Product type"},
-    tags=_TAGS_SCHEMA,
-    category_id=_gid("Category id", "TaxonomyCategory", required=False),
-    seo_title={**_SHORT_TEXT_SCHEMA, "title": "SEO title"},
-    seo_description={**_SEO_DESCRIPTION_SCHEMA, "title": "SEO description"},
-    options=_PRODUCT_OPTIONS_SCHEMA,
-    images={
-        "type": "array",
-        "title": "Images",
-        "description": "Public HTTPS image URLs. Shopify downloads and processes these asynchronously; creation success does not mean images are READY.",
-        "maxItems": 250,
-        "items": {
-            "type": "object",
-            "additionalProperties": False,
-            "required": ["url"],
-            "properties": {
-                "url": {"type": "string", "minLength": 9, "maxLength": 2048, "title": "Image URL"},
-                "alt": {"type": "string", "maxLength": 512, "title": "Alt text"},
-            },
+    **inputs.PRODUCT_COMMON_FIELDS,
+    "tags": _TAGS_SCHEMA,
+    "status": inputs.enum(
+        inputs.PRODUCT_STATUSES,
+        title="Status",
+        description="DRAFT unless you choose otherwise. ACTIVE makes it sellable.",
+        default="DRAFT",
+    ),
+    "gift_card": {"type": "boolean", "title": "Gift card"},
+    "collection_ids": {**inputs.COLLECTION_IDS, "title": "Collections"},
+    "combined_listing_role": inputs.enum(
+        inputs.COMBINED_LISTING_ROLES, title="Combined listing role"
+    ),
+    "claim_ownership": inputs.obj(
+        {"bundles": {"type": "boolean"}},
+        title="Claim ownership",
+        description="Claim this product for your app's bundles.",
+    ),
+    "metafields": inputs.metafields(
+        inputs.NEW_METAFIELD_INPUT, "Metafields to set on the new product."
+    ),
+    "options": inputs.PRODUCT_OPTIONS,
+    "variants": inputs.array(
+        _VARIANT_SET_ITEM_SCHEMA,
+        MAX_CREATE_VARIANTS,
+        title="Variants",
+        description=(
+            "The variants to create with the product, each with its own SKU, price, barcode, "
+            "weight and stock. Omit to get one variant built from the first value of each "
+            "option. Without options, give at most one variant."
+        ),
+    ),
+    "media": inputs.media(
+        "Images, videos and 3D models by public URL or existing file id. Shopify processes "
+        "them asynchronously; creation success does not mean they are READY."
+    ),
+    "image_files": inputs.IMAGE_FILES,
+}
+_CREATE_PRODUCT_INPUT_SCHEMA = _connection_input(**_PRODUCT_CREATE_FIELDS)
+
+#: A row of ``create_products_bulk`` is a ``create_product`` input without the
+#: connection and without artifact images, which a bulk row cannot carry.
+_BULK_ROW_FIELDS = tuple(name for name in _PRODUCT_CREATE_FIELDS if name not in ("image_files",))
+
+#: Shopify's own ``CreateMediaInput``: a URL, its kind and alt text.
+_CREATE_MEDIA_SCHEMA: dict[str, Any] = inputs.array(
+    inputs.obj(
+        {
+            "source_url": inputs.MEDIA_ITEM["properties"]["source_url"],
+            "content_type": inputs.MEDIA_ITEM["properties"]["content_type"],
+            "alt": inputs.text(512, title="Alt text"),
         },
-    },
+        required=("source_url",),
+    ),
+    inputs.MAX_MEDIA_ITEMS,
+    title="Media",
+    description="Media to create from public URLs and attach. Processed asynchronously.",
 )
+
+#: ``update_product`` mirrors Shopify's ``ProductUpdateInput`` plus the media
+#: and identifier arguments of ``productUpdate``.
+_PRODUCT_UPDATE_FIELDS: dict[str, Any] = {
+    "product_id": _gid(_MESSAGE_PRODUCT_ID, "Product", required=False),
+    "product_handle": {
+        **_HANDLE_SCHEMA,
+        "title": "Product handle",
+        "description": "Find the product by its handle instead of its id.",
+    },
+    "product_custom_id": inputs.obj(
+        {
+            "namespace": inputs.text(minimum=1),
+            "key": inputs.text(minimum=1),
+            "value": inputs.text(minimum=1),
+        },
+        required=("key", "value"),
+        title="Product custom id",
+        description="Find the product by a unique metafield value instead of its id.",
+    ),
+    "title": {**_TITLE_SCHEMA, "title": "Title"},
+    "handle": {**_HANDLE_SCHEMA, "title": "Handle", "description": "A new URL handle."},
+    "redirect_new_handle": {
+        "type": "boolean",
+        "title": "Redirect the old handle",
+        "description": "Keep the old URL working when the handle changes. Default true.",
+        "default": True,
+    },
+    **inputs.PRODUCT_COMMON_FIELDS,
+    "replace_tags": {
+        **_TAGS_SCHEMA,
+        "title": "Replace tags",
+        "description": "Replaces the product's entire tag list. Send [] to clear every tag.",
+    },
+    "status": inputs.enum(inputs.PRODUCT_STATUSES, title="Status"),
+    "join_collection_ids": {**inputs.COLLECTION_IDS, "title": "Add to collections"},
+    "leave_collection_ids": {**inputs.COLLECTION_IDS, "title": "Remove from collections"},
+    "delete_conflicting_constrained_metafields": {
+        "type": "boolean",
+        "title": "Delete metafields the new category does not allow",
+        "description": "Only with category_id. Default false: such metafields are kept and "
+        "Shopify refuses the change instead.",
+        "default": False,
+    },
+    "metafields": inputs.metafields(
+        inputs.METAFIELD_INPUT, "Metafields to create or update on the product."
+    ),
+    "media": _CREATE_MEDIA_SCHEMA,
+    "image_files": inputs.IMAGE_FILES,
+}
+
+#: Fields that say which product, or how, rather than what changes.
+_PRODUCT_UPDATE_NON_CHANGE_FIELDS = frozenset(
+    {
+        "product_id",
+        "product_handle",
+        "product_custom_id",
+        "redirect_new_handle",
+        "delete_conflicting_constrained_metafields",
+    }
+)
+
+#: Every field `update_product` may change. One of them must be present.
+PRODUCT_UPDATE_CHANGE_FIELDS: tuple[str, ...] = tuple(
+    name for name in _PRODUCT_UPDATE_FIELDS if name not in _PRODUCT_UPDATE_NON_CHANGE_FIELDS
+)
+
+#: The ways `update_product` can name its product. Exactly one is required.
+PRODUCT_IDENTIFIER_FIELDS: tuple[str, ...] = ("product_id", "product_handle", "product_custom_id")
+
 _BULK_PRODUCT_ITEM_SCHEMA = {
     **_CREATE_PRODUCT_INPUT_SCHEMA,
     "properties": {
         key: value
         for key, value in _CREATE_PRODUCT_INPUT_SCHEMA["properties"].items()
-        if key != "connection_ref"
+        if key in _BULK_ROW_FIELDS
     },
     "required": [
         key for key in _CREATE_PRODUCT_INPUT_SCHEMA["required"] if key != "connection_ref"
@@ -657,6 +686,193 @@ _BULK_OPERATION_SCHEMA = {
         key: {"type": "string", "minLength": 1} for key in ["id", "status", "client_identifier"]
     },
 }
+
+
+_NOTIFY_CUSTOMER_SCHEMA: dict[str, Any] = {
+    "type": "boolean",
+    "title": "Notify the customer",
+    "description": "Email the customer about this change. Default false.",
+    "default": False,
+}
+
+_ADDRESS_INPUT_SCHEMA: dict[str, Any] = inputs.obj(
+    {
+        "first_name": inputs.text(),
+        "last_name": inputs.text(),
+        "company": inputs.text(),
+        "address1": inputs.text(),
+        "address2": inputs.text(),
+        "city": inputs.text(),
+        "province_code": inputs.text(8),
+        "zip": inputs.text(32),
+        "country_code": inputs.text(2, minimum=2),
+        "phone": inputs.text(32),
+    },
+    title="Shipping address",
+)
+
+#: ``update_order_metadata`` mirrors Shopify's ``OrderInput``.
+_ORDER_UPDATE_FIELDS: dict[str, Any] = {
+    "order_id": _gid(_MESSAGE_ORDER_ID, "Order"),
+    "note": {
+        "type": "string",
+        "title": "Note",
+        "description": "Replaces the order note.",
+        "maxLength": MAX_NOTE_LENGTH,
+    },
+    "po_number": {
+        "type": "string",
+        "title": "PO number",
+        "description": "Replaces the purchase order number.",
+        "maxLength": MAX_PO_NUMBER_LENGTH,
+    },
+    "replace_tags": {
+        **_TAGS_SCHEMA,
+        "title": "Replace tags",
+        "description": "Replaces the order's entire tag list. Send [] to clear every tag.",
+    },
+    "replace_custom_attributes": {
+        "type": "array",
+        "title": "Replace custom attributes",
+        "description": "Replaces the order's entire custom attribute list.",
+        "maxItems": MAX_CUSTOM_ATTRIBUTES,
+        "items": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["key", "value"],
+            "properties": {
+                "key": {"type": "string", "minLength": 1, "maxLength": MAX_ATTRIBUTE_KEY_LENGTH},
+                "value": {"type": "string", "maxLength": MAX_ATTRIBUTE_VALUE_LENGTH},
+            },
+        },
+    },
+    "email": {
+        "type": "string",
+        "title": "Contact email",
+        "description": "The order's contact email. Needs Shopify's protected customer data access.",
+        "minLength": 3,
+        "maxLength": 320,
+    },
+    "phone": {
+        "type": "string",
+        "title": "Contact phone",
+        "description": "The order's contact phone in E.164 format. Needs Shopify's protected "
+        "customer data access.",
+        "minLength": 3,
+        "maxLength": 32,
+    },
+    "shipping_address": {
+        **_ADDRESS_INPUT_SCHEMA,
+        "description": "Replaces the shipping address. Needs Shopify's protected customer "
+        "data access.",
+    },
+    "metafields": inputs.metafields(
+        inputs.METAFIELD_INPUT, "Metafields to create or update on the order."
+    ),
+    "localized_fields": inputs.array(
+        inputs.obj(
+            {"key": inputs.text(64, minimum=1), "value": inputs.text(minimum=1)},
+            required=("key", "value"),
+        ),
+        50,
+        title="Localized fields",
+        description="Country-specific fields such as TAX_CREDENTIAL_BR or SHIPPING_CREDENTIAL_MX.",
+    ),
+}
+
+#: Every field `update_order_metadata` may change. One of them must be present.
+ORDER_METADATA_CHANGE_FIELDS: tuple[str, ...] = tuple(
+    name for name in _ORDER_UPDATE_FIELDS if name != "order_id"
+)
+
+
+#: Page ceilings that keep each query under Shopify's 1000-point single query
+#: cost limit. ``tests/test_admin_api_coverage.py`` recomputes the requested
+#: cost of every document at these ceilings and fails if one is exceeded.
+MAX_PRODUCTS_PAGE = 200
+MAX_INVENTORY_ITEMS_PAGE = 200
+MAX_VARIANTS_PAGE = 100
+MAX_MEDIA_PAGE = 150
+MAX_ORDERS_PAGE = 15
+MAX_LINE_ITEMS_PAGE = 40
+MAX_FULFILLMENT_ORDERS_PAGE = 50
+MAX_FULFILLMENT_ORDER_LINE_ITEMS = 100
+MAX_FULFILLMENTS_PAGE = 50
+
+#: Shopify's recommended product image size, in pixels on each side.
+SHOPIFY_RECOMMENDED_IMAGE_SIZE = 2048
+
+#: The catalog gaps `export_products` can look for. Each one is a reason a
+#: product needs attention, reported by its code in the row's quality_issues.
+QUALITY_FIELD_CHECKS: tuple[str, ...] = (
+    "vendor",
+    "product_type",
+    "category",
+    "tags",
+    "seo_title",
+    "seo_description",
+    "sku",
+    "barcode",
+    "weight",
+    "price",
+)
+
+_QUALITY_FILTER_SCHEMA: dict[str, Any] = inputs.obj(
+    {
+        "match": inputs.enum(
+            ("any", "all"),
+            title="Match",
+            description="any: a product with at least one of the checked problems. all: only "
+            "products with every checked problem.",
+            default="any",
+        ),
+        "missing_images": {"type": "boolean", "title": "No images"},
+        "min_image_width": {
+            "type": "integer",
+            "title": "Minimum image width",
+            "description": "Flag any image narrower than this, in pixels. Shopify recommends "
+            f"{SHOPIFY_RECOMMENDED_IMAGE_SIZE}.",
+            "minimum": 1,
+            "maximum": 20000,
+        },
+        "min_image_height": {
+            "type": "integer",
+            "title": "Minimum image height",
+            "description": "Flag any image shorter than this, in pixels.",
+            "minimum": 1,
+            "maximum": 20000,
+        },
+        "below_recommended_image_size": {
+            "type": "boolean",
+            "title": "Images below Shopify's recommendation",
+            "description": f"Flag any image smaller than {SHOPIFY_RECOMMENDED_IMAGE_SIZE} x "
+            f"{SHOPIFY_RECOMMENDED_IMAGE_SIZE} px.",
+        },
+        "missing_image_alt_text": {"type": "boolean", "title": "Images without alt text"},
+        "missing_description": {"type": "boolean", "title": "No description"},
+        "min_description_length": {
+            "type": "integer",
+            "title": "Minimum description length",
+            "description": "Flag a description shorter than this many characters of plain "
+            "text (HTML tags are not counted).",
+            "minimum": 1,
+            "maximum": 65535,
+        },
+        "missing_fields": inputs.array(
+            inputs.enum(QUALITY_FIELD_CHECKS),
+            len(QUALITY_FIELD_CHECKS),
+            minimum=1,
+            title="Fields that must be filled",
+            description="sku, barcode, weight and price are checked on every variant.",
+        ),
+    },
+    title="Only products that need attention",
+    description=(
+        "Export only the products with catalog gaps — missing or small images, short "
+        "descriptions, empty attributes — each with the list of what is wrong. Shopify's "
+        "search cannot filter on these, so the whole matching catalog is read and checked."
+    ),
+)
 
 
 OPERATIONS: tuple[Operation, ...] = (
@@ -716,12 +932,15 @@ OPERATIONS: tuple[Operation, ...] = (
     Operation(
         operation_id="get_shop",
         display_name="Get the store",
-        description="Returns a fixed, bounded set of store identity and locale fields.",
+        description=(
+            "Returns the store's settings: identity, currency, timezone, units, tax and "
+            "order-number settings."
+        ),
         kind="source",
         contacts_shopify=True,
         workflow_visible=True,
         input_schema=_connection_input(),
-        outputs=(Output("shop", "object", _SHOP_SCHEMA),),
+        outputs=(Output("shop", "object", models.SHOP),),
     ),
     Operation(
         operation_id="list_locations",
@@ -734,30 +953,26 @@ OPERATIONS: tuple[Operation, ...] = (
         contacts_shopify=True,
         workflow_visible=True,
         input_schema=_connection_input(
-            first={
-                "type": "integer",
-                "title": _MESSAGE_PAGE_SIZE,
-                "description": "How many locations to return, 1 to 250.",
-                "minimum": 1,
-                "maximum": MAX_PAGE_SIZE,
-                "default": DEFAULT_PAGE_SIZE,
-            },
-            after={
-                "type": "string",
-                "title": _MESSAGE_AFTER_CURSOR,
-                "description": _MESSAGE_THE_END_CURSOR_OF_THE_PREVIOUS_PAGE,
-                "minLength": 1,
-                "maxLength": MAX_CURSOR_LENGTH,
-            },
+            first=_first(_MESSAGE_PAGE_SIZE, "How many locations to return, 1 to 250."),
+            after=_after(),
             include_inactive={
                 "type": "boolean",
                 "title": "Include deactivated locations",
                 "description": "Deactivated locations can no longer stock inventory.",
                 "default": False,
             },
+            include_legacy={
+                "type": "boolean",
+                "title": "Include legacy locations",
+                "description": "Include locations of legacy fulfillment services.",
+                "default": False,
+            },
+            filter=_filter('name:Warehouse or "active:true"'),
+            sort_key=_sort_key(("ID", "NAME", "RELEVANCE"), "NAME"),
+            reverse=_REVERSE,
         ),
         outputs=(
-            Output("locations", "array", {"type": "array", "items": _LOCATION_SCHEMA}),
+            Output("locations", "array", {"type": "array", "items": models.LOCATION}),
             Output("page_info", "object", _PAGE_INFO_SCHEMA),
         ),
         required_oauth_scopes=(scopes.WRITE_INVENTORY, scopes.READ_LOCATIONS),
@@ -767,27 +982,18 @@ OPERATIONS: tuple[Operation, ...] = (
         display_name="List inventory items",
         description=(
             "Returns one cursor-paginated page of inventory items, optionally narrowed to "
-            "one SKU. Pass end_cursor back as after to read the next page."
+            "one SKU or a search. Pass end_cursor back as after to read the next page."
         ),
         kind="source",
         contacts_shopify=True,
         workflow_visible=True,
         input_schema=_connection_input(
-            first={
-                "type": "integer",
-                "title": _MESSAGE_PAGE_SIZE,
-                "description": "How many inventory items to return, 1 to 250.",
-                "minimum": 1,
-                "maximum": MAX_PAGE_SIZE,
-                "default": DEFAULT_PAGE_SIZE,
-            },
-            after={
-                "type": "string",
-                "title": _MESSAGE_AFTER_CURSOR,
-                "description": _MESSAGE_THE_END_CURSOR_OF_THE_PREVIOUS_PAGE,
-                "minLength": 1,
-                "maxLength": MAX_CURSOR_LENGTH,
-            },
+            first=_first(
+                _MESSAGE_PAGE_SIZE,
+                f"How many inventory items to return, 1 to {MAX_INVENTORY_ITEMS_PAGE}.",
+                maximum=MAX_INVENTORY_ITEMS_PAGE,
+            ),
+            after=_after(),
             sku={
                 "type": "string",
                 "title": "SKU",
@@ -798,9 +1004,11 @@ OPERATIONS: tuple[Operation, ...] = (
                 "minLength": 1,
                 "maxLength": MAX_SKU_LENGTH,
             },
+            filter=_filter("tracked:true or updated_at:>2026-01-01"),
+            reverse=_REVERSE,
         ),
         outputs=(
-            Output("inventory_items", "array", {"type": "array", "items": _INVENTORY_ITEM_SCHEMA}),
+            Output("inventory_items", "array", {"type": "array", "items": models.INVENTORY_ITEM}),
             Output("page_info", "object", _PAGE_INFO_SCHEMA),
         ),
         required_oauth_scopes=(scopes.WRITE_INVENTORY,),
@@ -820,14 +1028,15 @@ OPERATIONS: tuple[Operation, ...] = (
                 "_required": True,
             },
         ),
-        outputs=(Output("inventory_item", "object", _INVENTORY_ITEM_SCHEMA),),
+        outputs=(Output("inventory_item", "object", models.INVENTORY_ITEM),),
         required_oauth_scopes=(scopes.WRITE_INVENTORY,),
     ),
     Operation(
         operation_id="get_inventory_levels_batch",
         display_name="Get stock for many items at one location",
         description=(
-            "Returns the available and on-hand quantities for up to 250 inventory items at "
+            "Returns every quantity state — available, on hand, committed, incoming, reserved, "
+            "damaged, safety stock and quality control — for up to 250 inventory items at "
             "one location, in the order they were asked for."
         ),
         kind="source",
@@ -870,9 +1079,9 @@ OPERATIONS: tuple[Operation, ...] = (
         operation_id=SET_QUANTITIES_OPERATION_ID,
         display_name="Set stock quantities",
         description=(
-            "Sets absolute available quantities for 1 to 250 inventory items and waits for "
-            "Shopify's answer. This changes what the store has in stock; a quantity of 0 "
-            "makes the item out of stock at that location."
+            "Sets absolute available (or on-hand) quantities for 1 to 250 inventory items and "
+            "waits for Shopify's answer. This changes what the store has in stock; a quantity "
+            "of 0 makes the item out of stock at that location."
         ),
         kind="action",
         contacts_shopify=True,
@@ -911,7 +1120,7 @@ OPERATIONS: tuple[Operation, ...] = (
                             "type": "integer",
                             "title": "Quantity",
                             "description": (
-                                "The absolute available quantity to set, not a change. "
+                                "The absolute quantity to set, not a change. "
                                 "0 makes the item out of stock at that location."
                             ),
                             "minimum": 0,
@@ -932,9 +1141,30 @@ OPERATIONS: tuple[Operation, ...] = (
                 },
                 "_required": True,
             },
+            name={
+                "type": "string",
+                "title": "Quantity state",
+                "description": "available (default) or on_hand.",
+                "enum": list(inputs.SET_QUANTITY_NAMES),
+                "default": "available",
+            },
+            reason={
+                "type": "string",
+                "title": "Reason",
+                "description": (
+                    "Shopify's reason code, recorded on the adjustment: correction (default), "
+                    "cycle_count_available, damaged, movement_created, movement_received, "
+                    "movement_updated, movement_canceled, other, promotion, quality_control, "
+                    "received, reservation_created, reservation_deleted, reservation_updated, "
+                    "restock, safety_stock or shrinkage."
+                ),
+                "minLength": 1,
+                "maxLength": 64,
+                "default": "correction",
+            },
         ),
         outputs=(
-            Output("inventory_adjustment_group", "object", _ADJUSTMENT_GROUP_SCHEMA),
+            Output("inventory_adjustment_group", "object", models.INVENTORY_ADJUSTMENT_GROUP),
             *_EXTERNAL_EFFECT_OUTPUTS,
         ),
         extra_error_codes=(errors.MISSING_IDEMPOTENCY_KEY, errors.TIMEOUT_UNKNOWN),
@@ -953,18 +1183,29 @@ OPERATIONS: tuple[Operation, ...] = (
         contacts_shopify=True,
         workflow_visible=True,
         input_schema=_connection_input(
-            first=_first(_MESSAGE_PAGE_SIZE, "How many products to return, 1 to 250."),
+            first=_first(
+                _MESSAGE_PAGE_SIZE,
+                f"How many products to return, 1 to {MAX_PRODUCTS_PAGE}.",
+                maximum=MAX_PRODUCTS_PAGE,
+            ),
             after=_after(),
-            filter={
-                "type": "string",
-                "title": "Shopify search query",
-                "description": (
-                    "An optional Shopify product search expression, for example "
-                    "status:active, vendor:Acme, tag:summer, or category_id:sg-4-17."
+            filter=_filter("status:active, vendor:Acme, tag:summer, or category_id:sg-4-17"),
+            sort_key=_sort_key(
+                (
+                    "CREATED_AT",
+                    "ID",
+                    "INVENTORY_TOTAL",
+                    "PRODUCT_TYPE",
+                    "PUBLISHED_AT",
+                    "RELEVANCE",
+                    "TITLE",
+                    "UPDATED_AT",
+                    "VENDOR",
                 ),
-                "minLength": 1,
-                "maxLength": MAX_SEARCH_QUERY_LENGTH,
-            },
+                "ID",
+            ),
+            reverse=_REVERSE,
+            saved_search_id=_SAVED_SEARCH,
         ),
         outputs=(
             Output("products", "array", {"type": "array", "items": models.PRODUCT}),
@@ -976,48 +1217,65 @@ OPERATIONS: tuple[Operation, ...] = (
         operation_id="export_products",
         display_name="Export all matching products",
         description=(
-            "Follows every Shopify product cursor and streams the complete matching "
-            "catalog to a JSONL artifact. Use filter to export a filtered subset."
+            "Follows every Shopify product cursor and streams the complete matching catalog "
+            "to a JSONL artifact. Use filter to export a subset, or quality_filter to export "
+            "only products with missing or small images, short descriptions or empty fields."
         ),
         kind="source",
         contacts_shopify=True,
         workflow_visible=True,
         input_schema=_connection_input(
-            first=_first("Page size", "How many products to read per request, 1 to 250."),
+            first=_first(
+                "Page size",
+                f"How many products to read per request, 1 to {MAX_PRODUCTS_PAGE}.",
+                maximum=MAX_PRODUCTS_PAGE,
+            ),
             include_images={
                 "type": "boolean",
                 "default": False,
                 "title": "Include images",
-                "description": "Export all image media with URL and alt text, plus image_count. Adds paginated reads.",
+                "description": "Export every image with URL, alt text, width and height, plus "
+                "image_count. Adds paginated reads.",
             },
             include_variants={
                 "type": "boolean",
                 "default": False,
                 "title": "Include variants",
-                "description": "Export all variants with SKU, selected options and prices. Adds paginated reads.",
+                "description": "Export every variant record. Adds paginated reads.",
             },
             include_inventory={
                 "type": "boolean",
                 "default": False,
                 "title": "Include inventory",
-                "description": "Include variants automatically and export all inventory locations and quantities. Requires read_inventory or write_inventory, plus read_locations. Adds paginated reads.",
+                "description": "Include variants automatically and export all inventory "
+                "locations and quantities. Requires read_inventory or write_inventory, plus "
+                "read_locations. Adds paginated reads.",
             },
-            filter={
-                "type": "string",
-                "title": "Shopify search query",
-                "description": (
-                    "An optional Shopify product search expression, for example "
-                    "status:active, vendor:Acme, tag:summer, or category_id:sg-4-17."
+            filter=_filter("status:active, vendor:Acme, tag:summer, or category_id:sg-4-17"),
+            sort_key=_sort_key(
+                (
+                    "CREATED_AT",
+                    "ID",
+                    "INVENTORY_TOTAL",
+                    "PRODUCT_TYPE",
+                    "PUBLISHED_AT",
+                    "RELEVANCE",
+                    "TITLE",
+                    "UPDATED_AT",
+                    "VENDOR",
                 ),
-                "minLength": 1,
-                "maxLength": MAX_SEARCH_QUERY_LENGTH,
-            },
+                "ID",
+            ),
+            reverse=_REVERSE,
+            saved_search_id=_SAVED_SEARCH,
+            quality_filter=_QUALITY_FILTER_SCHEMA,
         ),
         outputs=(
             Output("artifact_handle", "artifact_handle"),
             Output("filename", "text", {"type": "string"}),
             Output("content_type", "text", {"type": "string"}),
             Output("item_count", "integer", {"type": "integer", "minimum": 0}),
+            Output("scanned_count", "integer", {"type": "integer", "minimum": 0}),
             Output("page_count", "integer", {"type": "integer", "minimum": 1}),
             Output("size_bytes", "integer", {"type": "integer", "minimum": 0}),
             Output("sha256", "text", {"type": "string"}),
@@ -1041,15 +1299,40 @@ OPERATIONS: tuple[Operation, ...] = (
         operation_id="list_product_variants",
         display_name="List product variants",
         description=(
-            "Returns one cursor-paginated page of product variants across the store. "
+            "Returns one cursor-paginated page of product variants across the store, "
+            "optionally narrowed by a search such as product_id:123 or sku:ABC. "
             "Pass end_cursor back as after to read the next page."
         ),
         kind="source",
         contacts_shopify=True,
         workflow_visible=True,
         input_schema=_connection_input(
-            first=_first(_MESSAGE_PAGE_SIZE, "How many variants to return, 1 to 250."),
+            first=_first(
+                _MESSAGE_PAGE_SIZE,
+                f"How many variants to return, 1 to {MAX_VARIANTS_PAGE}.",
+                maximum=MAX_VARIANTS_PAGE,
+            ),
             after=_after(),
+            filter=_filter("product_id:123, sku:ABC-1 or barcode:4006381333931"),
+            sort_key=_sort_key(
+                (
+                    "FULL_TITLE",
+                    "ID",
+                    "INVENTORY_LEVELS_AVAILABLE",
+                    "INVENTORY_MANAGEMENT",
+                    "INVENTORY_POLICY",
+                    "INVENTORY_QUANTITY",
+                    "NAME",
+                    "POPULAR",
+                    "POSITION",
+                    "RELEVANCE",
+                    "SKU",
+                    "TITLE",
+                ),
+                "ID",
+            ),
+            reverse=_REVERSE,
+            saved_search_id=_SAVED_SEARCH,
         ),
         outputs=(
             Output("product_variants", "array", {"type": "array", "items": models.PRODUCT_VARIANT}),
@@ -1075,7 +1358,8 @@ OPERATIONS: tuple[Operation, ...] = (
         display_name="List catalog metafields",
         description=(
             "Returns one cursor-paginated page of metafields for one product or one product "
-            "variant. The owner type must match the id."
+            "variant, optionally narrowed to a namespace or named keys. The owner type must "
+            "match the id."
         ),
         kind="source",
         contacts_shopify=True,
@@ -1096,6 +1380,9 @@ OPERATIONS: tuple[Operation, ...] = (
             },
             first=_first(_MESSAGE_PAGE_SIZE, "How many metafields to return, 1 to 250."),
             after=_after(),
+            namespace=_METAFIELD_NAMESPACE_FILTER,
+            keys=_METAFIELD_KEYS_FILTER,
+            reverse=_REVERSE,
         ),
         outputs=(
             Output("owner_id", "text", {"type": "string"}),
@@ -1109,16 +1396,24 @@ OPERATIONS: tuple[Operation, ...] = (
         operation_id="list_product_media",
         display_name="List product media",
         description=(
-            "Returns one cursor-paginated page of the media attached to one product. "
-            "Reads media and processing status, including images supplied during product creation."
+            "Returns one cursor-paginated page of the media attached to one product: images "
+            "with their URL, width and height, videos and 3D models, with processing status "
+            "and any processing errors."
         ),
         kind="source",
         contacts_shopify=True,
         workflow_visible=True,
         input_schema=_connection_input(
             product_id=_gid(_MESSAGE_PRODUCT_ID, "Product"),
-            first=_first(_MESSAGE_PAGE_SIZE, "How many media items to return, 1 to 250."),
+            first=_first(
+                _MESSAGE_PAGE_SIZE,
+                f"How many media items to return, 1 to {MAX_MEDIA_PAGE}.",
+                maximum=MAX_MEDIA_PAGE,
+            ),
             after=_after(),
+            filter=_filter("media_type:IMAGE"),
+            sort_key=_sort_key(("ID", "POSITION"), "POSITION"),
+            reverse=_REVERSE,
         ),
         outputs=(
             Output("product_id", "text", {"type": "string"}),
@@ -1131,11 +1426,12 @@ OPERATIONS: tuple[Operation, ...] = (
         operation_id="create_product",
         display_name="Create a product",
         description=(
-            "Creates one product as a draft. Shopify creates only the initial variant, using "
-            "the first value of each supplied option. product_variants contains that one variant "
-            "and its inventory item so a workflow can immediately set SKU, price and stock; add "
-            "the rest with the variant batch operations. Optional images are downloaded from "
-            "public HTTPS URLs and processed asynchronously. No metafields, collections or publications are created."
+            "Creates one product with its variants in a single atomic Shopify call: SKU, "
+            "price, barcode, weight, starting stock, images and metafields included. The "
+            "product is a DRAFT unless status says otherwise. Images come from public URLs, "
+            "existing Shopify files or Flow Steward artifacts and are processed "
+            "asynchronously. product_variants returns every created variant with its "
+            "inventory item."
         ),
         kind="action",
         contacts_shopify=True,
@@ -1148,7 +1444,7 @@ OPERATIONS: tuple[Operation, ...] = (
                 "array",
                 {
                     "type": "array",
-                    "maxItems": 1,
+                    "maxItems": MAX_CREATE_VARIANTS,
                     "items": models.INITIAL_PRODUCT_VARIANT,
                 },
             ),
@@ -1161,7 +1457,12 @@ OPERATIONS: tuple[Operation, ...] = (
     Operation(
         operation_id="create_products_bulk",
         display_name="Create products in bulk",
-        description="Uploads a batch of new draft products for asynchronous creation. Supply either products or a JSONL artifact containing create_product fields. Submission success is not per-row success; Shopify continues processing after this action returns. Creates only the initial variant.",
+        description=(
+            "Uploads a batch of new products for asynchronous creation. Each row takes the "
+            "same fields as create_product, variants included, except image_files: use media "
+            "URLs. Supply either products or a JSONL artifact. Submission success is not "
+            "per-row success; Shopify continues processing after this action returns."
+        ),
         kind="action",
         contacts_shopify=True,
         workflow_visible=True,
@@ -1172,14 +1473,16 @@ OPERATIONS: tuple[Operation, ...] = (
                 "minItems": 1,
                 "maxItems": 10000,
                 "items": _BULK_PRODUCT_ITEM_SCHEMA,
-                "description": "New products using create_product fields, without connection_ref. Use a JSONL artifact for large batches.",
+                "description": "New products using create_product fields, without "
+                "connection_ref and image_files. Use a JSONL artifact for large batches.",
             },
             artifact_handle={
                 "type": "string",
                 "title": "Products JSONL artifact",
                 "minLength": 1,
                 "maxLength": 512,
-                "description": "One product per line using create_product fields. Mutually exclusive with products. Maximum 10000 products and 100 MB.",
+                "description": "One product per line using create_product fields. Mutually "
+                "exclusive with products. Maximum 10000 products and 100 MB.",
             },
         ),
         outputs=(
@@ -1197,39 +1500,15 @@ OPERATIONS: tuple[Operation, ...] = (
         operation_id="update_product",
         display_name="Update a product",
         description=(
-            "Changes one product. Only the fields you supply are sent; everything else is left "
-            "as it is. replace_tags overwrites the whole tag list. Status, publications, "
-            "collections, media and metafields are out of reach here."
+            "Changes one product, found by id, handle or a unique metafield. Only the fields "
+            "you supply are sent; everything else is left as it is. replace_tags overwrites "
+            "the whole tag list. New images can be attached from URLs or Flow Steward "
+            "artifacts."
         ),
         kind="action",
         contacts_shopify=True,
         workflow_visible=True,
-        input_schema=_connection_input(
-            product_id=_gid(_MESSAGE_PRODUCT_ID, "Product"),
-            title={**_TITLE_SCHEMA, "title": "Title"},
-            description_html=_DESCRIPTION_SCHEMA,
-            vendor={**_SHORT_TEXT_SCHEMA, "title": "Vendor"},
-            product_type={**_SHORT_TEXT_SCHEMA, "title": "Product type"},
-            handle={
-                **_HANDLE_SCHEMA,
-                "title": "Handle",
-                "description": (
-                    "A new URL handle. Shopify is always asked to redirect the old one."
-                ),
-            },
-            replace_tags={
-                **_TAGS_SCHEMA,
-                "title": "Replace tags",
-                "description": (
-                    "Replaces the product's entire tag list. An empty list is refused, because "
-                    "clearing every tag is more likely a mistake than an intention."
-                ),
-                "minItems": 1,
-            },
-            category_id=_gid("Category id", "TaxonomyCategory", required=False),
-            seo_title={**_SHORT_TEXT_SCHEMA, "title": "SEO title"},
-            seo_description={**_SEO_DESCRIPTION_SCHEMA, "title": "SEO description"},
-        ),
+        input_schema=_connection_input(**_PRODUCT_UPDATE_FIELDS),
         outputs=(
             Output("product", "object", models.NULLABLE_PRODUCT),
             *_EXTERNAL_EFFECT_OUTPUTS,
@@ -1243,8 +1522,7 @@ OPERATIONS: tuple[Operation, ...] = (
         display_name="Create product variants",
         description=(
             "Creates 1 to 250 variants on one product in a single call. The product's options "
-            "must already exist. The product's standalone variant is preserved. Stock "
-            "quantities are not part of this: set them with the inventory operations."
+            "must already exist. By default the product's standalone variant is preserved."
         ),
         kind="action",
         contacts_shopify=True,
@@ -1260,6 +1538,17 @@ OPERATIONS: tuple[Operation, ...] = (
                 "items": _VARIANT_CREATE_ITEM_SCHEMA,
                 "_required": True,
             },
+            media=_CREATE_MEDIA_SCHEMA,
+            strategy={
+                "type": "string",
+                "title": "Standalone variant",
+                "description": (
+                    "PRESERVE_STANDALONE_VARIANT (default) keeps the product's default "
+                    "variant; REMOVE_STANDALONE_VARIANT deletes it; DEFAULT follows Shopify."
+                ),
+                "enum": ["DEFAULT", "REMOVE_STANDALONE_VARIANT", "PRESERVE_STANDALONE_VARIANT"],
+                "default": "PRESERVE_STANDALONE_VARIANT",
+            },
         ),
         outputs=(
             Output("product_variants", "array", {"type": "array", "items": models.PRODUCT_VARIANT}),
@@ -1273,8 +1562,8 @@ OPERATIONS: tuple[Operation, ...] = (
         operation_id="update_product_variants_batch",
         display_name="Update product variants",
         description=(
-            "Changes 1 to 250 existing variants on one product in a single call. Shopify is "
-            "asked to apply all of them or none. Each entry must name a variant and carry at "
+            "Changes 1 to 250 existing variants on one product in a single call. By default "
+            "Shopify applies all of them or none. Each entry must name a variant and carry at "
             "least one actual change."
         ),
         kind="action",
@@ -1290,6 +1579,13 @@ OPERATIONS: tuple[Operation, ...] = (
                 "maxItems": MAX_BATCH_ITEMS,
                 "items": _VARIANT_UPDATE_ITEM_SCHEMA,
                 "_required": True,
+            },
+            media=_CREATE_MEDIA_SCHEMA,
+            allow_partial_updates={
+                "type": "boolean",
+                "title": "Allow partial updates",
+                "description": "false (default): all variants change or none do.",
+                "default": False,
             },
         ),
         outputs=(
@@ -1321,11 +1617,11 @@ OPERATIONS: tuple[Operation, ...] = (
         extra_error_codes=(errors.MISSING_IDEMPOTENCY_KEY, errors.TIMEOUT_UNKNOWN),
     ),
     Operation(
-        operation_id="update_product_media_alt",
-        display_name="Update media alt text",
+        operation_id="update_product_media",
+        display_name="Update a media file",
         description=(
-            "Changes the alt text of one existing media file. Nothing else about the file is "
-            "touched: not its source, filename, preview, or which products it belongs to."
+            "Changes one existing file in Shopify Files: its alt text, its source (replacing "
+            "the file), its preview image, its filename, and which products it is attached to."
         ),
         kind="action",
         contacts_shopify=True,
@@ -1334,24 +1630,41 @@ OPERATIONS: tuple[Operation, ...] = (
             media_id={
                 **_GID_SCHEMA_BASE,
                 "title": "Media id",
-                "description": "A MediaImage, Video or Model3d id that already exists.",
+                "description": "A MediaImage, Video, Model3d, ExternalVideo or GenericFile id.",
                 "_required": True,
             },
             alt={
                 "type": "string",
                 "title": "Alt text",
-                "description": "The replacement alt text. Must not be empty.",
-                "minLength": 1,
+                "description": "The replacement alt text.",
                 "maxLength": MAX_ALT_LENGTH,
-                "_required": True,
+            },
+            source_url={
+                **inputs.MEDIA_ITEM["properties"]["source_url"],
+                "title": "Replacement source URL",
+                "description": "A public https:// URL to replace the file's content with.",
+            },
+            preview_image_url={
+                **inputs.MEDIA_ITEM["properties"]["source_url"],
+                "title": "Preview image URL",
+                "description": "A public https:// image URL to use as the file's preview.",
+            },
+            filename={"type": "string", "title": "Filename", "minLength": 1, "maxLength": 255},
+            add_to_product_ids={
+                **inputs.array(dict(_GID_SCHEMA_BASE), MAX_BATCH_ITEMS, minimum=1),
+                "title": "Attach to products",
+            },
+            remove_from_product_ids={
+                **inputs.array(dict(_GID_SCHEMA_BASE), MAX_BATCH_ITEMS, minimum=1),
+                "title": "Detach from products",
             },
         ),
         outputs=(
-            Output("file", "object", models.NULLABLE_MEDIA_FILE),
+            Output("file", "object", models.NULLABLE_FILE),
             *_EXTERNAL_EFFECT_OUTPUTS,
         ),
         required_oauth_scopes=(scopes.WRITE_FILES,),
-        effect_kind="shopify_product_media_alt_update",
+        effect_kind="shopify_product_media_update",
         extra_error_codes=(errors.MISSING_IDEMPOTENCY_KEY, errors.TIMEOUT_UNKNOWN),
     ),
     # -- Orders, fulfillment orders and fulfillments -----------------------
@@ -1359,15 +1672,44 @@ OPERATIONS: tuple[Operation, ...] = (
         operation_id="list_orders",
         display_name="List orders",
         description=(
-            "Returns one cursor-paginated page of orders. Customer, address, payment and "
-            "contact details are never requested."
+            "Returns one cursor-paginated page of orders, optionally filtered and sorted. "
+            "Customer names, emails, phone numbers and addresses are never requested."
         ),
         kind="source",
         contacts_shopify=True,
         workflow_visible=True,
         input_schema=_connection_input(
-            first=_first(_MESSAGE_PAGE_SIZE, "How many orders to return, 1 to 250."),
+            first=_first(
+                _MESSAGE_PAGE_SIZE,
+                f"How many orders to return, 1 to {MAX_ORDERS_PAGE}.",
+                maximum=MAX_ORDERS_PAGE,
+            ),
             after=_after(),
+            filter=_filter(
+                "financial_status:paid, fulfillment_status:unfulfilled, "
+                "created_at:>2026-01-01 or tag:wholesale"
+            ),
+            sort_key=_sort_key(
+                (
+                    "CREATED_AT",
+                    "CURRENT_TOTAL_PRICE",
+                    "CUSTOMER_NAME",
+                    "DESTINATION",
+                    "FINANCIAL_STATUS",
+                    "FULFILLMENT_STATUS",
+                    "ID",
+                    "ORDER_NUMBER",
+                    "PO_NUMBER",
+                    "PROCESSED_AT",
+                    "RELEVANCE",
+                    "TOTAL_ITEMS_QUANTITY",
+                    "TOTAL_PRICE",
+                    "UPDATED_AT",
+                ),
+                "ID",
+            ),
+            reverse=_REVERSE,
+            saved_search_id=_SAVED_SEARCH,
         ),
         outputs=(
             Output("orders", "array", {"type": "array", "items": models.ORDER}),
@@ -1379,8 +1721,8 @@ OPERATIONS: tuple[Operation, ...] = (
         operation_id="get_order",
         display_name="Get an order",
         description=(
-            "Returns one order, found by its Shopify order id. Customer, address, payment and "
-            "contact details are never requested."
+            "Returns one order, found by its Shopify order id. Customer names, emails, phone "
+            "numbers and addresses are never requested."
         ),
         kind="source",
         contacts_shopify=True,
@@ -1398,8 +1740,13 @@ OPERATIONS: tuple[Operation, ...] = (
         workflow_visible=True,
         input_schema=_connection_input(
             order_id=_gid(_MESSAGE_ORDER_ID, "Order"),
-            first=_first(_MESSAGE_PAGE_SIZE, "How many line items to return, 1 to 250."),
+            first=_first(
+                _MESSAGE_PAGE_SIZE,
+                f"How many line items to return, 1 to {MAX_LINE_ITEMS_PAGE}.",
+                maximum=MAX_LINE_ITEMS_PAGE,
+            ),
             after=_after(),
+            reverse=_REVERSE,
         ),
         outputs=(
             Output("order_id", "text", {"type": "string"}),
@@ -1411,7 +1758,10 @@ OPERATIONS: tuple[Operation, ...] = (
     Operation(
         operation_id="list_order_metafields",
         display_name="List order metafields",
-        description="Returns one cursor-paginated page of the metafields on one order.",
+        description=(
+            "Returns one cursor-paginated page of the metafields on one order, optionally "
+            "narrowed to a namespace or named keys."
+        ),
         kind="source",
         contacts_shopify=True,
         workflow_visible=True,
@@ -1419,6 +1769,9 @@ OPERATIONS: tuple[Operation, ...] = (
             order_id=_gid(_MESSAGE_ORDER_ID, "Order"),
             first=_first(_MESSAGE_PAGE_SIZE, "How many metafields to return, 1 to 250."),
             after=_after(),
+            namespace=_METAFIELD_NAMESPACE_FILTER,
+            keys=_METAFIELD_KEYS_FILTER,
+            reverse=_REVERSE,
         ),
         outputs=(
             Output("order_id", "text", {"type": "string"}),
@@ -1432,19 +1785,36 @@ OPERATIONS: tuple[Operation, ...] = (
         display_name="List fulfillment orders",
         description=(
             "Returns one cursor-paginated page of the fulfillment orders on one order, each "
-            "with an explicitly sized page of its own line items."
+            "with an explicitly sized page of its own line items. first multiplied by "
+            "line_items_first is bounded so the request stays within Shopify's cost limit."
         ),
         kind="source",
         contacts_shopify=True,
         workflow_visible=True,
         input_schema=_connection_input(
             order_id=_gid(_MESSAGE_ORDER_ID, "Order"),
-            first=_first(_MESSAGE_PAGE_SIZE, "How many fulfillment orders to return, 1 to 250."),
+            first=_first(
+                _MESSAGE_PAGE_SIZE,
+                f"How many fulfillment orders to return, 1 to {MAX_FULFILLMENT_ORDERS_PAGE}.",
+                maximum=MAX_FULFILLMENT_ORDERS_PAGE,
+                default=10,
+            ),
             after=_after(),
             line_items_first=_first(
                 "Line items per fulfillment order",
-                "How many line items to return inside each fulfillment order, 1 to 250.",
+                "How many line items to return inside each fulfillment order, 1 to "
+                f"{MAX_FULFILLMENT_ORDER_LINE_ITEMS}.",
+                maximum=MAX_FULFILLMENT_ORDER_LINE_ITEMS,
+                default=20,
             ),
+            reverse=_REVERSE,
+            displayable={
+                "type": "boolean",
+                "title": "Only displayable",
+                "description": "Only fulfillment orders a merchant can see and act on.",
+                "default": False,
+            },
+            filter=_filter("status:open or assigned_location_id:123"),
         ),
         outputs=(
             Output("order_id", "text", {"type": "string"}),
@@ -1484,15 +1854,20 @@ OPERATIONS: tuple[Operation, ...] = (
         operation_id="list_order_fulfillments",
         display_name="List order fulfillments",
         description=(
-            "Returns up to 250 of an order's fulfillments plus the store's own total, so a "
-            "caller can tell a complete answer from a partial one."
+            f"Returns up to {MAX_FULFILLMENTS_PAGE} of an order's fulfillments plus the "
+            "store's own total, so a caller can tell a complete answer from a partial one."
         ),
         kind="source",
         contacts_shopify=True,
         workflow_visible=True,
         input_schema=_connection_input(
             order_id=_gid(_MESSAGE_ORDER_ID, "Order"),
-            first=_first(_MESSAGE_PAGE_SIZE, "How many fulfillments to return, 1 to 250."),
+            first=_first(
+                _MESSAGE_PAGE_SIZE,
+                f"How many fulfillments to return, 1 to {MAX_FULFILLMENTS_PAGE}.",
+                maximum=MAX_FULFILLMENTS_PAGE,
+            ),
+            filter=_filter("status:success"),
         ),
         outputs=(
             Output("order_id", "text", {"type": "string"}),
@@ -1504,62 +1879,19 @@ OPERATIONS: tuple[Operation, ...] = (
     ),
     Operation(
         operation_id="update_order_metadata",
-        display_name="Update order metadata",
+        display_name="Update an order",
         description=(
-            "Changes an order's note, PO number, tags or custom attributes. The two replace_ "
-            "fields overwrite their whole list. Customers, addresses, payments, line items, "
-            "refunds and order edits are out of reach here."
+            "Changes what Shopify lets an app edit on an existing order: note, PO number, "
+            "tags, custom attributes, metafields, contact email and phone, shipping address "
+            "and localized fields. The replace_ fields overwrite their whole list. Line items, "
+            "payments, refunds and order edits are out of reach here."
         ),
         kind="action",
         contacts_shopify=True,
         workflow_visible=True,
-        input_schema=_connection_input(
-            order_id=_gid(_MESSAGE_ORDER_ID, "Order"),
-            note={
-                "type": "string",
-                "title": "Note",
-                "description": "Replaces the order note. Must not be empty.",
-                "minLength": 1,
-                "maxLength": MAX_NOTE_LENGTH,
-            },
-            po_number={
-                "type": "string",
-                "title": "PO number",
-                "description": "Replaces the purchase order number. Must not be empty.",
-                "minLength": 1,
-                "maxLength": MAX_PO_NUMBER_LENGTH,
-            },
-            replace_tags={
-                **_TAGS_SCHEMA,
-                "title": "Replace tags",
-                "description": "Replaces the order's entire tag list. An empty list is refused.",
-                "minItems": 1,
-            },
-            replace_custom_attributes={
-                "type": "array",
-                "title": "Replace custom attributes",
-                "description": (
-                    "Replaces the order's entire custom attribute list. An empty list is refused."
-                ),
-                "minItems": 1,
-                "maxItems": MAX_CUSTOM_ATTRIBUTES,
-                "items": {
-                    "type": "object",
-                    "additionalProperties": False,
-                    "required": ["key", "value"],
-                    "properties": {
-                        "key": {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": MAX_ATTRIBUTE_KEY_LENGTH,
-                        },
-                        "value": {"type": "string", "maxLength": MAX_ATTRIBUTE_VALUE_LENGTH},
-                    },
-                },
-            },
-        ),
+        input_schema=_connection_input(**_ORDER_UPDATE_FIELDS),
         outputs=(
-            Output("order", "object", models.NULLABLE_ORDER_METADATA),
+            Output("order", "object", models.NULLABLE_ORDER),
             *_EXTERNAL_EFFECT_OUTPUTS,
         ),
         required_oauth_scopes=(scopes.WRITE_ORDERS,),
@@ -1591,7 +1923,8 @@ OPERATIONS: tuple[Operation, ...] = (
         description=(
             "Fulfills named line items on named fulfillment orders. Every line item and "
             "quantity must be stated: Shopify would otherwise fulfil everything remaining, and "
-            "that is not a decision an omitted field should make. The customer is not notified."
+            "that is not a decision an omitted field should make. The customer is notified "
+            "only when notify_customer is true."
         ),
         kind="action",
         contacts_shopify=True,
@@ -1634,6 +1967,27 @@ OPERATIONS: tuple[Operation, ...] = (
                 "_required": True,
             },
             tracking=_TRACKING_INPUT_SCHEMA,
+            notify_customer=_NOTIFY_CUSTOMER_SCHEMA,
+            origin_address=inputs.obj(
+                {
+                    "address1": inputs.text(),
+                    "address2": inputs.text(),
+                    "city": inputs.text(),
+                    "zip": inputs.text(32),
+                    "province_code": inputs.text(8),
+                    "country_code": inputs.text(2, minimum=2),
+                },
+                required=("country_code",),
+                title="Shipped from",
+                description="The address the goods leave from, if not the assigned location.",
+            ),
+            message={
+                "type": "string",
+                "title": "Message",
+                "description": "A note recorded with the fulfillment.",
+                "minLength": 1,
+                "maxLength": MAX_NOTE_LENGTH,
+            },
         ),
         outputs=(
             Output("fulfillment", "object", models.NULLABLE_FULFILLMENT),
@@ -1649,7 +2003,7 @@ OPERATIONS: tuple[Operation, ...] = (
         description=(
             "Replaces the tracking information on one existing fulfillment. At least one "
             "tracking value is required: this operation cannot be used to clear tracking. The "
-            "customer is not notified."
+            "customer is notified only when notify_customer is true."
         ),
         kind="action",
         contacts_shopify=True,
@@ -1657,6 +2011,7 @@ OPERATIONS: tuple[Operation, ...] = (
         input_schema=_connection_input(
             fulfillment_id=_gid("Fulfillment id", "Fulfillment"),
             tracking={**_TRACKING_INPUT_SCHEMA, "_required": True},
+            notify_customer=_NOTIFY_CUSTOMER_SCHEMA,
         ),
         outputs=(
             Output("fulfillment", "object", models.NULLABLE_FULFILLMENT),
@@ -1731,6 +2086,7 @@ __all__ = [
     "CHANNEL",
     "DEFAULT_PAGE_SIZE",
     "MAX_BATCH_ITEMS",
+    "MAX_CREATE_VARIANTS",
     "MAX_PAGE_SIZE",
     "MAX_QUANTITY",
     "MIN_BATCH_ITEMS",
@@ -1738,9 +2094,15 @@ __all__ = [
     "OPERATIONS",
     "OPERATIONS_BY_ID",
     "OPERATION_IDS",
+    "ORDER_METADATA_CHANGE_FIELDS",
+    "PRODUCT_IDENTIFIER_FIELDS",
+    "PRODUCT_UPDATE_CHANGE_FIELDS",
+    "QUALITY_FIELD_CHECKS",
     "SET_QUANTITIES_OPERATION_ID",
+    "SHOPIFY_RECOMMENDED_IMAGE_SIZE",
     "TEST_CONNECTION_OPERATION_ID",
     "VALIDATE_SETTINGS_OPERATION_ID",
+    "VARIANT_UPDATE_CHANGE_FIELDS",
     "Operation",
     "Output",
     "UiField",

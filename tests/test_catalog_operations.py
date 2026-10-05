@@ -12,7 +12,6 @@ from conftest import (
     VARIANT_A,
     VARIANT_B,
     FakeHttp,
-    adjustment_group_response,
     connection,
     graphql_response,
     metafield_node,
@@ -21,6 +20,7 @@ from conftest import (
     run_operation,
     variant_node,
 )
+
 from runtime import documents, errors
 from runtime.catalog import DEFAULT_PAGE_SIZE
 
@@ -37,7 +37,12 @@ class TestCatalogSources:
         assert product["category_id"] == CATEGORY_A
         assert product["seo"] == {"title": "Boots", "description": "Good boots"}
         assert product["options"] == [
-            {"id": "gid://shopify/ProductOption/1", "name": "Size", "position": 1}
+            {
+                "id": "gid://shopify/ProductOption/1",
+                "name": "Size",
+                "position": 1,
+                "values": [],
+            }
         ]
 
     def test_a_page_defaults_to_fifty_and_sends_no_cursor(self, http: FakeHttp) -> None:
@@ -45,7 +50,12 @@ class TestCatalogSources:
 
         run_operation("list_products", {}, http)
 
-        assert http.variables() == {"first": DEFAULT_PAGE_SIZE, "after": None}
+        assert http.variables() == {
+            "first": DEFAULT_PAGE_SIZE,
+            "after": None,
+            "sortKey": "ID",
+            "reverse": False,
+        }
 
     @pytest.mark.parametrize(
         "operation_id",
@@ -178,26 +188,59 @@ class TestCreateProduct:
     def _answer(self, **overrides):
         overrides.setdefault("variants", connection([variant_node()]))
         return graphql_response(
-            {"productCreate": {"product": product_node(**overrides), "userErrors": []}}
+            {"productSet": {"product": product_node(**overrides), "userErrors": []}}
         )
 
-    def test_initial_variant_array_is_ready_for_followup_price_sku_and_stock_steps(
+    def test_sku_price_and_stock_are_set_in_the_same_single_call(self, http: FakeHttp) -> None:
+        """The reason this operation exists in its current form: no follow-up steps."""
+        http.queue(self._answer())
+
+        response = run_action(
+            "create_product",
+            {
+                "title": "Boots",
+                "handle": "boots",
+                "variants": [
+                    {
+                        "sku": "BOOT-42",
+                        "price": "49.90",
+                        "barcode": "4006381333931",
+                        "inventory_item": {
+                            "tracked": True,
+                            "measurement": {"weight": {"value": 1.2, "unit": "KILOGRAMS"}},
+                        },
+                        "inventory_quantities": [
+                            {"location_id": LOCATION_A, "name": "available", "quantity": 5}
+                        ],
+                    }
+                ],
+            },
+            http,
+        )
+
+        assert response["ok"] is True, response
+        assert len(http.requests) == 1
+        variant = http.variables()["input"]["variants"][0]
+        assert variant == {
+            "optionValues": [{"optionName": "Title", "name": "Default Title"}],
+            "sku": "BOOT-42",
+            "price": "49.90",
+            "barcode": "4006381333931",
+            "inventoryItem": {
+                "tracked": True,
+                "measurement": {"weight": {"value": 1.2, "unit": "KILOGRAMS"}},
+            },
+            "inventoryQuantities": [{"locationId": LOCATION_A, "name": "available", "quantity": 5}],
+        }
+        assert http.variables()["input"]["productOptions"] == [
+            {"name": "Title", "values": [{"name": "Default Title"}]}
+        ]
+        assert "productSet(input: $input, synchronous: true)" in http.document()
+
+    def test_without_variants_the_initial_variant_uses_the_first_value_of_each_option(
         self, http: FakeHttp
     ) -> None:
-        http.queue(
-            self._answer(
-                variants=connection(
-                    [
-                        variant_node(
-                            selectedOptions=[
-                                {"name": "Size", "value": "41"},
-                                {"name": "Color", "value": "Black"},
-                            ]
-                        )
-                    ]
-                )
-            )
-        )
+        http.queue(self._answer())
 
         response = run_action(
             "create_product",
@@ -213,110 +256,54 @@ class TestCreateProduct:
         )
 
         assert response["ok"] is True, response
-        assert len(response["result"]["product_variants"]) == 1
-        initial_variant = response["result"]["product_variants"][0]
-        assert initial_variant["id"] == VARIANT_A
-        assert initial_variant["product_id"] == PRODUCT_A
-        assert initial_variant["selected_options"] == [
-            {"name": "Size", "value": "41"},
-            {"name": "Color", "value": "Black"},
-        ]
-        assert initial_variant["inventory_item"] == {
-            "id": "gid://shopify/InventoryItem/1001",
-            "sku": "SKU-1",
-            "tracked": True,
-            "requires_shipping": True,
-        }
-        assert http.variables()["product"]["productOptions"] == [
+        sent = http.variables()["input"]
+        assert sent["productOptions"] == [
             {"name": "Size", "values": [{"name": "41"}, {"name": "42"}]},
             {"name": "Color", "values": [{"name": "Black"}, {"name": "Brown"}]},
         ]
-        document = http.document()
-        assert "variants(first: 1)" in document
-        assert "inventoryItem { id sku tracked requiresShipping }" in document
+        assert sent["variants"] == [
+            {
+                "optionValues": [
+                    {"optionName": "Size", "name": "41"},
+                    {"optionName": "Color", "name": "Black"},
+                ]
+            }
+        ]
+        assert http.variables()["variantsFirst"] == 1
 
-    def test_created_variant_array_composes_with_update_and_stock_actions(
-        self, http: FakeHttp
-    ) -> None:
-        http.queue(self._answer())
-        created = run_action(
+    def test_every_created_variant_comes_back_with_its_inventory_item(self, http: FakeHttp) -> None:
+        http.queue(self._answer(variants=connection([variant_node(), variant_node(VARIANT_B)])))
+
+        response = run_action(
             "create_product",
-            {"title": "Boots", "handle": "boots"},
+            {
+                "title": "Boots",
+                "handle": "boots",
+                "options": [{"name": "Size", "values": ["41", "42"]}],
+                "variants": [
+                    {"option_values": [{"option_name": "Size", "value": "41"}], "sku": "A"},
+                    {"option_values": [{"option_name": "Size", "value": "42"}], "sku": "B"},
+                ],
+            },
             http,
         )
 
-        created_variants = created["result"]["product_variants"]
-        update_input = [
-            {
-                "variant_id": variant["id"],
-                "price": "21.50",
-                "inventory_item": {"sku": "NEW-SKU", "tracked": True},
-            }
-            for variant in created_variants
-        ]
-        http.queue(
-            graphql_response(
-                {
-                    "productVariantsBulkUpdate": {
-                        "productVariants": [
-                            variant_node(
-                                price="21.50",
-                                inventoryItem={
-                                    "id": "gid://shopify/InventoryItem/1001",
-                                    "sku": "NEW-SKU",
-                                    "tracked": True,
-                                    "requiresShipping": True,
-                                },
-                            )
-                        ],
-                        "userErrors": [],
-                    }
-                }
-            )
-        )
-        updated = run_action(
-            "update_product_variants_batch",
-            {"product_id": PRODUCT_A, "variants": update_input},
-            http,
-        )
-
-        quantities = [
-            {
-                "inventory_item_id": variant["inventory_item"]["id"],
-                "location_id": LOCATION_A,
-                "quantity": 7,
-                "change_from_quantity": None,
-            }
-            for variant in updated["result"]["product_variants"]
-        ]
-        http.queue(adjustment_group_response())
-        stocked = run_action("set_inventory_quantities", {"quantities": quantities}, http)
-
-        assert created["ok"] is True
-        assert updated["ok"] is True
-        assert stocked["ok"] is True
-        assert http.variables(1) == {
-            "productId": PRODUCT_A,
-            "variants": [
-                {
-                    "id": VARIANT_A,
-                    "price": "21.50",
-                    "inventoryItem": {"sku": "NEW-SKU", "tracked": True},
-                }
-            ],
-        }
-        assert http.variables(2)["input"]["quantities"][0]["inventoryItemId"] == (
-            "gid://shopify/InventoryItem/1001"
-        )
+        assert response["ok"] is True, response
+        variants = response["result"]["product_variants"]
+        assert [variant["id"] for variant in variants] == [VARIANT_A, VARIANT_B]
+        assert all(variant["product_id"] == PRODUCT_A for variant in variants)
+        assert variants[0]["inventory_item"]["id"] == "gid://shopify/InventoryItem/1001"
+        assert http.variables()["variantsFirst"] == 2
 
     @pytest.mark.parametrize(
         "variants",
         [
             connection([]),
             connection([variant_node(inventoryItem={"sku": "SKU-1", "tracked": True})]),
+            connection([variant_node(product={"id": PRODUCT_B})]),
         ],
     )
-    def test_an_unusable_initial_variant_is_an_unknown_create_outcome(
+    def test_an_unusable_variant_confirmation_is_an_unknown_create_outcome(
         self, variants: dict, http: FakeHttp
     ) -> None:
         http.queue(self._answer(variants=variants))
@@ -327,67 +314,29 @@ class TestCreateProduct:
         assert response["external_effect_status"] == "timeout_unknown"
         assert response["definitely_no_external_effect"] is False
 
-    def test_a_created_product_is_always_a_draft(self, http: FakeHttp) -> None:
-        """Publishing is a merchandising decision, never an import side effect."""
+    def test_a_created_product_is_a_draft_unless_asked_otherwise(self, http: FakeHttp) -> None:
+        """Publishing is a merchandising decision, so it has to be asked for."""
+        http.queue(self._answer(), self._answer())
+
+        run_action("create_product", {"title": "Boots", "handle": "boots"}, http)
+        run_action("create_product", {"title": "Boots", "handle": "b2", "status": "ACTIVE"}, http)
+
+        assert http.variables(0)["input"]["status"] == documents.CREATE_PRODUCT_STATUS == "DRAFT"
+        assert http.variables(1)["input"]["status"] == "ACTIVE"
+
+    def test_an_omitted_field_is_not_sent(self, http: FakeHttp) -> None:
         http.queue(self._answer())
 
         run_action("create_product", {"title": "Boots", "handle": "boots"}, http)
 
-        assert http.variables()["product"]["status"] == documents.CREATE_PRODUCT_STATUS == "DRAFT"
-
-    def test_nothing_but_the_declared_fields_is_sent(self, http: FakeHttp) -> None:
-        http.queue(self._answer())
-
-        run_action("create_product", {"title": "Boots", "handle": "boots"}, http)
-
-        assert set(http.variables()) == {"product"}
-        assert set(http.variables()["product"]) == {"title", "handle", "status"}
-
-    def test_media_metafields_collections_and_publications_are_unreachable(
-        self, http: FakeHttp
-    ) -> None:
-        http.queue(self._answer())
-
-        run_action(
-            "create_product",
-            {
-                "title": "Boots",
-                "handle": "boots",
-                "description_html": "<p>x</p>",
-                "vendor": "Acme",
-                "product_type": "Footwear",
-                "tags": ["new"],
-                "category_id": CATEGORY_A,
-                "seo_title": "Boots",
-                "seo_description": "Good boots",
-                "options": [{"name": "Size", "values": ["41", "42"]}],
-            },
-            http,
-        )
-
-        product = http.variables()["product"]
-        assert set(product) == {
+        assert set(http.variables()) == {"input", "variantsFirst"}
+        assert set(http.variables()["input"]) == {
             "title",
             "handle",
             "status",
-            "descriptionHtml",
-            "vendor",
-            "productType",
-            "tags",
-            "category",
-            "seo",
             "productOptions",
+            "variants",
         }
-        for forbidden in (
-            "media",
-            "metafields",
-            "collectionsToJoin",
-            "publications",
-            "giftCard",
-            "templateSuffix",
-            "sellingPlanGroups",
-        ):
-            assert forbidden not in product
 
     @pytest.mark.parametrize(
         "operation_input",
@@ -396,9 +345,30 @@ class TestCreateProduct:
             {"title": "Boots"},
             {"title": "", "handle": "boots"},
             {"title": "Boots", "handle": ""},
-            {"title": "Boots", "handle": "boots", "status": "ACTIVE"},
+            {"title": "Boots", "handle": "boots", "status": "LIVE"},
             {"title": "Boots", "handle": "boots", "options": [{"name": "Size", "values": []}]},
+            {"title": "Boots", "handle": "boots", "options": [{"name": "Size"}]},
             {"title": "Boots", "handle": "boots", "category_id": PRODUCT_A},
+            {"title": "Boots", "handle": "boots", "variants": [{"sku": "A"}, {"sku": "B"}]},
+            {
+                "title": "Boots",
+                "handle": "boots",
+                "options": [{"name": "Size", "values": ["41"]}],
+                "variants": [{"sku": "A"}],
+            },
+            {
+                "title": "Boots",
+                "handle": "boots",
+                "options": [{"name": "Size", "values": ["41", "42"]}],
+                "variants": [
+                    {"option_values": [{"option_name": "Size", "value": "41"}]},
+                    {"option_values": [{"option_name": "Size", "value": "41"}]},
+                ],
+            },
+            {"title": "Boots", "handle": "boots", "variants": [{"price": "free"}]},
+            {"title": "Boots", "handle": "boots", "media": [{"source_url": "http://x.test/a"}]},
+            {"title": "Boots", "handle": "boots", "media": [{"alt": "no source"}]},
+            {"title": "Boots", "handle": "boots", "collection_ids": [PRODUCT_A]},
         ],
     )
     def test_an_unusable_request_never_reaches_shopify(
@@ -406,7 +376,7 @@ class TestCreateProduct:
     ) -> None:
         response = run_action("create_product", operation_input, http)
 
-        assert response["error_code"] == errors.INVALID_PAYLOAD
+        assert response["error_code"] == errors.INVALID_PAYLOAD, response
         assert http.requests == []
 
     def test_more_than_three_options_are_refused(self, http: FakeHttp) -> None:
@@ -427,9 +397,11 @@ class TestCreateProduct:
         http.queue(
             graphql_response(
                 {
-                    "productCreate": {
+                    "productSet": {
                         "product": None,
-                        "userErrors": [{"field": ["handle"], "message": "taken"}],
+                        "userErrors": [
+                            {"field": ["input", "handle"], "message": "taken", "code": "TAKEN"}
+                        ],
                     }
                 }
             )
@@ -439,6 +411,7 @@ class TestCreateProduct:
 
         assert response["error_code"] == errors.UPSTREAM_VALIDATION_FAILED
         assert "handle" in response["error"]
+        assert "TAKEN" in response["error"]
         assert "taken" not in response["error"]
         assert len(http.requests) == 1
 
@@ -454,13 +427,21 @@ class TestUpdateProduct:
 
         assert set(http.variables()["product"]) == {"id", "vendor"}
 
-    def test_changing_the_handle_always_asks_for_a_redirect(self, http: FakeHttp) -> None:
-        """A metadata edit must not be able to break a live URL silently."""
-        http.queue(self._answer())
+    def test_changing_the_handle_asks_for_a_redirect_unless_told_not_to(
+        self, http: FakeHttp
+    ) -> None:
+        """A metadata edit must not break a live URL unless that is the intent."""
+        http.queue(self._answer(), self._answer())
 
         run_action("update_product", {"product_id": PRODUCT_A, "handle": "new"}, http)
+        run_action(
+            "update_product",
+            {"product_id": PRODUCT_A, "handle": "new", "redirect_new_handle": False},
+            http,
+        )
 
-        assert http.variables()["product"]["redirectNewHandle"] is True
+        assert http.variables(0)["product"]["redirectNewHandle"] is True
+        assert http.variables(1)["product"]["redirectNewHandle"] is False
 
     def test_changing_the_category_never_deletes_constrained_metafields(
         self, http: FakeHttp
@@ -479,9 +460,30 @@ class TestUpdateProduct:
 
         assert http.variables()["product"]["tags"] == ["a"]
 
-    def test_an_empty_replace_tags_is_refused(self, http: FakeHttp) -> None:
-        """Clearing every tag is more likely a mistake than an intention."""
-        response = run_action("update_product", {"product_id": PRODUCT_A, "replace_tags": []}, http)
+    def test_an_empty_replace_tags_clears_every_tag(self, http: FakeHttp) -> None:
+        http.queue(self._answer())
+
+        run_action("update_product", {"product_id": PRODUCT_A, "replace_tags": []}, http)
+
+        assert http.variables()["product"]["tags"] == []
+
+    def test_a_product_can_be_named_by_handle_instead_of_id(self, http: FakeHttp) -> None:
+        http.queue(self._answer())
+
+        response = run_action("update_product", {"product_handle": "boots", "vendor": "A"}, http)
+
+        assert response["ok"] is True, response
+        assert http.variables()["identifier"] == {"handle": "boots"}
+        assert "id" not in http.variables()["product"]
+
+    @pytest.mark.parametrize(
+        "named",
+        [{}, {"product_id": PRODUCT_A, "product_handle": "boots"}],
+    )
+    def test_exactly_one_way_of_naming_the_product_is_required(
+        self, named: dict, http: FakeHttp
+    ) -> None:
+        response = run_action("update_product", {**named, "vendor": "A"}, http)
 
         assert response["error_code"] == errors.INVALID_PAYLOAD
         assert http.requests == []
@@ -492,10 +494,8 @@ class TestUpdateProduct:
         assert response["error_code"] == errors.INVALID_PAYLOAD
         assert http.requests == []
 
-    @pytest.mark.parametrize(
-        "field", ["status", "published", "media", "metafields", "templateSuffix", "giftCard"]
-    )
-    def test_a_field_outside_the_whitelist_is_refused(self, field: str, http: FakeHttp) -> None:
+    @pytest.mark.parametrize("field", ["published", "templateSuffix", "giftCard", "variants"])
+    def test_a_field_outside_the_contract_is_refused(self, field: str, http: FakeHttp) -> None:
         response = run_action("update_product", {"product_id": PRODUCT_A, field: "x"}, http)
 
         assert response["error_code"] == errors.INVALID_PAYLOAD
@@ -524,12 +524,31 @@ class TestVariantBatches:
             {"productVariantsBulkUpdate": {"productVariants": variants, "userErrors": []}}
         )
 
-    def test_create_preserves_the_standalone_variant(self) -> None:
-        assert "strategy: PRESERVE_STANDALONE_VARIANT" in documents.CREATE_PRODUCT_VARIANTS_BATCH
+    def test_create_preserves_the_standalone_variant_by_default(self, http: FakeHttp) -> None:
+        http.queue(self._create_answer([variant_node()]))
+
+        run_action(
+            "create_product_variants_batch",
+            {
+                "product_id": PRODUCT_A,
+                "variants": [{"option_values": [{"option_name": "Size", "value": "42"}]}],
+            },
+            http,
+        )
+
+        assert http.variables()["strategy"] == documents.VARIANTS_BULK_CREATE_STRATEGY
         assert documents.VARIANTS_BULK_CREATE_STRATEGY == "PRESERVE_STANDALONE_VARIANT"
 
-    def test_update_never_applies_a_partial_batch(self) -> None:
-        assert documents.VARIANTS_BULK_UPDATE_PARTIAL in documents.UPDATE_PRODUCT_VARIANTS_BATCH
+    def test_update_applies_all_or_nothing_by_default(self, http: FakeHttp) -> None:
+        http.queue(self._update_answer([variant_node()]))
+
+        run_action(
+            "update_product_variants_batch",
+            {"product_id": PRODUCT_A, "variants": [{"variant_id": VARIANT_A, "price": "1.00"}]},
+            http,
+        )
+
+        assert http.variables()["allowPartialUpdates"] is False
 
     def test_prices_travel_as_decimal_strings(self, http: FakeHttp) -> None:
         """Never as binary floats: 19.99 must not become 19.989999999999998."""
@@ -573,8 +592,9 @@ class TestVariantBatches:
         assert response["error_code"] == errors.INVALID_PAYLOAD
         assert http.requests == []
 
-    def test_quantities_and_media_cannot_be_smuggled_into_a_variant(self, http: FakeHttp) -> None:
-        for field in ("quantities", "inventoryQuantities", "media", "metafields", "taxCode"):
+    def test_shopify_spelled_fields_are_not_accepted(self, http: FakeHttp) -> None:
+        """Every field has one snake_case name; camelCase copies are refused."""
+        for field in ("quantities", "inventoryQuantities", "mediaSrc", "taxCode", "sku"):
             response = run_action(
                 "create_product_variants_batch",
                 {
@@ -772,60 +792,98 @@ class TestVariantBatches:
         assert all("index" not in v for v in variants)
 
 
-class TestMediaAlt:
-    def test_the_file_input_is_exactly_id_and_alt(self, http: FakeHttp) -> None:
-        """`FileUpdateInput` can also move a file's source, filename, preview and
-        product references. None of that is reachable from here."""
-        http.queue(
-            graphql_response(
-                {
-                    "fileUpdate": {
-                        "files": [{"id": MEDIA_A, "alt": "Boots", "fileStatus": "READY"}],
-                        "userErrors": [],
-                    }
+class TestMediaFile:
+    def _answer(self, media_id: str = MEDIA_A):
+        return graphql_response(
+            {
+                "fileUpdate": {
+                    "files": [
+                        {"__typename": media_id.split("/")[3], "id": media_id, "alt": "Boots"}
+                    ],
+                    "userErrors": [],
                 }
-            )
+            }
         )
 
-        run_action("update_product_media_alt", {"media_id": MEDIA_A, "alt": "Boots"}, http)
+    def test_an_omitted_field_is_not_sent(self, http: FakeHttp) -> None:
+        http.queue(self._answer())
 
-        files = http.variables()["files"]
-        assert len(files) == 1
-        assert set(files[0]) == {"id", "alt"}
+        response = run_action("update_product_media", {"media_id": MEDIA_A, "alt": "Boots"}, http)
+
+        assert response["ok"] is True, response
+        assert http.variables()["files"] == [{"id": MEDIA_A, "alt": "Boots"}]
+        assert response["result"]["file"]["alt"] == "Boots"
+
+    def test_every_file_update_field_is_mapped(self, http: FakeHttp) -> None:
+        http.queue(self._answer())
+
+        run_action(
+            "update_product_media",
+            {
+                "media_id": MEDIA_A,
+                "source_url": "https://cdn.example.test/new.jpg",
+                "preview_image_url": "https://cdn.example.test/p.jpg",
+                "filename": "new.jpg",
+                "add_to_product_ids": [PRODUCT_A],
+                "remove_from_product_ids": [PRODUCT_B],
+            },
+            http,
+        )
+
+        assert http.variables()["files"] == [
+            {
+                "id": MEDIA_A,
+                "originalSource": "https://cdn.example.test/new.jpg",
+                "previewImageSource": "https://cdn.example.test/p.jpg",
+                "filename": "new.jpg",
+                "referencesToAdd": [PRODUCT_A],
+                "referencesToRemove": [PRODUCT_B],
+            }
+        ]
 
     @pytest.mark.parametrize(
         "media_id",
-        ["gid://shopify/Video/1", "gid://shopify/Model3d/1", MEDIA_A],
+        [
+            "gid://shopify/Video/1",
+            "gid://shopify/Model3d/1",
+            "gid://shopify/ExternalVideo/1",
+            "gid://shopify/GenericFile/1",
+            MEDIA_A,
+        ],
     )
-    def test_the_three_media_types_are_accepted(self, media_id: str, http: FakeHttp) -> None:
-        http.queue(
-            graphql_response(
-                {"fileUpdate": {"files": [{"id": media_id, "alt": "a"}], "userErrors": []}}
-            )
-        )
+    def test_every_file_type_is_accepted(self, media_id: str, http: FakeHttp) -> None:
+        http.queue(self._answer(media_id))
 
-        response = run_action("update_product_media_alt", {"media_id": media_id, "alt": "a"}, http)
+        response = run_action("update_product_media", {"media_id": media_id, "alt": "a"}, http)
 
-        assert response["ok"] is True
+        assert response["ok"] is True, response
 
-    @pytest.mark.parametrize("media_id", [PRODUCT_A, "gid://shopify/GenericFile/1", "1"])
-    def test_anything_that_is_not_media_is_refused(self, media_id: str, http: FakeHttp) -> None:
-        response = run_action("update_product_media_alt", {"media_id": media_id, "alt": "a"}, http)
+    @pytest.mark.parametrize("media_id", [PRODUCT_A, "1"])
+    def test_anything_that_is_not_a_file_is_refused(self, media_id: str, http: FakeHttp) -> None:
+        response = run_action("update_product_media", {"media_id": media_id, "alt": "a"}, http)
 
         assert response["error_code"] == errors.INVALID_PAYLOAD
         assert http.requests == []
 
-    @pytest.mark.parametrize("alt", ["", None, 42])
-    def test_an_empty_alt_is_refused(self, alt: object, http: FakeHttp) -> None:
-        response = run_action("update_product_media_alt", {"media_id": MEDIA_A, "alt": alt}, http)
+    def test_naming_a_file_without_a_change_is_refused(self, http: FakeHttp) -> None:
+        response = run_action("update_product_media", {"media_id": MEDIA_A}, http)
+
+        assert response["error_code"] == errors.INVALID_PAYLOAD
+        assert http.requests == []
+
+    def test_a_replacement_source_must_be_https(self, http: FakeHttp) -> None:
+        response = run_action(
+            "update_product_media",
+            {"media_id": MEDIA_A, "source_url": "http://cdn.example.test/a.jpg"},
+            http,
+        )
 
         assert response["error_code"] == errors.INVALID_PAYLOAD
 
     def test_only_one_file_can_ever_be_addressed(self) -> None:
         from runtime.catalog import OPERATIONS_BY_ID
 
-        row = OPERATIONS_BY_ID["update_product_media_alt"]
-        properties = row.input_schema["properties"]
+        properties = OPERATIONS_BY_ID["update_product_media"].input_schema["properties"]
 
         assert properties["media_id"]["type"] == "string"
         assert "files" not in properties

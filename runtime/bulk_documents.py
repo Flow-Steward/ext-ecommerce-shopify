@@ -10,13 +10,10 @@ mutation FlowStewardStageProductBulk {
 """
 
 CREATE_ROW = """\
-mutation FlowStewardBulkCreateProductRow($product: ProductCreateInput!, $media: [CreateMediaInput!]) {
-  productCreate(product: $product, media: $media) {
-    product {
-      id handle
-      variants(first: 1) { nodes { id inventoryItem { id sku } } }
-    }
-    userErrors { field message }
+mutation FlowStewardBulkCreateProductRow($input: ProductSetInput!) {
+  productSet(input: $input) {
+    product { id handle }
+    userErrors { code field message }
   }
 }
 """

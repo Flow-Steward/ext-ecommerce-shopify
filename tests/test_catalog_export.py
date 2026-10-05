@@ -7,6 +7,7 @@ from typing import Any
 
 import pytest
 from conftest import FakeHttp, connection, connection_payload, graphql_response, product_node
+
 from runtime import errors
 from runtime.errors import ExtensionError
 from runtime.transport import ShopifyGraphQLTransport
@@ -60,11 +61,21 @@ def test_export_follows_every_cursor_and_streams_jsonl(http: FakeHttp) -> None:
     )
 
     assert len(http.requests) == 2
-    assert http.variables(0) == {"first": 1, "after": None, "query": "status:active"}
+    assert http.variables(0) == {
+        "first": 1,
+        "after": None,
+        "query": "status:active",
+        "sortKey": "ID",
+        "reverse": False,
+        "savedSearchId": None,
+    }
     assert http.variables(1) == {
         "first": 1,
         "after": "cursor-1",
         "query": "status:active",
+        "sortKey": "ID",
+        "reverse": False,
+        "savedSearchId": None,
     }
     records = [json.loads(line) for line in captured["body"].splitlines()]
     assert [record["id"] for record in records] == [

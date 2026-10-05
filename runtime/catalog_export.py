@@ -14,7 +14,7 @@ from typing import Any
 
 from flowsteward_extension_sdk import write_artifact_stream
 
-from . import errors, shapes, validation
+from . import catalog_quality, errors, shapes, validation
 from .catalog import DEFAULT_PAGE_SIZE, Operation, operation
 from .connection import connection_from_payload
 from .errors import ExtensionError
@@ -49,16 +49,25 @@ def export_products(
     operation_input = validation.validated_input(row, raw_input)
     connection = connection_from_payload(payload, connection_ref=operation_input["connection_ref"])
     transport = transport_factory(connection)
-    state = {"item_count": 0, "page_count": 0}
+    state = {"item_count": 0, "scanned_count": 0, "page_count": 0}
+    quality = operation_input.get("quality_filter")
     chunks = _product_jsonl_chunks(
         transport,
         row,
-        first=operation_input.get("first", DEFAULT_PAGE_SIZE),
-        query=operation_input.get("filter"),
+        variables={
+            "first": operation_input.get("first", DEFAULT_PAGE_SIZE),
+            "query": operation_input.get("filter"),
+            "sortKey": operation_input["sort_key"],
+            "reverse": bool(operation_input.get("reverse", False)),
+            "savedSearchId": operation_input.get("saved_search_id"),
+        },
         state=state,
-        include_images=operation_input["include_images"],
-        include_variants=operation_input["include_variants"],
+        include_images=operation_input["include_images"]
+        or bool(quality and catalog_quality.needs_images(quality)),
+        include_variants=operation_input["include_variants"]
+        or bool(quality and catalog_quality.needs_variants(quality)),
         include_inventory=operation_input["include_inventory"],
+        quality=quality,
     )
     try:
         written = artifact_writer(
@@ -100,6 +109,7 @@ def export_products(
         "filename": EXPORT_PRODUCTS_FILENAME,
         "content_type": EXPORT_PRODUCTS_CONTENT_TYPE,
         "item_count": state["item_count"],
+        "scanned_count": state["scanned_count"],
         "page_count": state["page_count"],
         "size_bytes": size_bytes,
         "sha256": sha256,
@@ -111,12 +121,12 @@ def _product_jsonl_chunks(
     transport: Any,
     row: Operation,
     *,
-    first: int,
-    query: str | None,
+    variables: Mapping[str, Any],
     state: dict[str, int],
     include_images: bool,
     include_variants: bool,
     include_inventory: bool,
+    quality: Mapping[str, Any] | None,
 ) -> Iterable[bytes]:
     after: str | None = None
     page = 1
@@ -124,7 +134,7 @@ def _product_jsonl_chunks(
         data = read_export(
             transport,
             row.document or "",
-            {"first": first, "after": after, "query": query},
+            {**variables, "after": after},
             purpose=f"Shopify Admin GraphQL {EXPORT_PRODUCTS_OPERATION_ID} page {page}",
         ).data
         connection = shapes.mapping(data.get("products"))
@@ -140,6 +150,12 @@ def _product_jsonl_chunks(
             include_inventory=include_inventory,
         )
         for product in products:
+            state["scanned_count"] += 1
+            if quality:
+                found = catalog_quality.issues(product, quality)
+                if not catalog_quality.matches(found, quality):
+                    continue
+                product["quality_issues"] = found
             state["item_count"] += 1
             yield (
                 json.dumps(product, ensure_ascii=False, separators=(",", ":")).encode("utf-8")

@@ -1,6 +1,6 @@
 """The complete set of GraphQL documents this extension can send.
 
-Seven fixed documents, one per Shopify-contacting operation. Nothing here is
+One fixed document per Shopify-contacting operation. Nothing here is
 built from caller input: every value a workflow supplies travels as a GraphQL
 *variable*, never as document text. There is no string interpolation, no
 document assembly, and no way to reach a query that is not written out below.
@@ -15,34 +15,38 @@ from __future__ import annotations
 
 API_VERSION = "2026-07"
 
-#: The two quantity states this extension reads and writes. ``available`` is the
-#: one it sets; ``on_hand`` is returned alongside it as context.
+#: The quantity states this extension reads. ``available`` and ``on_hand`` are
+#: the two ``inventorySetQuantities`` and ``productSet`` may write.
 AVAILABLE_QUANTITY_NAME = "available"
 ON_HAND_QUANTITY_NAME = "on_hand"
+READ_QUANTITY_NAMES: tuple[str, ...] = (
+    "available",
+    "on_hand",
+    "committed",
+    "incoming",
+    "reserved",
+    "damaged",
+    "safety_stock",
+    "quality_control",
+)
 
-#: Fixed values for every ``inventorySetQuantities`` request. A workflow cannot
-#: choose the quantity name or the reason: this extension sets absolute
-#: ``available`` quantities and records them as a correction.
+#: Defaults a caller may override. Each is the cautious choice: stock is set as
+#: an ``available`` correction, a new product starts unpublished, a variant
+#: batch keeps the standalone variant and applies all-or-nothing, and no
+#: customer is emailed.
 SET_QUANTITIES_NAME = AVAILABLE_QUANTITY_NAME
 SET_QUANTITIES_REASON = "correction"
+CREATE_PRODUCT_STATUS = "DRAFT"
+VARIANTS_BULK_CREATE_STRATEGY = "PRESERVE_STANDALONE_VARIANT"
+VARIANTS_BULK_ALLOW_PARTIAL_UPDATES = False
+NOTIFY_CUSTOMER = False
 
 #: The reference document URI template. The host's external effect id is what
 #: makes one call distinguishable from a retry of the same call.
 REFERENCE_DOCUMENT_URI_PREFIX = "gid://flow-steward/ExternalEffect/"
 
-#: Every product this extension creates starts unpublished. Publishing is a
-#: merchandising decision, and nothing here is allowed to make it by accident.
-CREATE_PRODUCT_STATUS = "DRAFT"
-
-#: Fixed arguments written into the mutation documents themselves rather than
-#: passed as variables, so no caller value can reach them. Named here so tests
-#: can assert the document text still carries them.
-VARIANTS_BULK_CREATE_STRATEGY = "PRESERVE_STANDALONE_VARIANT"
-VARIANTS_BULK_UPDATE_PARTIAL = "allowPartialUpdates: false"
-FULFILLMENT_NOTIFY_CUSTOMER = "notifyCustomer: false"
-
 #: Bounded page sizes for the sub-selections a caller does not paginate.
-TRACKING_INFO_LIMIT = 25
+TRACKING_INFO_LIMIT = 10
 
 TEST_CONNECTION = """\
 query FlowStewardTestConnection {
@@ -67,41 +71,87 @@ query FlowStewardGetShop {
     myshopifyDomain
     currencyCode
     ianaTimezone
+    checkoutApiSupported
+    contactEmail
+    createdAt
+    customerAccounts
+    description
+    enabledPresentmentCurrencies
+    marketingSmsConsentEnabledAtCheckout
+    orderNumberFormatPrefix
+    orderNumberFormatSuffix
+    richTextEditorUrl
+    setupRequired
+    shipsToCountries
+    taxShipping
+    taxesIncluded
+    timezoneAbbreviation
+    timezoneOffset
+    timezoneOffsetMinutes
+    transactionalSmsDisabled
+    unitSystem
+    updatedAt
+    url
+    weightUnit
   }
 }
 """
 
 LIST_LOCATIONS = """\
-query FlowStewardListLocations($first: Int!, $after: String, $includeInactive: Boolean!) {
-  locations(first: $first, after: $after, includeInactive: $includeInactive) {
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
+query FlowStewardListLocations($first: Int!, $after: String, $includeInactive: Boolean!, \
+$includeLegacy: Boolean!, $query: String, $sortKey: LocationSortKeys!, $reverse: Boolean!) {
+  locations(
+    first: $first
+    after: $after
+    includeInactive: $includeInactive
+    includeLegacy: $includeLegacy
+    query: $query
+    sortKey: $sortKey
+    reverse: $reverse
+  ) {
+    pageInfo { hasNextPage endCursor }
     nodes {
       id
       name
       isActive
       fulfillsOnlineOrders
       shipsInventory
+      activatable
+      addressVerified
+      createdAt
+      deactivatable
+      deactivatedAt
+      deletable
+      hasActiveInventory
+      hasUnfulfilledOrders
+      isFulfillmentService
+      legacyResourceId
+      updatedAt
     }
   }
 }
 """
 
 LIST_INVENTORY_ITEMS = """\
-query FlowStewardListInventoryItems($first: Int!, $after: String, $query: String) {
-  inventoryItems(first: $first, after: $after, query: $query) {
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
+query FlowStewardListInventoryItems($first: Int!, $after: String, $query: String, \
+$reverse: Boolean!) {
+  inventoryItems(first: $first, after: $after, query: $query, reverse: $reverse) {
+    pageInfo { hasNextPage endCursor }
     nodes {
       id
       sku
       tracked
       requiresShipping
       updatedAt
+      countryCodeOfOrigin
+      createdAt
+      duplicateSkuCount
+      harmonizedSystemCode
+      inventoryHistoryUrl
+      legacyResourceId
+      provinceCodeOfOrigin
+      unitCost { amount currencyCode }
+      measurement { id weight { unit value } }
     }
   }
 }
@@ -116,6 +166,15 @@ query FlowStewardGetInventoryItem($id: ID!) {
     tracked
     requiresShipping
     updatedAt
+    countryCodeOfOrigin
+    createdAt
+    duplicateSkuCount
+    harmonizedSystemCode
+    inventoryHistoryUrl
+    legacyResourceId
+    provinceCodeOfOrigin
+    unitCost { amount currencyCode }
+    measurement { id weight { unit value } }
   }
 }
 """
@@ -131,14 +190,13 @@ $includeInactive: Boolean!) {
       tracked
       inventoryLevel(locationId: $locationId, includeInactive: $includeInactive) {
         id
-        location {
-          id
-          isActive
-        }
-        quantities(names: ["available", "on_hand"]) {
-          name
-          quantity
-        }
+        isActive
+        canDeactivate
+        deactivationAlert
+        createdAt
+        updatedAt
+        location { id isActive }
+        quantities(names: ["available", "on_hand", "committed", "incoming", "reserved", "damaged", "safety_stock", "quality_control"]) { name quantity }
       }
     }
   }
@@ -154,68 +212,100 @@ $idempotencyKey: String!) {
       createdAt
       reason
       referenceDocumentUri
-      changes {
-        name
-        delta
-        quantityAfterChange
-        item {
-          id
-        }
-        location {
-          id
-        }
-      }
+      changes { item { id } location { id } name delta quantityAfterChange ledgerDocumentUri }
     }
-    userErrors {
-      code
-      field
-      message
-    }
+    userErrors { code field message }
   }
 }
 """
 
 LIST_PRODUCTS = """\
-query FlowStewardListProducts($first: Int!, $after: String, $query: String) {
-  products(first: $first, after: $after, query: $query, sortKey: ID) {
+query FlowStewardListProducts($first: Int!, $after: String, $query: String, \
+$sortKey: ProductSortKeys!, $reverse: Boolean!, $savedSearchId: ID) {
+  products(
+    first: $first
+    after: $after
+    query: $query
+    sortKey: $sortKey
+    reverse: $reverse
+    savedSearchId: $savedSearchId
+  ) {
     pageInfo { hasNextPage endCursor }
     nodes {
       id
       title
       handle
       descriptionHtml
+      description
       vendor
       productType
       status
       tags
-      createdAt
-      updatedAt
       category { id }
       seo { title description }
-      options { id name position }
+      createdAt
+      updatedAt
+      publishedAt
+      options { id name position values }
+      combinedListingRole
+      giftCardTemplateSuffix
+      hasOnlyDefaultVariant
+      hasOutOfStockVariants
+      hasVariantsThatRequiresComponents
+      isGiftCard
+      legacyResourceId
+      onlineStorePreviewUrl
+      onlineStoreUrl
+      requiresSellingPlan
+      templateSuffix
+      totalInventory
+      tracksInventory
     }
   }
 }
 """
 
 EXPORT_PRODUCTS = """\
-query FlowStewardExportProducts($first: Int!, $after: String, $query: String) {
-  products(first: $first, after: $after, query: $query, sortKey: ID) {
+query FlowStewardExportProducts($first: Int!, $after: String, $query: String, \
+$sortKey: ProductSortKeys!, $reverse: Boolean!, $savedSearchId: ID) {
+  products(
+    first: $first
+    after: $after
+    query: $query
+    sortKey: $sortKey
+    reverse: $reverse
+    savedSearchId: $savedSearchId
+  ) {
     pageInfo { hasNextPage endCursor }
     nodes {
       id
       title
       handle
       descriptionHtml
+      description
       vendor
       productType
       status
       tags
-      createdAt
-      updatedAt
       category { id }
       seo { title description }
-      options { id name position }
+      createdAt
+      updatedAt
+      publishedAt
+      options { id name position values }
+      combinedListingRole
+      giftCardTemplateSuffix
+      hasOnlyDefaultVariant
+      hasOutOfStockVariants
+      hasVariantsThatRequiresComponents
+      isGiftCard
+      legacyResourceId
+      onlineStorePreviewUrl
+      onlineStoreUrl
+      requiresSellingPlan
+      templateSuffix
+      totalInventory
+      tracksInventory
     }
   }
 }
@@ -228,36 +318,70 @@ query FlowStewardGetProduct($id: ID!) {
     title
     handle
     descriptionHtml
+    description
     vendor
     productType
     status
     tags
-    createdAt
-    updatedAt
     category { id }
     seo { title description }
-    options { id name position }
+    createdAt
+    updatedAt
+    publishedAt
+    options { id name position values }
+    combinedListingRole
+    giftCardTemplateSuffix
+    hasOnlyDefaultVariant
+    hasOutOfStockVariants
+    hasVariantsThatRequiresComponents
+    isGiftCard
+    legacyResourceId
+    onlineStorePreviewUrl
+    onlineStoreUrl
+    requiresSellingPlan
+    templateSuffix
+    totalInventory
+    tracksInventory
   }
 }
 """
 
 LIST_PRODUCT_VARIANTS = """\
-query FlowStewardListProductVariants($first: Int!, $after: String) {
-  productVariants(first: $first, after: $after) {
+query FlowStewardListProductVariants($first: Int!, $after: String, $query: String, \
+$sortKey: ProductVariantSortKeys!, $reverse: Boolean!, $savedSearchId: ID) {
+  productVariants(
+    first: $first
+    after: $after
+    query: $query
+    sortKey: $sortKey
+    reverse: $reverse
+    savedSearchId: $savedSearchId
+  ) {
     pageInfo { hasNextPage endCursor }
     nodes {
       id
+      product { id }
       title
+      displayName
+      sku
       barcode
+      position
       price
       compareAtPrice
+      unitPrice { amount currencyCode }
+      showUnitPrice
+      unitPriceMeasurement { measuredType quantityUnit quantityValue referenceUnit referenceValue }
       inventoryPolicy
+      inventoryQuantity
+      sellableOnlineQuantity
+      availableForSale
       taxable
+      requiresComponents
+      legacyResourceId
       createdAt
       updatedAt
-      product { id }
       selectedOptions { name value }
-      inventoryItem { id sku tracked requiresShipping }
+      inventoryItem { id sku tracked requiresShipping updatedAt countryCodeOfOrigin createdAt duplicateSkuCount harmonizedSystemCode inventoryHistoryUrl legacyResourceId provinceCodeOfOrigin unitCost { amount currencyCode } measurement { id weight { unit value } } }
     }
   }
 }
@@ -267,37 +391,49 @@ GET_PRODUCT_VARIANT = """\
 query FlowStewardGetProductVariant($id: ID!) {
   productVariant(id: $id) {
     id
+    product { id }
     title
+    displayName
+    sku
     barcode
+    position
     price
     compareAtPrice
+    unitPrice { amount currencyCode }
+    showUnitPrice
+    unitPriceMeasurement { measuredType quantityUnit quantityValue referenceUnit referenceValue }
     inventoryPolicy
+    inventoryQuantity
+    sellableOnlineQuantity
+    availableForSale
     taxable
+    requiresComponents
+    legacyResourceId
     createdAt
     updatedAt
-    product { id }
     selectedOptions { name value }
-    inventoryItem { id sku tracked requiresShipping }
+    inventoryItem { id sku tracked requiresShipping updatedAt countryCodeOfOrigin createdAt duplicateSkuCount harmonizedSystemCode inventoryHistoryUrl legacyResourceId provinceCodeOfOrigin unitCost { amount currencyCode } measurement { id weight { unit value } } }
   }
 }
 """
 
 LIST_CATALOG_METAFIELDS = """\
-query FlowStewardListCatalogMetafields($id: ID!, $first: Int!, $after: String) {
+query FlowStewardListCatalogMetafields($id: ID!, $first: Int!, $after: String, \
+$namespace: String, $keys: [String!], $reverse: Boolean!) {
   node(id: $id) {
     __typename
     ... on Product {
       id
-      metafields(first: $first, after: $after) {
+      metafields(first: $first, after: $after, namespace: $namespace, keys: $keys, reverse: $reverse) {
         pageInfo { hasNextPage endCursor }
-        nodes { id namespace key type value compareDigest createdAt updatedAt }
+        nodes { id namespace key type value jsonValue compareDigest ownerType sizeInBytes legacyResourceId createdAt updatedAt }
       }
     }
     ... on ProductVariant {
       id
-      metafields(first: $first, after: $after) {
+      metafields(first: $first, after: $after, namespace: $namespace, keys: $keys, reverse: $reverse) {
         pageInfo { hasNextPage endCursor }
-        nodes { id namespace key type value compareDigest createdAt updatedAt }
+        nodes { id namespace key type value jsonValue compareDigest ownerType sizeInBytes legacyResourceId createdAt updatedAt }
       }
     }
   }
@@ -305,17 +441,25 @@ query FlowStewardListCatalogMetafields($id: ID!, $first: Int!, $after: String) {
 """
 
 LIST_PRODUCT_MEDIA = """\
-query FlowStewardListProductMedia($id: ID!, $first: Int!, $after: String) {
+query FlowStewardListProductMedia($id: ID!, $first: Int!, $after: String, $query: String, \
+$sortKey: ProductMediaSortKeys!, $reverse: Boolean!) {
   product(id: $id) {
     id
-    media(first: $first, after: $after) {
+    media(first: $first, after: $after, query: $query, sortKey: $sortKey, reverse: $reverse) {
       pageInfo { hasNextPage endCursor }
       nodes {
+        __typename
         id
         mediaContentType
         alt
         status
-        preview { status image { width height } }
+        preview { status image { id url altText width height thumbhash } }
+        mediaErrors { code details message }
+        mediaWarnings { code message }
+        ... on MediaImage { createdAt updatedAt fileStatus mimeType image { id url altText width height thumbhash } }
+        ... on Video { createdAt updatedAt fileStatus filename duration }
+        ... on Model3d { createdAt updatedAt fileStatus filename }
+        ... on ExternalVideo { createdAt updatedAt fileStatus embedUrl host originUrl }
       }
     }
   }
@@ -323,61 +467,103 @@ query FlowStewardListProductMedia($id: ID!, $first: Int!, $after: String) {
 """
 
 CREATE_PRODUCT = """\
-mutation FlowStewardCreateProduct($product: ProductCreateInput!, $media: [CreateMediaInput!]) {
-  productCreate(product: $product, media: $media) {
+mutation FlowStewardCreateProduct($input: ProductSetInput!, $variantsFirst: Int!) {
+  productSet(input: $input, synchronous: true) {
     product {
       id
       title
       handle
       descriptionHtml
+      description
       vendor
       productType
       status
       tags
-      createdAt
-      updatedAt
       category { id }
       seo { title description }
-      options { id name position }
-      variants(first: 1) {
+      createdAt
+      updatedAt
+      publishedAt
+      options { id name position values }
+      combinedListingRole
+      giftCardTemplateSuffix
+      hasOnlyDefaultVariant
+      hasOutOfStockVariants
+      hasVariantsThatRequiresComponents
+      isGiftCard
+      legacyResourceId
+      onlineStorePreviewUrl
+      onlineStoreUrl
+      requiresSellingPlan
+      templateSuffix
+      totalInventory
+      tracksInventory
+      variants(first: $variantsFirst) {
         nodes {
           id
+          product { id }
           title
+          displayName
+          sku
           barcode
+          position
           price
           compareAtPrice
+          unitPrice { amount currencyCode }
+          showUnitPrice
+          unitPriceMeasurement { measuredType quantityUnit quantityValue referenceUnit referenceValue }
           inventoryPolicy
+          inventoryQuantity
+          sellableOnlineQuantity
+          availableForSale
           taxable
+          requiresComponents
+          legacyResourceId
           createdAt
           updatedAt
-          product { id }
           selectedOptions { name value }
-          inventoryItem { id sku tracked requiresShipping }
+          inventoryItem { id sku tracked requiresShipping updatedAt countryCodeOfOrigin createdAt duplicateSkuCount harmonizedSystemCode inventoryHistoryUrl legacyResourceId provinceCodeOfOrigin unitCost { amount currencyCode } measurement { id weight { unit value } } }
         }
       }
     }
-    userErrors { field message }
+    userErrors { code field message }
   }
 }
 """
 
 UPDATE_PRODUCT = """\
-mutation FlowStewardUpdateProduct($product: ProductUpdateInput!) {
-  productUpdate(product: $product) {
+mutation FlowStewardUpdateProduct($product: ProductUpdateInput!, $media: [CreateMediaInput!], \
+$identifier: ProductUpdateIdentifiers) {
+  productUpdate(product: $product, media: $media, identifier: $identifier) {
     product {
       id
       title
       handle
       descriptionHtml
+      description
       vendor
       productType
       status
       tags
-      createdAt
-      updatedAt
       category { id }
       seo { title description }
-      options { id name position }
+      createdAt
+      updatedAt
+      publishedAt
+      options { id name position values }
+      combinedListingRole
+      giftCardTemplateSuffix
+      hasOnlyDefaultVariant
+      hasOutOfStockVariants
+      hasVariantsThatRequiresComponents
+      isGiftCard
+      legacyResourceId
+      onlineStorePreviewUrl
+      onlineStoreUrl
+      requiresSellingPlan
+      templateSuffix
+      totalInventory
+      tracksInventory
     }
     userErrors { field message }
   }
@@ -385,49 +571,74 @@ mutation FlowStewardUpdateProduct($product: ProductUpdateInput!) {
 """
 
 CREATE_PRODUCT_VARIANTS_BATCH = """\
-mutation FlowStewardCreateProductVariants($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
-  productVariantsBulkCreate(
-    productId: $productId
-    variants: $variants
-    strategy: PRESERVE_STANDALONE_VARIANT
-  ) {
+mutation FlowStewardCreateProductVariants($productId: ID!, $variants: [ProductVariantsBulkInput!]!, \
+$media: [CreateMediaInput!], $strategy: ProductVariantsBulkCreateStrategy!) {
+  productVariantsBulkCreate(productId: $productId, variants: $variants, media: $media, strategy: $strategy) {
     productVariants {
       id
+      product { id }
       title
+      displayName
+      sku
       barcode
+      position
       price
       compareAtPrice
+      unitPrice { amount currencyCode }
+      showUnitPrice
+      unitPriceMeasurement { measuredType quantityUnit quantityValue referenceUnit referenceValue }
       inventoryPolicy
+      inventoryQuantity
+      sellableOnlineQuantity
+      availableForSale
       taxable
-      product { id }
+      requiresComponents
+      legacyResourceId
+      createdAt
+      updatedAt
       selectedOptions { name value }
-      inventoryItem { id sku tracked requiresShipping }
+      inventoryItem { id sku tracked requiresShipping updatedAt countryCodeOfOrigin createdAt duplicateSkuCount harmonizedSystemCode inventoryHistoryUrl legacyResourceId provinceCodeOfOrigin unitCost { amount currencyCode } measurement { id weight { unit value } } }
     }
-    userErrors { field message code }
+    userErrors { code field message }
   }
 }
 """
 
 UPDATE_PRODUCT_VARIANTS_BATCH = """\
-mutation FlowStewardUpdateProductVariants($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
+mutation FlowStewardUpdateProductVariants($productId: ID!, $variants: [ProductVariantsBulkInput!]!, \
+$media: [CreateMediaInput!], $allowPartialUpdates: Boolean!) {
   productVariantsBulkUpdate(
     productId: $productId
     variants: $variants
-    allowPartialUpdates: false
+    media: $media
+    allowPartialUpdates: $allowPartialUpdates
   ) {
     productVariants {
       id
+      product { id }
       title
+      displayName
+      sku
       barcode
+      position
       price
       compareAtPrice
+      unitPrice { amount currencyCode }
+      showUnitPrice
+      unitPriceMeasurement { measuredType quantityUnit quantityValue referenceUnit referenceValue }
       inventoryPolicy
+      inventoryQuantity
+      sellableOnlineQuantity
+      availableForSale
       taxable
-      product { id }
+      requiresComponents
+      legacyResourceId
+      createdAt
+      updatedAt
       selectedOptions { name value }
-      inventoryItem { id sku tracked requiresShipping }
+      inventoryItem { id sku tracked requiresShipping updatedAt countryCodeOfOrigin createdAt duplicateSkuCount harmonizedSystemCode inventoryHistoryUrl legacyResourceId provinceCodeOfOrigin unitCost { amount currencyCode } measurement { id weight { unit value } } }
     }
-    userErrors { field message code }
+    userErrors { code field message }
   }
 }
 """
@@ -441,59 +652,138 @@ mutation FlowStewardSetCatalogMetafields($metafields: [MetafieldsSetInput!]!) {
       key
       type
       value
+      jsonValue
       compareDigest
+      ownerType
+      sizeInBytes
+      legacyResourceId
       createdAt
       updatedAt
-      owner {
-        __typename
-        ... on Product { id }
-        ... on ProductVariant { id }
-      }
+      owner { __typename ... on Product { id } ... on ProductVariant { id } }
     }
-    userErrors { field message code elementIndex }
+    userErrors { code elementIndex field message }
   }
 }
 """
 
-UPDATE_PRODUCT_MEDIA_ALT = """\
-mutation FlowStewardUpdateProductMediaAlt($files: [FileUpdateInput!]!) {
+UPDATE_PRODUCT_MEDIA = """\
+mutation FlowStewardUpdateProductMedia($files: [FileUpdateInput!]!) {
   fileUpdate(files: $files) {
     files {
+      __typename
       id
       alt
       fileStatus
       createdAt
       updatedAt
+      preview { status image { id url altText width height thumbhash } }
+      fileErrors { code details message }
+      ... on MediaImage { mediaContentType status mimeType image { id url altText width height thumbhash } }
+      ... on Video { mediaContentType status filename duration }
+      ... on Model3d { mediaContentType status filename }
+      ... on ExternalVideo { mediaContentType status embedUrl host originUrl }
+      ... on GenericFile { mimeType url originalFileSize }
     }
-    userErrors { field message code }
+    userErrors { code field message }
   }
 }
 """
 
 LIST_ORDERS = """\
-query FlowStewardListOrders($first: Int!, $after: String) {
-  orders(first: $first, after: $after) {
+query FlowStewardListOrders($first: Int!, $after: String, $query: String, \
+$sortKey: OrderSortKeys!, $reverse: Boolean!, $savedSearchId: ID) {
+  orders(
+    first: $first
+    after: $after
+    query: $query
+    sortKey: $sortKey
+    reverse: $reverse
+    savedSearchId: $savedSearchId
+  ) {
     pageInfo { hasNextPage endCursor }
     nodes {
       id
       name
+      number
+      confirmationNumber
+      legacyResourceId
       createdAt
       updatedAt
       processedAt
       cancelledAt
+      cancelReason
       closedAt
+      closed
+      confirmed
+      test
+      edited
       displayFinancialStatus
       displayFulfillmentStatus
+      returnStatus
       currencyCode
+      presentmentCurrencyCode
       tags
       note
       poNumber
       customAttributes { key value }
+      sourceName
+      sourceIdentifier
+      registeredSourceUrl
+      statusPageUrl
+      cartToken
+      checkoutToken
+      customerLocale
+      customerAcceptsMarketing
+      discountCode
+      discountCodes
+      paymentGatewayNames
+      billingAddressMatchesShippingAddress
+      canMarkAsPaid
+      canNotifyCustomer
+      capturable
+      fulfillable
+      fullyPaid
+      unpaid
+      refundable
+      restockable
+      requiresShipping
+      merchantEditable
+      merchantEditableErrors
+      hasTimelineComment
+      productNetwork
+      dutiesIncluded
+      estimatedTaxes
+      taxExempt
+      taxesIncluded
+      subtotalLineItemsQuantity
+      currentSubtotalLineItemsQuantity
+      totalWeight
+      currentTotalWeight
       totalPriceSet { shopMoney { amount currencyCode } }
       subtotalPriceSet { shopMoney { amount currencyCode } }
       totalTaxSet { shopMoney { amount currencyCode } }
       totalShippingPriceSet { shopMoney { amount currencyCode } }
       totalDiscountsSet { shopMoney { amount currencyCode } }
+      cartDiscountAmountSet { shopMoney { amount currencyCode } }
+      currentCartDiscountAmountSet { shopMoney { amount currencyCode } }
+      currentShippingPriceSet { shopMoney { amount currencyCode } }
+      currentSubtotalPriceSet { shopMoney { amount currencyCode } }
+      currentTotalAdditionalFeesSet { shopMoney { amount currencyCode } }
+      currentTotalDiscountsSet { shopMoney { amount currencyCode } }
+      currentTotalDutiesSet { shopMoney { amount currencyCode } }
+      currentTotalPriceSet { shopMoney { amount currencyCode } }
+      currentTotalTaxSet { shopMoney { amount currencyCode } }
+      netPaymentSet { shopMoney { amount currencyCode } }
+      originalTotalAdditionalFeesSet { shopMoney { amount currencyCode } }
+      originalTotalDutiesSet { shopMoney { amount currencyCode } }
+      originalTotalPriceSet { shopMoney { amount currencyCode } }
+      refundDiscrepancySet { shopMoney { amount currencyCode } }
+      totalCapturableSet { shopMoney { amount currencyCode } }
+      totalOutstandingSet { shopMoney { amount currencyCode } }
+      totalReceivedSet { shopMoney { amount currencyCode } }
+      totalRefundedSet { shopMoney { amount currencyCode } }
+      totalRefundedShippingSet { shopMoney { amount currencyCode } }
+      totalTipReceivedSet { shopMoney { amount currencyCode } }
     }
   }
 }
@@ -504,49 +794,124 @@ query FlowStewardGetOrder($id: ID!) {
   order(id: $id) {
     id
     name
+    number
+    confirmationNumber
+    legacyResourceId
     createdAt
     updatedAt
     processedAt
     cancelledAt
+    cancelReason
     closedAt
+    closed
+    confirmed
+    test
+    edited
     displayFinancialStatus
     displayFulfillmentStatus
+    returnStatus
     currencyCode
+    presentmentCurrencyCode
     tags
     note
     poNumber
     customAttributes { key value }
+    sourceName
+    sourceIdentifier
+    registeredSourceUrl
+    statusPageUrl
+    cartToken
+    checkoutToken
+    customerLocale
+    customerAcceptsMarketing
+    discountCode
+    discountCodes
+    paymentGatewayNames
+    billingAddressMatchesShippingAddress
+    canMarkAsPaid
+    canNotifyCustomer
+    capturable
+    fulfillable
+    fullyPaid
+    unpaid
+    refundable
+    restockable
+    requiresShipping
+    merchantEditable
+    merchantEditableErrors
+    hasTimelineComment
+    productNetwork
+    dutiesIncluded
+    estimatedTaxes
+    taxExempt
+    taxesIncluded
+    subtotalLineItemsQuantity
+    currentSubtotalLineItemsQuantity
+    totalWeight
+    currentTotalWeight
     totalPriceSet { shopMoney { amount currencyCode } }
     subtotalPriceSet { shopMoney { amount currencyCode } }
     totalTaxSet { shopMoney { amount currencyCode } }
     totalShippingPriceSet { shopMoney { amount currencyCode } }
     totalDiscountsSet { shopMoney { amount currencyCode } }
+    cartDiscountAmountSet { shopMoney { amount currencyCode } }
+    currentCartDiscountAmountSet { shopMoney { amount currencyCode } }
+    currentShippingPriceSet { shopMoney { amount currencyCode } }
+    currentSubtotalPriceSet { shopMoney { amount currencyCode } }
+    currentTotalAdditionalFeesSet { shopMoney { amount currencyCode } }
+    currentTotalDiscountsSet { shopMoney { amount currencyCode } }
+    currentTotalDutiesSet { shopMoney { amount currencyCode } }
+    currentTotalPriceSet { shopMoney { amount currencyCode } }
+    currentTotalTaxSet { shopMoney { amount currencyCode } }
+    netPaymentSet { shopMoney { amount currencyCode } }
+    originalTotalAdditionalFeesSet { shopMoney { amount currencyCode } }
+    originalTotalDutiesSet { shopMoney { amount currencyCode } }
+    originalTotalPriceSet { shopMoney { amount currencyCode } }
+    refundDiscrepancySet { shopMoney { amount currencyCode } }
+    totalCapturableSet { shopMoney { amount currencyCode } }
+    totalOutstandingSet { shopMoney { amount currencyCode } }
+    totalReceivedSet { shopMoney { amount currencyCode } }
+    totalRefundedSet { shopMoney { amount currencyCode } }
+    totalRefundedShippingSet { shopMoney { amount currencyCode } }
+    totalTipReceivedSet { shopMoney { amount currencyCode } }
   }
 }
 """
 
 LIST_ORDER_LINE_ITEMS = """\
-query FlowStewardListOrderLineItems($id: ID!, $first: Int!, $after: String) {
+query FlowStewardListOrderLineItems($id: ID!, $first: Int!, $after: String, $reverse: Boolean!) {
   order(id: $id) {
     id
-    lineItems(first: $first, after: $after) {
+    lineItems(first: $first, after: $after, reverse: $reverse) {
       pageInfo { hasNextPage endCursor }
       nodes {
         id
+        product { id }
+        variant { id }
         title
+        variantTitle
         name
         sku
+        vendor
         quantity
         currentQuantity
         refundableQuantity
         unfulfilledQuantity
+        nonFulfillableQuantity
         requiresShipping
-        product { id }
-        variant { id }
+        taxable
+        isGiftCard
+        merchantEditable
+        restockable
         originalUnitPriceSet { shopMoney { amount currencyCode } }
         discountedUnitPriceSet { shopMoney { amount currencyCode } }
+        discountedUnitPriceAfterAllDiscountsSet { shopMoney { amount currencyCode } }
         originalTotalSet { shopMoney { amount currencyCode } }
         discountedTotalSet { shopMoney { amount currencyCode } }
+        priceAfterAllDiscountsBeforeTaxesSet { shopMoney { amount currencyCode } }
+        totalDiscountSet { shopMoney { amount currencyCode } }
+        unfulfilledDiscountedTotalSet { shopMoney { amount currencyCode } }
+        unfulfilledOriginalTotalSet { shopMoney { amount currencyCode } }
       }
     }
   }
@@ -554,34 +919,44 @@ query FlowStewardListOrderLineItems($id: ID!, $first: Int!, $after: String) {
 """
 
 LIST_ORDER_METAFIELDS = """\
-query FlowStewardListOrderMetafields($id: ID!, $first: Int!, $after: String) {
+query FlowStewardListOrderMetafields($id: ID!, $first: Int!, $after: String, \
+$namespace: String, $keys: [String!], $reverse: Boolean!) {
   order(id: $id) {
     id
-    metafields(first: $first, after: $after) {
+    metafields(first: $first, after: $after, namespace: $namespace, keys: $keys, reverse: $reverse) {
       pageInfo { hasNextPage endCursor }
-      nodes { id namespace key type value compareDigest createdAt updatedAt }
-    }
+      nodes { id namespace key type value jsonValue compareDigest ownerType sizeInBytes legacyResourceId createdAt updatedAt }
+      }
   }
 }
 """
 
 LIST_ORDER_FULFILLMENT_ORDERS = """\
-query FlowStewardListOrderFulfillmentOrders($id: ID!, $first: Int!, $after: String, $lineItemsFirst: Int!) {
+query FlowStewardListOrderFulfillmentOrders($id: ID!, $first: Int!, $after: String, \
+$reverse: Boolean!, $displayable: Boolean!, $query: String, $lineItemsFirst: Int!) {
   order(id: $id) {
     id
-    fulfillmentOrders(first: $first, after: $after) {
+    fulfillmentOrders(
+      first: $first
+      after: $after
+      reverse: $reverse
+      displayable: $displayable
+      query: $query
+    ) {
       pageInfo { hasNextPage endCursor }
       nodes {
         id
         status
         requestStatus
+        orderId
+        orderName
+        orderProcessedAt
+        fulfillAt
+        fulfillBy
         createdAt
         updatedAt
-        assignedLocation { name location { id } }
-        lineItems(first: $lineItemsFirst) {
-          pageInfo { hasNextPage endCursor }
-          nodes { id totalQuantity remainingQuantity lineItem { id } }
-        }
+        assignedLocation { location { id } name address1 address2 city province zip countryCode phone }
+        lineItems(first: $lineItemsFirst) { pageInfo { hasNextPage endCursor } nodes { id lineItem { id } inventoryItemId productTitle variantTitle sku vendor totalQuantity remainingQuantity requiresShipping } }
       }
     }
   }
@@ -594,27 +969,38 @@ query FlowStewardGetFulfillmentOrder($id: ID!, $lineItemsFirst: Int!, $lineItems
     id
     status
     requestStatus
+    orderId
+    orderName
+    orderProcessedAt
+    fulfillAt
+    fulfillBy
     createdAt
     updatedAt
-    assignedLocation { name location { id } }
-    lineItems(first: $lineItemsFirst, after: $lineItemsAfter) {
-      pageInfo { hasNextPage endCursor }
-      nodes { id totalQuantity remainingQuantity lineItem { id } }
-    }
+    assignedLocation { location { id } name address1 address2 city province zip countryCode phone }
+    lineItems(first: $lineItemsFirst, after: $lineItemsAfter) { pageInfo { hasNextPage endCursor } nodes { id lineItem { id } inventoryItemId productTitle variantTitle sku vendor totalQuantity remainingQuantity requiresShipping } }
   }
 }
 """
 
 LIST_ORDER_FULFILLMENTS = """\
-query FlowStewardListOrderFulfillments($id: ID!, $first: Int!, $trackingFirst: Int!) {
+query FlowStewardListOrderFulfillments($id: ID!, $first: Int!, $query: String, \
+$trackingFirst: Int!) {
   order(id: $id) {
     id
     fulfillmentsCount { count precision }
-    fulfillments(first: $first) {
+    fulfillments(first: $first, query: $query) {
       id
+      name
       status
+      displayStatus
+      legacyResourceId
+      totalQuantity
+      requiresShipping
       createdAt
       updatedAt
+      inTransitAt
+      estimatedDeliveryAt
+      deliveredAt
       trackingInfo(first: $trackingFirst) { company number url }
     }
   }
@@ -627,11 +1013,86 @@ mutation FlowStewardUpdateOrderMetadata($input: OrderInput!) {
     order {
       id
       name
+      number
+      confirmationNumber
+      legacyResourceId
+      createdAt
       updatedAt
+      processedAt
+      cancelledAt
+      cancelReason
+      closedAt
+      closed
+      confirmed
+      test
+      edited
+      displayFinancialStatus
+      displayFulfillmentStatus
+      returnStatus
+      currencyCode
+      presentmentCurrencyCode
       tags
       note
       poNumber
       customAttributes { key value }
+      sourceName
+      sourceIdentifier
+      registeredSourceUrl
+      statusPageUrl
+      cartToken
+      checkoutToken
+      customerLocale
+      customerAcceptsMarketing
+      discountCode
+      discountCodes
+      paymentGatewayNames
+      billingAddressMatchesShippingAddress
+      canMarkAsPaid
+      canNotifyCustomer
+      capturable
+      fulfillable
+      fullyPaid
+      unpaid
+      refundable
+      restockable
+      requiresShipping
+      merchantEditable
+      merchantEditableErrors
+      hasTimelineComment
+      productNetwork
+      dutiesIncluded
+      estimatedTaxes
+      taxExempt
+      taxesIncluded
+      subtotalLineItemsQuantity
+      currentSubtotalLineItemsQuantity
+      totalWeight
+      currentTotalWeight
+      totalPriceSet { shopMoney { amount currencyCode } }
+      subtotalPriceSet { shopMoney { amount currencyCode } }
+      totalTaxSet { shopMoney { amount currencyCode } }
+      totalShippingPriceSet { shopMoney { amount currencyCode } }
+      totalDiscountsSet { shopMoney { amount currencyCode } }
+      cartDiscountAmountSet { shopMoney { amount currencyCode } }
+      currentCartDiscountAmountSet { shopMoney { amount currencyCode } }
+      currentShippingPriceSet { shopMoney { amount currencyCode } }
+      currentSubtotalPriceSet { shopMoney { amount currencyCode } }
+      currentTotalAdditionalFeesSet { shopMoney { amount currencyCode } }
+      currentTotalDiscountsSet { shopMoney { amount currencyCode } }
+      currentTotalDutiesSet { shopMoney { amount currencyCode } }
+      currentTotalPriceSet { shopMoney { amount currencyCode } }
+      currentTotalTaxSet { shopMoney { amount currencyCode } }
+      netPaymentSet { shopMoney { amount currencyCode } }
+      originalTotalAdditionalFeesSet { shopMoney { amount currencyCode } }
+      originalTotalDutiesSet { shopMoney { amount currencyCode } }
+      originalTotalPriceSet { shopMoney { amount currencyCode } }
+      refundDiscrepancySet { shopMoney { amount currencyCode } }
+      totalCapturableSet { shopMoney { amount currencyCode } }
+      totalOutstandingSet { shopMoney { amount currencyCode } }
+      totalReceivedSet { shopMoney { amount currencyCode } }
+      totalRefundedSet { shopMoney { amount currencyCode } }
+      totalRefundedShippingSet { shopMoney { amount currencyCode } }
+      totalTipReceivedSet { shopMoney { amount currencyCode } }
     }
     userErrors { field message }
   }
@@ -647,27 +1108,37 @@ mutation FlowStewardSetOrderMetafields($metafields: [MetafieldsSetInput!]!) {
       key
       type
       value
+      jsonValue
       compareDigest
+      ownerType
+      sizeInBytes
+      legacyResourceId
       createdAt
       updatedAt
-      owner {
-        __typename
-        ... on Order { id }
-      }
+      owner { __typename ... on Order { id } }
     }
-    userErrors { field message code elementIndex }
+    userErrors { code elementIndex field message }
   }
 }
 """
 
 CREATE_FULFILLMENT = """\
-mutation FlowStewardCreateFulfillment($fulfillment: FulfillmentInput!, $trackingFirst: Int!) {
-  fulfillmentCreate(fulfillment: $fulfillment) {
+mutation FlowStewardCreateFulfillment($fulfillment: FulfillmentInput!, $message: String, \
+$trackingFirst: Int!) {
+  fulfillmentCreate(fulfillment: $fulfillment, message: $message) {
     fulfillment {
       id
+      name
       status
+      displayStatus
+      legacyResourceId
+      totalQuantity
+      requiresShipping
       createdAt
       updatedAt
+      inTransitAt
+      estimatedDeliveryAt
+      deliveredAt
       trackingInfo(first: $trackingFirst) { company number url }
     }
     userErrors { field message }
@@ -676,17 +1147,26 @@ mutation FlowStewardCreateFulfillment($fulfillment: FulfillmentInput!, $tracking
 """
 
 UPDATE_FULFILLMENT_TRACKING = """\
-mutation FlowStewardUpdateFulfillmentTracking($fulfillmentId: ID!, $trackingInfoInput: FulfillmentTrackingInput!, $trackingFirst: Int!) {
+mutation FlowStewardUpdateFulfillmentTracking($fulfillmentId: ID!, \
+$trackingInfoInput: FulfillmentTrackingInput!, $notifyCustomer: Boolean!, $trackingFirst: Int!) {
   fulfillmentTrackingInfoUpdate(
     fulfillmentId: $fulfillmentId
     trackingInfoInput: $trackingInfoInput
-    notifyCustomer: false
+    notifyCustomer: $notifyCustomer
   ) {
     fulfillment {
       id
+      name
       status
+      displayStatus
+      legacyResourceId
+      totalQuantity
+      requiresShipping
       createdAt
       updatedAt
+      inTransitAt
+      estimatedDeliveryAt
+      deliveredAt
       trackingInfo(first: $trackingFirst) { company number url }
     }
     userErrors { field message }
@@ -726,7 +1206,7 @@ DOCUMENTS: dict[str, str] = {
     "create_product_variants_batch": CREATE_PRODUCT_VARIANTS_BATCH,
     "update_product_variants_batch": UPDATE_PRODUCT_VARIANTS_BATCH,
     "set_catalog_metafields": SET_CATALOG_METAFIELDS,
-    "update_product_media_alt": UPDATE_PRODUCT_MEDIA_ALT,
+    "update_product_media": UPDATE_PRODUCT_MEDIA,
     "list_orders": LIST_ORDERS,
     "get_order": GET_ORDER,
     "list_order_line_items": LIST_ORDER_LINE_ITEMS,
@@ -753,7 +1233,6 @@ __all__ = [
     "CREATE_PRODUCT_STATUS",
     "CREATE_PRODUCT_VARIANTS_BATCH",
     "DOCUMENTS",
-    "FULFILLMENT_NOTIFY_CUSTOMER",
     "GET_FULFILLMENT_ORDER",
     "GET_INVENTORY_ITEM",
     "GET_INVENTORY_LEVELS_BATCH",
@@ -772,7 +1251,9 @@ __all__ = [
     "LIST_PRODUCTS",
     "LIST_PRODUCT_MEDIA",
     "LIST_PRODUCT_VARIANTS",
+    "NOTIFY_CUSTOMER",
     "ON_HAND_QUANTITY_NAME",
+    "READ_QUANTITY_NAMES",
     "REFERENCE_DOCUMENT_URI_PREFIX",
     "SET_CATALOG_METAFIELDS",
     "SET_INVENTORY_QUANTITIES",
@@ -784,8 +1265,8 @@ __all__ = [
     "UPDATE_FULFILLMENT_TRACKING",
     "UPDATE_ORDER_METADATA",
     "UPDATE_PRODUCT",
-    "UPDATE_PRODUCT_MEDIA_ALT",
+    "UPDATE_PRODUCT_MEDIA",
     "UPDATE_PRODUCT_VARIANTS_BATCH",
+    "VARIANTS_BULK_ALLOW_PARTIAL_UPDATES",
     "VARIANTS_BULK_CREATE_STRATEGY",
-    "VARIANTS_BULK_UPDATE_PARTIAL",
 ]

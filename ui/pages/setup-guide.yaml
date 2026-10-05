@@ -149,7 +149,7 @@ components:
       | Location details | `read_locations` |
       | Inventory reads and stock writes | `write_inventory` |
       | Product reads and catalog writes | `write_products` |
-      | Media alt text | `write_files` |
+      | Media files: alt text, replacement, product attachment | `write_files` |
       | Order reads and order writes | `write_orders` |
       | Fulfillment orders, whoever owns them | the three `write_*_fulfillment_orders` scopes |
 
@@ -161,9 +161,10 @@ components:
 
       One consequence worth stating plainly: authorizing this extension grants it
       the ability to change stock, catalog, orders and fulfillments in that store.
-      It cannot delete, archive, cancel, refund, publish, or notify a customer —
-      see the operation list — but it is not a read-only integration, and it does
-      not offer a read-only mode.
+      It cannot delete, cancel or refund anything, and it never publishes a
+      product or emails a customer unless a workflow step explicitly asks for it
+      (`status: ACTIVE`, `notify_customer: true`) — see the operation list — but it
+      is not a read-only integration, and it does not offer a read-only mode.
   - component_id: setup_guide_capabilities
     type: markdown
     title: What `Test the connection` tells you

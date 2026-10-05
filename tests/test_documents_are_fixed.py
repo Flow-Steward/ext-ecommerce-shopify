@@ -20,6 +20,7 @@ from conftest import (
     run_action,
     run_operation,
 )
+
 from runtime import documents
 from runtime.catalog import NETWORK_OPERATION_IDS, OPERATIONS, OPERATIONS_BY_ID
 
@@ -195,20 +196,29 @@ class TestPaginationIsForwardOnlyAndBounded:
         }
 
     @pytest.mark.parametrize("operation_id", sorted(PAGINATED))
-    def test_the_page_size_is_bounded_and_defaults_to_fifty(self, operation_id: str) -> None:
+    def test_the_page_size_is_bounded_and_defaults_within_it(self, operation_id: str) -> None:
+        """Each ceiling keeps the query under Shopify's 1000-point cost limit.
+
+        The ceiling itself is proved against the official schema in
+        ``test_admin_api_coverage.py``; here it is only bounded and sane.
+        """
         properties = OPERATIONS_BY_ID[operation_id].input_schema["properties"]
         first = properties.get("first") or properties["line_items_first"]
 
         assert first["minimum"] == 1
-        assert first["maximum"] == 250
-        assert first["default"] == 50
+        assert first["maximum"] <= 250
+        assert 1 <= first["default"] <= first["maximum"]
 
     @pytest.mark.parametrize("operation_id", sorted(PAGINATED))
     def test_there_is_no_backward_pagination(self, operation_id: str) -> None:
-        """`last`/`before` would let a caller walk a store backwards forever."""
+        """`last`/`before` would let a caller walk a store backwards forever.
+
+        ``reverse`` and ``sort_key`` are different: they choose the order of a
+        forward walk, which Shopify's own list arguments offer.
+        """
         names = set(OPERATIONS_BY_ID[operation_id].input_field_names)
 
-        assert not names & {"last", "before", "reverse", "sort_key"}
+        assert not names & {"last", "before"}
 
     @pytest.mark.parametrize("operation_id", sorted(documents.DOCUMENTS))
     def test_no_document_declares_a_backward_page(self, operation_id: str) -> None:
@@ -224,7 +234,6 @@ class TestForbiddenSurfacesAreAbsent:
         "productDelete",
         "productVariantsBulkDelete",
         "productOptionsDelete",
-        "productSet",
         "productDuplicate",
         "publishablePublish",
         "publishableUnpublish",
@@ -239,7 +248,6 @@ class TestForbiddenSurfacesAreAbsent:
         "orderInvoiceSend",
         "fileCreate",
         "fileDelete",
-        "stagedUploadsCreate",
         "inventoryActivate",
         "inventoryDeactivate",
         "inventoryBulkToggleActivation",
@@ -259,6 +267,20 @@ class TestForbiddenSurfacesAreAbsent:
     @pytest.mark.parametrize("name", FORBIDDEN_MUTATIONS)
     def test_no_operation_is_registered_under_a_forbidden_name(self, name: str) -> None:
         assert name not in OPERATIONS_BY_ID
+
+    def test_only_creation_uses_product_set_and_never_upserts(self) -> None:
+        """``productSet`` creates a product whole; given an identifier it would
+        update an existing one, so no document ever passes one."""
+        users = {key for key, document in documents.DOCUMENTS.items() if "productSet(" in document}
+        assert users == {"create_product"}
+        assert "identifier" not in documents.CREATE_PRODUCT.split("productSet(", 1)[1].split(")")[0]
+
+    def test_only_media_and_bulk_staging_use_staged_uploads(self) -> None:
+        from runtime import bulk_documents, media_documents
+
+        assert all("stagedUploadsCreate" not in d for d in documents.DOCUMENTS.values())
+        assert "stagedUploadsCreate" in media_documents.STAGE_IMAGES
+        assert "stagedUploadsCreate" in bulk_documents.STAGE
 
     def test_only_bulk_creation_can_start_a_bulk_mutation(self) -> None:
         starters = {

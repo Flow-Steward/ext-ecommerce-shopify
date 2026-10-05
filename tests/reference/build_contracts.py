@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+
 from runtime.catalog import (
     CATEGORY,
     CHANNEL,
@@ -178,7 +179,7 @@ def _parameter_type(value_type: str) -> str:
 
 
 def artifact_policies() -> dict[str, Any]:
-    """The complete export streams to object storage with a configurable cap."""
+    """Artifact inputs (bulk rows, product images) and the streamed catalog export."""
     return {
         "artifact_policies": [
             {
@@ -194,6 +195,22 @@ def artifact_policies() -> dict[str, Any]:
                     }
                 ],
             },
+            *(
+                {
+                    "operation_id": operation_id,
+                    "inputs": [
+                        {
+                            "kind": "artifact",
+                            "value_type": "artifact_handle",
+                            "binding_key": "product_image_files",
+                            "field": "image_files",
+                            "required": False,
+                            "max_size_bytes": 20971520,
+                        }
+                    ],
+                }
+                for operation_id in ("create_product", "update_product")
+            ),
             {
                 "operation_id": EXPORT_PRODUCTS_OPERATION_ID,
                 "outputs": [

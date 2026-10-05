@@ -46,7 +46,7 @@ MAX_RESPONSE_BYTES = 4 * 1024 * 1024
 MAX_ERROR_BODY_BYTES = 16 * 1024
 CHUNK_BYTES = 64 * 1024
 
-_USER_AGENT = "FlowSteward-Shopify/0.3"
+_USER_AGENT = "FlowSteward-Shopify/0.4"
 
 
 @dataclass(frozen=True)

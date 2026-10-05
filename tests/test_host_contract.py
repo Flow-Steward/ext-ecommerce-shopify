@@ -9,6 +9,7 @@ from conftest import (
     connection_payload,
     graphql_response,
 )
+
 from dispatcher import OPERATION_REGISTRY, dispatch_runtime
 from runtime import errors
 from runtime.catalog import ACTION_OPERATION_IDS, NETWORK_OPERATION_IDS, OPERATION_IDS
@@ -39,7 +40,7 @@ EXPECTED_OPERATIONS = (
     "create_product_variants_batch",
     "update_product_variants_batch",
     "set_catalog_metafields",
-    "update_product_media_alt",
+    "update_product_media",
     "list_orders",
     "get_order",
     "list_order_line_items",
@@ -61,7 +62,7 @@ EXPECTED_ACTIONS = (
     "create_product_variants_batch",
     "update_product_variants_batch",
     "set_catalog_metafields",
-    "update_product_media_alt",
+    "update_product_media",
     "update_order_metadata",
     "set_order_metafields",
     "create_fulfillment",

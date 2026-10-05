@@ -10,7 +10,8 @@ Two layers, in this order:
    which Shopify id type belongs in which field, and that a batch does not name
    the same inventory item at the same location twice.
 
-Only then are defaults applied and the typed input handed to the operation.
+Defaults are applied before the semantic rules, so a rule sees the values the
+operation will actually use.
 """
 
 from __future__ import annotations
@@ -42,6 +43,10 @@ _GID_FIELDS: dict[str, dict[str, str]] = {
     "list_product_media": {"product_id": gids.PRODUCT},
     "create_product": {"category_id": gids.TAXONOMY_CATEGORY},
     "update_product": {"product_id": gids.PRODUCT, "category_id": gids.TAXONOMY_CATEGORY},
+    "list_products": {"saved_search_id": gids.SAVED_SEARCH},
+    "export_products": {"saved_search_id": gids.SAVED_SEARCH},
+    "list_product_variants": {"saved_search_id": gids.SAVED_SEARCH},
+    "list_orders": {"saved_search_id": gids.SAVED_SEARCH},
     "create_product_variants_batch": {"product_id": gids.PRODUCT},
     "update_product_variants_batch": {"product_id": gids.PRODUCT},
     "get_order": {"order_id": gids.ORDER},
@@ -57,6 +62,15 @@ _GID_FIELDS: dict[str, dict[str, str]] = {
 #: List-of-id fields, and the type every element carries.
 _GID_LIST_FIELDS: dict[str, dict[str, str]] = {
     "get_inventory_levels_batch": {"inventory_item_ids": gids.INVENTORY_ITEM},
+    "create_product": {"collection_ids": gids.COLLECTION},
+    "update_product": {
+        "join_collection_ids": gids.COLLECTION,
+        "leave_collection_ids": gids.COLLECTION,
+    },
+    "update_product_media": {
+        "add_to_product_ids": gids.PRODUCT,
+        "remove_from_product_ids": gids.PRODUCT,
+    },
 }
 
 #: The metafield owner types each set operation may address.
@@ -70,9 +84,9 @@ _METAFIELD_OWNER_TYPES: dict[str, tuple[str, ...]] = {
 #: turning "19.99" into a binary float and back is how a price quietly moves.
 _DECIMAL_RE = re.compile(r"^-?(?:0|[1-9](?a:\d){0,14})(?:\.(?a:\d){1,6})?$")
 
-#: Tracking URLs, like creation image sources, are forwarded to Shopify rather
-#: than fetched by the extension. HTTPS only, so a
-#: merchant-visible link cannot be plain http.
+#: Tracking URLs, like media sources, are forwarded to Shopify rather than
+#: fetched by the extension. HTTPS only, so a merchant-visible link cannot be
+#: plain http.
 _TRACKING_URL_RE = re.compile(r"^https://[A-Za-z0-9._~:/?#\[\]@!$&'()*+,;=%-]{1,2040}$")
 
 
@@ -93,10 +107,11 @@ def validated_input(row: Operation, raw_input: Any) -> dict[str, Any]:
         payload["metafields"] = _metafields(
             payload.get("metafields"), owners=_METAFIELD_OWNER_TYPES[row.operation_id]
         )
+    payload = _with_defaults(row, payload)
     rule = _SEMANTIC_RULES.get(row.operation_id)
     if rule is not None:
         payload = rule(payload)
-    return _with_defaults(row, payload)
+    return payload
 
 
 def _with_defaults(row: Operation, payload: dict[str, Any]) -> dict[str, Any]:
@@ -229,7 +244,62 @@ def _tracking(value: Any, *, field: str) -> dict[str, Any]:
     return entry
 
 
-def _variant_money(entry: dict[str, Any], *, field: str) -> dict[str, Any]:
+def _https_url(value: Any, *, field: str) -> str:
+    """A public https URL Shopify will fetch, without credentials or whitespace."""
+    source = value if isinstance(value, str) else ""
+    try:
+        parsed = urlsplit(source)
+        valid = bool(
+            source.startswith("https://")
+            and parsed.hostname
+            and parsed.username is None
+            and parsed.password is None
+            and not any(char.isspace() or ord(char) < 32 for char in source)
+        )
+        _ = parsed.port  # Reject malformed ports before submitting a batch.
+    except ValueError:
+        valid = False
+    if not valid:
+        raise ExtensionError(
+            errors.INVALID_PAYLOAD,
+            f"{field} must be an HTTPS URL without credentials or whitespace",
+        )
+    return source
+
+
+def _gid_list(value: Any, *, expected_type: str, field: str) -> list[str]:
+    return _unique_gids(value, expected_type=expected_type, field=field)
+
+
+def _metafield_ids(entries: Any, *, field: str) -> None:
+    for index, entry in enumerate(entries or []):
+        if isinstance(entry, Mapping) and "id" in entry:
+            gids.gid(entry["id"], expected_type=gids.METAFIELD, field=f"{field}[{index}].id")
+        elif isinstance(entry, Mapping) and not {"namespace", "key"} <= set(entry):
+            raise ExtensionError(
+                errors.INVALID_PAYLOAD,
+                f"{field}[{index}] needs either an id or a namespace and key",
+            )
+
+
+def _media_item(item: Mapping[str, Any], *, field: str, by_url_only: bool = False) -> None:
+    has_url, has_file = "source_url" in item, "file_id" in item
+    if by_url_only and not has_url:
+        raise ExtensionError(errors.INVALID_PAYLOAD, f"{field}.source_url is required")
+    if has_url == has_file:
+        raise ExtensionError(
+            errors.INVALID_PAYLOAD, f"{field} needs exactly one of source_url or file_id"
+        )
+    if has_url:
+        _https_url(item["source_url"], field=f"{field}.source_url")
+    else:
+        gids.one_of_gid(
+            item["file_id"], expected_types=gids.FILE_GID_TYPES, field=f"{field}.file_id"
+        )
+
+
+def _variant_fields(entry: dict[str, Any], *, field: str) -> dict[str, Any]:
+    """Money, ids and URLs inside one variant entry, whichever operation it is for."""
     for name in ("price", "compare_at_price"):
         if name in entry:
             entry[name] = _decimal(entry[name], field=f"{field}.{name}")
@@ -238,41 +308,110 @@ def _variant_money(entry: dict[str, Any], *, field: str) -> dict[str, Any]:
         inventory_item = dict(item)
         inventory_item["cost"] = _decimal(item["cost"], field=f"{field}.inventory_item.cost")
         entry["inventory_item"] = inventory_item
+    seen_locations: set[str] = set()
+    for key in ("inventory_quantities", "quantity_adjustments"):
+        for index, quantity in enumerate(entry.get(key) or []):
+            location = gids.gid(
+                quantity.get("location_id"),
+                expected_type=gids.LOCATION,
+                field=f"{field}.{key}[{index}].location_id",
+            )
+            identity = f"{key}:{location}:{quantity.get('name', '')}"
+            if identity in seen_locations:
+                raise ExtensionError(
+                    errors.INVALID_PAYLOAD,
+                    f"{field}.{key} names the same location twice",
+                )
+            seen_locations.add(identity)
+    if "media_id" in entry:
+        gids.one_of_gid(
+            entry["media_id"], expected_types=gids.MEDIA_GID_TYPES, field=f"{field}.media_id"
+        )
+    if isinstance(entry.get("image"), Mapping):
+        _media_item(entry["image"], field=f"{field}.image")
+    _metafield_ids(entry.get("metafields"), field=f"{field}.metafields")
     return entry
+
+
+def _option_names(entry: Mapping[str, Any]) -> list[str]:
+    return [str(value.get("option_name")) for value in entry.get("option_values") or []]
 
 
 # -- Per-operation semantic rules ------------------------------------------
 
 
 def _create_product(payload: dict[str, Any]) -> dict[str, Any]:
-    for image in payload.get("images", []):
-        source = image["url"]
-        try:
-            parsed = urlsplit(source)
-            valid = (
-                source.startswith("https://")
-                and parsed.hostname
-                and parsed.username is None
-                and parsed.password is None
-                and not any(char.isspace() or ord(char) < 32 for char in source)
+    """The product, its options and its variants must describe one consistent product."""
+    for index, item in enumerate(payload.get("media") or []):
+        _media_item(item, field=f"media[{index}]")
+        if item.get("content_type") == "EXTERNAL_VIDEO" and "source_url" not in item:
+            raise ExtensionError(
+                errors.INVALID_PAYLOAD, f"media[{index}] EXTERNAL_VIDEO needs a source_url"
             )
-            _ = parsed.port  # Reject malformed ports before submitting a batch.
-        except ValueError:
-            valid = False
-        if not valid:
+    options = list(payload.get("options") or [])
+    names = [str(option.get("name")) for option in options]
+    if len(set(names)) != len(names):
+        raise ExtensionError(errors.INVALID_PAYLOAD, "options names the same option twice")
+    for index, option in enumerate(options):
+        linked = option.get("linked_metafield")
+        if ("values" in option) == isinstance(linked, Mapping):
             raise ExtensionError(
                 errors.INVALID_PAYLOAD,
-                "images.url must be an HTTPS URL without credentials or whitespace",
+                f"options[{index}] needs exactly one of values or linked_metafield",
             )
-    options = payload.get("options")
-    if isinstance(options, Sequence) and not isinstance(options, (str, bytes)):
-        names = [entry.get("name") for entry in options if isinstance(entry, Mapping)]
-        if len(set(names)) != len(names):
-            raise ExtensionError(errors.INVALID_PAYLOAD, "options names the same option twice")
+    variants = list(payload.get("variants") or [])
+    if not variants:
+        for index, option in enumerate(options):
+            linked = option.get("linked_metafield")
+            if isinstance(linked, Mapping) and not linked.get("values"):
+                raise ExtensionError(
+                    errors.INVALID_PAYLOAD,
+                    f"options[{index}] is linked to a metafield without values; give variants",
+                )
+    if not options and len(variants) > 1:
+        raise ExtensionError(
+            errors.INVALID_PAYLOAD, "Several variants need options to tell them apart"
+        )
+    checked: list[dict[str, Any]] = []
+    combinations: set[tuple[tuple[str, str], ...]] = set()
+    for index, raw in enumerate(variants):
+        entry = dict(raw)
+        field = f"variants[{index}]"
+        if options:
+            if sorted(_option_names(entry)) != sorted(names):
+                raise ExtensionError(
+                    errors.INVALID_PAYLOAD,
+                    f"{field}.option_values must give one value for each option: "
+                    + ", ".join(names),
+                )
+            combination = tuple(
+                sorted(
+                    (str(value.get("option_name")), str(value.get("value", value.get(
+                        "linked_metafield_value", "")))) for value in entry["option_values"]
+                )
+            )  # fmt: skip
+            if combination in combinations:
+                raise ExtensionError(
+                    errors.INVALID_PAYLOAD, f"{field} repeats another variant's option values"
+                )
+            combinations.add(combination)
+        elif "option_values" in entry:
+            raise ExtensionError(
+                errors.INVALID_PAYLOAD, f"{field}.option_values needs options on the product"
+            )
+        checked.append(_variant_fields(entry, field=field))
+    if variants:
+        payload["variants"] = checked
     return payload
 
 
 def _update_product(payload: dict[str, Any]) -> dict[str, Any]:
+    identifiers = [name for name in catalog.PRODUCT_IDENTIFIER_FIELDS if name in payload]
+    if len(identifiers) != 1:
+        raise ExtensionError(
+            errors.INVALID_PAYLOAD,
+            "update_product needs exactly one of: " + ", ".join(catalog.PRODUCT_IDENTIFIER_FIELDS),
+        )
     changes = [name for name in catalog.PRODUCT_UPDATE_CHANGE_FIELDS if name in payload]
     if not changes:
         raise ExtensionError(
@@ -280,6 +419,9 @@ def _update_product(payload: dict[str, Any]) -> dict[str, Any]:
             "update_product needs at least one of: "
             + ", ".join(catalog.PRODUCT_UPDATE_CHANGE_FIELDS),
         )
+    for index, item in enumerate(payload.get("media") or []):
+        _https_url(item["source_url"], field=f"media[{index}].source_url")
+    _metafield_ids(payload.get("metafields"), field="metafields")
     return payload
 
 
@@ -287,6 +429,8 @@ def _variants(payload: dict[str, Any], *, updating: bool) -> dict[str, Any]:
     entries = payload.get("variants")
     if not isinstance(entries, Sequence) or isinstance(entries, (str, bytes)):
         raise ExtensionError(errors.INVALID_PAYLOAD, "variants must be an array")
+    for index, item in enumerate(payload.get("media") or []):
+        _https_url(item["source_url"], field=f"media[{index}].source_url")
     checked: list[dict[str, Any]] = []
     seen: set[str] = set()
     for index, raw in enumerate(entries):
@@ -311,7 +455,7 @@ def _variants(payload: dict[str, Any], *, updating: bool) -> dict[str, Any]:
                 raise ExtensionError(
                     errors.INVALID_PAYLOAD, f"{field} names a variant but asks for no change"
                 )
-        checked.append(_variant_money(entry, field=field))
+        checked.append(_variant_fields(entry, field=field))
     payload["variants"] = checked
     return payload
 
@@ -351,10 +495,24 @@ def _metafields(value: Any, *, owners: Sequence[str]) -> list[dict[str, Any]]:
     return checked
 
 
-def _media_alt(payload: dict[str, Any]) -> dict[str, Any]:
+_MEDIA_FILE_CHANGES: tuple[str, ...] = (
+    "alt",
+    "source_url",
+    "preview_image_url",
+    "filename",
+    "add_to_product_ids",
+    "remove_from_product_ids",
+)
+
+
+def _media_file(payload: dict[str, Any]) -> dict[str, Any]:
     payload["media_id"] = gids.one_of_gid(
-        payload.get("media_id"), expected_types=gids.MEDIA_GID_TYPES, field="media_id"
+        payload.get("media_id"), expected_types=gids.FILE_GID_TYPES, field="media_id"
     )
+    _require_one_of(payload, _MEDIA_FILE_CHANGES, what="update_product_media")
+    for name in ("source_url", "preview_image_url"):
+        if name in payload:
+            payload[name] = _https_url(payload[name], field=name)
     return payload
 
 
@@ -379,7 +537,36 @@ def _catalog_metafield_owner(payload: dict[str, Any]) -> dict[str, Any]:
 
 def _order_metadata(payload: dict[str, Any]) -> dict[str, Any]:
     _require_one_of(payload, catalog.ORDER_METADATA_CHANGE_FIELDS, what="update_order_metadata")
+    _metafield_ids(payload.get("metafields"), field="metafields")
     return payload
+
+
+#: Shopify refuses any single query whose requested cost exceeds 1000 points.
+#: The order costs 3, and each fulfillment order 5 plus 2 per line item inside it.
+MAX_QUERY_COST = 1000
+
+
+def _fulfillment_orders_page(payload: dict[str, Any]) -> dict[str, Any]:
+    first = int(payload.get("first") or catalog.DEFAULT_PAGE_SIZE)
+    lines = int(payload.get("line_items_first") or catalog.DEFAULT_PAGE_SIZE)
+    if 3 + first * (5 + 2 * lines) > MAX_QUERY_COST:
+        raise ExtensionError(
+            errors.INVALID_PAYLOAD,
+            "first x (2 x line_items_first + 5) must be at most 997 to stay within "
+            "Shopify's query cost limit; ask for fewer fulfillment orders or line items",
+        )
+    return payload
+
+
+_REASON_RE = re.compile(r"^[a-z][a-z_]{0,63}$")
+
+
+def _set_quantities(payload: dict[str, Any]) -> dict[str, Any]:
+    if "reason" in payload and _REASON_RE.fullmatch(str(payload["reason"])) is None:
+        raise ExtensionError(
+            errors.INVALID_PAYLOAD, "reason must be one of Shopify's lowercase reason codes"
+        )
+    return {**payload, "quantities": _quantities(payload.get("quantities"))}
 
 
 def _fulfillment_lines(group: dict[str, Any], field: str) -> list[dict[str, Any]]:
@@ -454,14 +641,12 @@ _SEMANTIC_RULES: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
     "create_product_variants_batch": lambda payload: _variants(payload, updating=False),
     "update_product_variants_batch": lambda payload: _variants(payload, updating=True),
     "list_catalog_metafields": _catalog_metafield_owner,
-    "update_product_media_alt": _media_alt,
+    "update_product_media": _media_file,
     "update_order_metadata": _order_metadata,
     "create_fulfillment": _fulfillment,
     "update_fulfillment_tracking": _fulfillment_tracking,
-    "set_inventory_quantities": lambda payload: {
-        **payload,
-        "quantities": _quantities(payload.get("quantities")),
-    },
+    "set_inventory_quantities": _set_quantities,
+    "list_order_fulfillment_orders": _fulfillment_orders_page,
 }
 
 

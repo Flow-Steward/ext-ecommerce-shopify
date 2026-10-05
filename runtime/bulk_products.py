@@ -1,4 +1,4 @@
-"""Submit asynchronous bulk draft creation without waiting for completion."""
+"""Submit asynchronous bulk product creation without waiting for completion."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from .bulk_storage import MAX_BULK_BYTES, upload_jsonl
 from .catalog import Operation, operation
 from .connection import connection_from_payload
 from .errors import ExtensionError
-from .product_input import create_product_variables
+from .product_input import product_set_input
 
 MAX_PRODUCTS = 10000
 CLIENT_PREFIX = "fs-product-create:"
@@ -53,9 +53,10 @@ def _rows(payload: Mapping[str, Any], inputs: dict[str, Any], reader: Any) -> li
     validated = []
     handles: set[str] = set()
     for index, row in enumerate(rows):
-        if not isinstance(row, Mapping) or "connection_ref" in row:
+        if not isinstance(row, Mapping) or "connection_ref" in row or "image_files" in row:
             raise _invalid(
-                f"Product row {index} must use create_product fields without connection_ref"
+                f"Product row {index} must use create_product fields without connection_ref "
+                "or image_files"
             )
         try:
             item = validation.validated_input(
@@ -69,7 +70,7 @@ def _rows(payload: Mapping[str, Any], inputs: dict[str, Any], reader: Any) -> li
         if handle in handles:
             raise _invalid(f"Product row {index} repeats a handle in this batch")
         handles.add(handle)
-        validated.append(create_product_variables(item))
+        validated.append({"input": product_set_input(item)})
     return validated
 
 

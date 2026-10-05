@@ -108,37 +108,6 @@ def _relations(
     return result
 
 
-def _variant_record(
-    node: Mapping[str, Any], items: dict[str, dict[str, Any]], *, include_inventory: bool
-) -> dict[str, Any]:
-    variant = {
-        "id": shapes.text(node.get("id")),
-        "title": shapes.optional_text(node.get("title")),
-        "sku": shapes.optional_text(node.get("sku")),
-        "price": shapes.optional_text(node.get("price")),
-        "compare_at_price": shapes.optional_text(node.get("compareAtPrice")),
-        "selected_options": [
-            {
-                "name": shapes.optional_text(o.get("name")),
-                "value": shapes.optional_text(o.get("value")),
-            }
-            for o in node.get("selectedOptions", [])
-        ],
-    }
-    if include_inventory:
-        item = shapes.mapping(node.get("inventoryItem"))
-        item_id = item.get("id")
-        if not isinstance(item_id, str) or not item_id:
-            raise _failure()
-        inventory_item = {
-            "id": item_id,
-            "tracked": shapes.optional_bool(item.get("tracked")),
-        }
-        variant["inventory_item"] = inventory_item
-        items[item_id] = inventory_item
-    return variant
-
-
 def enrich_products(
     transport: Any,
     products: list[dict[str, Any]],
@@ -156,22 +125,27 @@ def enrich_products(
                 {
                     "id": shapes.text(n.get("id")),
                     "alt": shapes.optional_text(n.get("alt")),
+                    "status": shapes.optional_text(n.get("status")),
                     "url": shapes.optional_text(shapes.mapping(n.get("image")).get("url")),
+                    "width": shapes.optional_int(shapes.mapping(n.get("image")).get("width")),
+                    "height": shapes.optional_int(shapes.mapping(n.get("image")).get("height")),
                 }
                 for n in images[product["id"]]
             ]
             product["image_count"] = len(product["images"])
     if not (include_variants or include_inventory):
         return
-    variants = _relations(
-        transport, export_documents.VARIANTS, ids, "variants", inventory=include_inventory
-    )
+    variants = _relations(transport, export_documents.VARIANTS, ids, "variants")
     items: dict[str, dict[str, Any]] = {}
     for product in products:
-        product["variants"] = []
-        for node in variants[product["id"]]:
-            variant = _variant_record(node, items, include_inventory=include_inventory)
-            product["variants"].append(variant)
+        product["variants"] = [shapes.product_variant(node) for node in variants[product["id"]]]
+        if not include_inventory:
+            continue
+        for variant in product["variants"]:
+            item = variant.get("inventory_item")
+            if not isinstance(item, dict) or not item.get("id"):
+                raise _failure()
+            items[item["id"]] = item
     if include_inventory:
         levels = _relations(transport, export_documents.INVENTORY, list(items), "inventoryLevels")
         for item_id, item in items.items():

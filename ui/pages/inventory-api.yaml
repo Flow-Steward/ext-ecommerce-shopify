@@ -33,18 +33,20 @@ components:
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
+      - Shopify: `shop`
       - Inputs: `connection_ref`
       - Results: `shop_id`, `shop_name`, `myshopify_domain`, `api_version`, `granted_scopes`, `capability_summary`, `capabilities`, `capability_scope_matrix`
       - Scopes: no business-resource scope
 
       ### Get the store
 
-      Returns a fixed, bounded set of store identity and locale fields.
+      Returns the store's settings: identity, currency, timezone, units, tax and order-number settings.
 
       - Action id: `get_shop`
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
+      - Shopify: `shop`
       - Inputs: `connection_ref`
       - Results: `shop`
       - Scopes: no business-resource scope
@@ -57,19 +59,21 @@ components:
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `first` (optional), `after` (optional), `include_inactive` (optional)
+      - Shopify: `locations`
+      - Inputs: `connection_ref`, `first` (optional), `after` (optional), `include_inactive` (optional), `include_legacy` (optional), `filter` (optional), `sort_key` (optional), `reverse` (optional)
       - Results: `locations`, `page_info`
       - Scopes: `write_inventory`, `read_locations`
 
       ### List inventory items
 
-      Returns one cursor-paginated page of inventory items, optionally narrowed to one SKU. Pass end_cursor back as after to read the next page.
+      Returns one cursor-paginated page of inventory items, optionally narrowed to one SKU or a search. Pass end_cursor back as after to read the next page.
 
       - Action id: `list_inventory_items`
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `first` (optional), `after` (optional), `sku` (optional)
+      - Shopify: `inventoryItems`
+      - Inputs: `connection_ref`, `first` (optional), `after` (optional), `sku` (optional), `filter` (optional), `reverse` (optional)
       - Results: `inventory_items`, `page_info`
       - Scopes: `write_inventory`
 
@@ -81,31 +85,34 @@ components:
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
+      - Shopify: `inventoryItem`
       - Inputs: `connection_ref`, `inventory_item_id`
       - Results: `inventory_item`
       - Scopes: `write_inventory`
 
       ### Get stock for many items at one location
 
-      Returns the available and on-hand quantities for up to 250 inventory items at one location, in the order they were asked for.
+      Returns every quantity state — available, on hand, committed, incoming, reserved, damaged, safety stock and quality control — for up to 250 inventory items at one location, in the order they were asked for.
 
       - Action id: `get_inventory_levels_batch`
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
+      - Shopify: `nodes`
       - Inputs: `connection_ref`, `location_id`, `inventory_item_ids`, `include_inactive` (optional)
       - Results: `location_id`, `items`
       - Scopes: `write_inventory`
 
       ### Set stock quantities
 
-      Sets absolute available quantities for 1 to 250 inventory items and waits for Shopify's answer. This changes what the store has in stock; a quantity of 0 makes the item out of stock at that location.
+      Sets absolute available (or on-hand) quantities for 1 to 250 inventory items and waits for Shopify's answer. This changes what the store has in stock; a quantity of 0 makes the item out of stock at that location.
 
       - Action id: `set_inventory_quantities`
       - Kind: action
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `quantities`
+      - Shopify: `inventorySetQuantities`
+      - Inputs: `connection_ref`, `quantities`, `name` (optional), `reason` (optional)
       - Results: `inventory_adjustment_group`, `external_effect_status`, `definitely_no_external_effect`
       - Scopes: `write_inventory`
       - External effect: `shopify_inventory_set_quantities`
@@ -118,20 +125,22 @@ components:
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `first` (optional), `after` (optional), `filter` (optional)
+      - Shopify: `products`
+      - Inputs: `connection_ref`, `first` (optional), `after` (optional), `filter` (optional), `sort_key` (optional), `reverse` (optional), `saved_search_id` (optional)
       - Results: `products`, `page_info`
       - Scopes: `write_products`
 
       ### Export all matching products
 
-      Follows every Shopify product cursor and streams the complete matching catalog to a JSONL artifact. Use filter to export a filtered subset.
+      Follows every Shopify product cursor and streams the complete matching catalog to a JSONL artifact. Use filter to export a subset, or quality_filter to export only products with missing or small images, short descriptions or empty fields.
 
       - Action id: `export_products`
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `first` (optional), `include_images` (optional), `include_variants` (optional), `include_inventory` (optional), `filter` (optional)
-      - Results: `artifact_handle`, `filename`, `content_type`, `item_count`, `page_count`, `size_bytes`, `sha256`, `artifacts`
+      - Shopify: `products`
+      - Inputs: `connection_ref`, `first` (optional), `include_images` (optional), `include_variants` (optional), `include_inventory` (optional), `filter` (optional), `sort_key` (optional), `reverse` (optional), `saved_search_id` (optional), `quality_filter` (optional)
+      - Results: `artifact_handle`, `filename`, `content_type`, `item_count`, `scanned_count`, `page_count`, `size_bytes`, `sha256`, `artifacts`
       - Scopes: `write_products`
 
       ### Get a product
@@ -142,19 +151,21 @@ components:
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
+      - Shopify: `product`
       - Inputs: `connection_ref`, `product_id`
       - Results: `product`
       - Scopes: `write_products`
 
       ### List product variants
 
-      Returns one cursor-paginated page of product variants across the store. Pass end_cursor back as after to read the next page.
+      Returns one cursor-paginated page of product variants across the store, optionally narrowed by a search such as product_id:123 or sku:ABC. Pass end_cursor back as after to read the next page.
 
       - Action id: `list_product_variants`
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `first` (optional), `after` (optional)
+      - Shopify: `productVariants`
+      - Inputs: `connection_ref`, `first` (optional), `after` (optional), `filter` (optional), `sort_key` (optional), `reverse` (optional), `saved_search_id` (optional)
       - Results: `product_variants`, `page_info`
       - Scopes: `write_products`
 
@@ -166,55 +177,60 @@ components:
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
+      - Shopify: `productVariant`
       - Inputs: `connection_ref`, `product_variant_id`
       - Results: `product_variant`
       - Scopes: `write_products`
 
       ### List catalog metafields
 
-      Returns one cursor-paginated page of metafields for one product or one product variant. The owner type must match the id.
+      Returns one cursor-paginated page of metafields for one product or one product variant, optionally narrowed to a namespace or named keys. The owner type must match the id.
 
       - Action id: `list_catalog_metafields`
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `owner_type`, `owner_id`, `first` (optional), `after` (optional)
+      - Shopify: `node`
+      - Inputs: `connection_ref`, `owner_type`, `owner_id`, `first` (optional), `after` (optional), `namespace` (optional), `keys` (optional), `reverse` (optional)
       - Results: `owner_id`, `owner_type`, `metafields`, `page_info`
       - Scopes: `write_products`
 
       ### List product media
 
-      Returns one cursor-paginated page of the media attached to one product. Reads media and processing status, including images supplied during product creation.
+      Returns one cursor-paginated page of the media attached to one product: images with their URL, width and height, videos and 3D models, with processing status and any processing errors.
 
       - Action id: `list_product_media`
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `product_id`, `first` (optional), `after` (optional)
+      - Shopify: `product`
+      - Inputs: `connection_ref`, `product_id`, `first` (optional), `after` (optional), `filter` (optional), `sort_key` (optional), `reverse` (optional)
       - Results: `product_id`, `media`, `page_info`
       - Scopes: `write_products`
 
       ### Create a product
 
-      Creates one product as a draft. Shopify creates only the initial variant, using the first value of each supplied option. product_variants contains that one variant and its inventory item so a workflow can immediately set SKU, price and stock; add the rest with the variant batch operations. Optional images are downloaded from public HTTPS URLs and processed asynchronously. No metafields, collections or publications are created.
+      Creates one product with its variants in a single atomic Shopify call: SKU, price, barcode, weight, starting stock, images and metafields included. The product is a DRAFT unless status says otherwise. Images come from public URLs, existing Shopify files or Flow Steward artifacts and are processed asynchronously. product_variants returns every created variant with its inventory item.
 
       - Action id: `create_product`
       - Kind: action
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `title`, `handle`, `description_html` (optional), `vendor` (optional), `product_type` (optional), `tags` (optional), `category_id` (optional), `seo_title` (optional), `seo_description` (optional), `options` (optional), `images` (optional)
+      - Shopify: `productSet`
+      - Inputs: `connection_ref`, `title`, `handle`, `description_html` (optional), `vendor` (optional), `product_type` (optional), `category_id` (optional), `seo_title` (optional), `seo_description` (optional), `template_suffix` (optional), `gift_card_template_suffix` (optional), `requires_selling_plan` (optional), `tags` (optional), `status` (optional), `gift_card` (optional), `collection_ids` (optional), `combined_listing_role` (optional), `claim_ownership` (optional), `metafields` (optional), `options` (optional), `variants` (optional), `media` (optional), `image_files` (optional)
       - Results: `product`, `product_variants`, `external_effect_status`, `definitely_no_external_effect`
       - Scopes: `write_products`
       - External effect: `shopify_product_create`
 
       ### Create products in bulk
 
-      Uploads a batch of new draft products for asynchronous creation. Supply either products or a JSONL artifact containing create_product fields. Submission success is not per-row success; Shopify continues processing after this action returns. Creates only the initial variant.
+      Uploads a batch of new products for asynchronous creation. Each row takes the same fields as create_product, variants included, except image_files: use media URLs. Supply either products or a JSONL artifact. Submission success is not per-row success; Shopify continues processing after this action returns.
 
       - Action id: `create_products_bulk`
       - Kind: action
       - Contacts Shopify: yes
       - Available in workflows: yes
+      - Shopify: `bulkOperationRunMutation`
       - Inputs: `connection_ref`, `products` (optional), `artifact_handle` (optional)
       - Results: `bulk_operation`, `item_count`, `external_effect_status`, `definitely_no_external_effect`
       - Scopes: `write_products`
@@ -222,39 +238,42 @@ components:
 
       ### Update a product
 
-      Changes one product. Only the fields you supply are sent; everything else is left as it is. replace_tags overwrites the whole tag list. Status, publications, collections, media and metafields are out of reach here.
+      Changes one product, found by id, handle or a unique metafield. Only the fields you supply are sent; everything else is left as it is. replace_tags overwrites the whole tag list. New images can be attached from URLs or Flow Steward artifacts.
 
       - Action id: `update_product`
       - Kind: action
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `product_id`, `title` (optional), `description_html` (optional), `vendor` (optional), `product_type` (optional), `handle` (optional), `replace_tags` (optional), `category_id` (optional), `seo_title` (optional), `seo_description` (optional)
+      - Shopify: `productUpdate`
+      - Inputs: `connection_ref`, `product_id` (optional), `product_handle` (optional), `product_custom_id` (optional), `title` (optional), `handle` (optional), `redirect_new_handle` (optional), `description_html` (optional), `vendor` (optional), `product_type` (optional), `category_id` (optional), `seo_title` (optional), `seo_description` (optional), `template_suffix` (optional), `gift_card_template_suffix` (optional), `requires_selling_plan` (optional), `replace_tags` (optional), `status` (optional), `join_collection_ids` (optional), `leave_collection_ids` (optional), `delete_conflicting_constrained_metafields` (optional), `metafields` (optional), `media` (optional), `image_files` (optional)
       - Results: `product`, `external_effect_status`, `definitely_no_external_effect`
       - Scopes: `write_products`
       - External effect: `shopify_product_update`
 
       ### Create product variants
 
-      Creates 1 to 250 variants on one product in a single call. The product's options must already exist. The product's standalone variant is preserved. Stock quantities are not part of this: set them with the inventory operations.
+      Creates 1 to 250 variants on one product in a single call. The product's options must already exist. By default the product's standalone variant is preserved.
 
       - Action id: `create_product_variants_batch`
       - Kind: action
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `product_id`, `variants`
+      - Shopify: `productVariantsBulkCreate`
+      - Inputs: `connection_ref`, `product_id`, `variants`, `media` (optional), `strategy` (optional)
       - Results: `product_variants`, `external_effect_status`, `definitely_no_external_effect`
       - Scopes: `write_products`
       - External effect: `shopify_product_variants_create`
 
       ### Update product variants
 
-      Changes 1 to 250 existing variants on one product in a single call. Shopify is asked to apply all of them or none. Each entry must name a variant and carry at least one actual change.
+      Changes 1 to 250 existing variants on one product in a single call. By default Shopify applies all of them or none. Each entry must name a variant and carry at least one actual change.
 
       - Action id: `update_product_variants_batch`
       - Kind: action
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `product_id`, `variants`
+      - Shopify: `productVariantsBulkUpdate`
+      - Inputs: `connection_ref`, `product_id`, `variants`, `media` (optional), `allow_partial_updates` (optional)
       - Results: `product_variants`, `external_effect_status`, `definitely_no_external_effect`
       - Scopes: `write_products`
       - External effect: `shopify_product_variants_update`
@@ -267,44 +286,48 @@ components:
       - Kind: action
       - Contacts Shopify: yes
       - Available in workflows: yes
+      - Shopify: `metafieldsSet`
       - Inputs: `connection_ref`, `metafields`
       - Results: `metafields`, `external_effect_status`, `definitely_no_external_effect`
       - Scopes: `write_products`
       - External effect: `shopify_catalog_metafields_set`
 
-      ### Update media alt text
+      ### Update a media file
 
-      Changes the alt text of one existing media file. Nothing else about the file is touched: not its source, filename, preview, or which products it belongs to.
+      Changes one existing file in Shopify Files: its alt text, its source (replacing the file), its preview image, its filename, and which products it is attached to.
 
-      - Action id: `update_product_media_alt`
+      - Action id: `update_product_media`
       - Kind: action
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `media_id`, `alt`
+      - Shopify: `fileUpdate`
+      - Inputs: `connection_ref`, `media_id`, `alt` (optional), `source_url` (optional), `preview_image_url` (optional), `filename` (optional), `add_to_product_ids` (optional), `remove_from_product_ids` (optional)
       - Results: `file`, `external_effect_status`, `definitely_no_external_effect`
       - Scopes: `write_files`
-      - External effect: `shopify_product_media_alt_update`
+      - External effect: `shopify_product_media_update`
 
       ### List orders
 
-      Returns one cursor-paginated page of orders. Customer, address, payment and contact details are never requested.
+      Returns one cursor-paginated page of orders, optionally filtered and sorted. Customer names, emails, phone numbers and addresses are never requested.
 
       - Action id: `list_orders`
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `first` (optional), `after` (optional)
+      - Shopify: `orders`
+      - Inputs: `connection_ref`, `first` (optional), `after` (optional), `filter` (optional), `sort_key` (optional), `reverse` (optional), `saved_search_id` (optional)
       - Results: `orders`, `page_info`
       - Scopes: `write_orders`
 
       ### Get an order
 
-      Returns one order, found by its Shopify order id. Customer, address, payment and contact details are never requested.
+      Returns one order, found by its Shopify order id. Customer names, emails, phone numbers and addresses are never requested.
 
       - Action id: `get_order`
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
+      - Shopify: `order`
       - Inputs: `connection_ref`, `order_id`
       - Results: `order`
       - Scopes: `write_orders`
@@ -317,31 +340,34 @@ components:
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `order_id`, `first` (optional), `after` (optional)
+      - Shopify: `order`
+      - Inputs: `connection_ref`, `order_id`, `first` (optional), `after` (optional), `reverse` (optional)
       - Results: `order_id`, `line_items`, `page_info`
       - Scopes: `write_orders`
 
       ### List order metafields
 
-      Returns one cursor-paginated page of the metafields on one order.
+      Returns one cursor-paginated page of the metafields on one order, optionally narrowed to a namespace or named keys.
 
       - Action id: `list_order_metafields`
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `order_id`, `first` (optional), `after` (optional)
+      - Shopify: `order`
+      - Inputs: `connection_ref`, `order_id`, `first` (optional), `after` (optional), `namespace` (optional), `keys` (optional), `reverse` (optional)
       - Results: `order_id`, `metafields`, `page_info`
       - Scopes: `write_orders`
 
       ### List fulfillment orders
 
-      Returns one cursor-paginated page of the fulfillment orders on one order, each with an explicitly sized page of its own line items.
+      Returns one cursor-paginated page of the fulfillment orders on one order, each with an explicitly sized page of its own line items. first multiplied by line_items_first is bounded so the request stays within Shopify's cost limit.
 
       - Action id: `list_order_fulfillment_orders`
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `order_id`, `first` (optional), `after` (optional), `line_items_first` (optional)
+      - Shopify: `order`
+      - Inputs: `connection_ref`, `order_id`, `first` (optional), `after` (optional), `line_items_first` (optional), `reverse` (optional), `displayable` (optional), `filter` (optional)
       - Results: `order_id`, `fulfillment_orders`, `page_info`
       - Scopes: `write_orders`, `write_assigned_fulfillment_orders`, `write_merchant_managed_fulfillment_orders`, `write_third_party_fulfillment_orders`
 
@@ -353,31 +379,34 @@ components:
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
+      - Shopify: `fulfillmentOrder`
       - Inputs: `connection_ref`, `fulfillment_order_id`, `line_items_first` (optional), `line_items_after` (optional)
       - Results: `fulfillment_order`
       - Scopes: `write_orders`, `write_assigned_fulfillment_orders`, `write_merchant_managed_fulfillment_orders`, `write_third_party_fulfillment_orders`
 
       ### List order fulfillments
 
-      Returns up to 250 of an order's fulfillments plus the store's own total, so a caller can tell a complete answer from a partial one.
+      Returns up to 50 of an order's fulfillments plus the store's own total, so a caller can tell a complete answer from a partial one.
 
       - Action id: `list_order_fulfillments`
       - Kind: source
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `order_id`, `first` (optional)
+      - Shopify: `order`
+      - Inputs: `connection_ref`, `order_id`, `first` (optional), `filter` (optional)
       - Results: `order_id`, `fulfillments`, `total_count`, `truncated`
       - Scopes: `write_orders`
 
-      ### Update order metadata
+      ### Update an order
 
-      Changes an order's note, PO number, tags or custom attributes. The two replace_ fields overwrite their whole list. Customers, addresses, payments, line items, refunds and order edits are out of reach here.
+      Changes what Shopify lets an app edit on an existing order: note, PO number, tags, custom attributes, metafields, contact email and phone, shipping address and localized fields. The replace_ fields overwrite their whole list. Line items, payments, refunds and order edits are out of reach here.
 
       - Action id: `update_order_metadata`
       - Kind: action
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `order_id`, `note` (optional), `po_number` (optional), `replace_tags` (optional), `replace_custom_attributes` (optional)
+      - Shopify: `orderUpdate`
+      - Inputs: `connection_ref`, `order_id`, `note` (optional), `po_number` (optional), `replace_tags` (optional), `replace_custom_attributes` (optional), `email` (optional), `phone` (optional), `shipping_address` (optional), `metafields` (optional), `localized_fields` (optional)
       - Results: `order`, `external_effect_status`, `definitely_no_external_effect`
       - Scopes: `write_orders`
       - External effect: `shopify_order_metadata_update`
@@ -390,6 +419,7 @@ components:
       - Kind: action
       - Contacts Shopify: yes
       - Available in workflows: yes
+      - Shopify: `metafieldsSet`
       - Inputs: `connection_ref`, `metafields`
       - Results: `metafields`, `external_effect_status`, `definitely_no_external_effect`
       - Scopes: `write_orders`
@@ -397,26 +427,28 @@ components:
 
       ### Create a fulfillment
 
-      Fulfills named line items on named fulfillment orders. Every line item and quantity must be stated: Shopify would otherwise fulfil everything remaining, and that is not a decision an omitted field should make. The customer is not notified.
+      Fulfills named line items on named fulfillment orders. Every line item and quantity must be stated: Shopify would otherwise fulfil everything remaining, and that is not a decision an omitted field should make. The customer is notified only when notify_customer is true.
 
       - Action id: `create_fulfillment`
       - Kind: action
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `fulfillment_orders`, `tracking` (optional)
+      - Shopify: `fulfillmentCreate`
+      - Inputs: `connection_ref`, `fulfillment_orders`, `tracking` (optional), `notify_customer` (optional), `origin_address` (optional), `message` (optional)
       - Results: `fulfillment`, `external_effect_status`, `definitely_no_external_effect`
       - Scopes: `write_assigned_fulfillment_orders`, `write_merchant_managed_fulfillment_orders`, `write_third_party_fulfillment_orders`
       - External effect: `shopify_fulfillment_create`
 
       ### Update fulfillment tracking
 
-      Replaces the tracking information on one existing fulfillment. At least one tracking value is required: this operation cannot be used to clear tracking. The customer is not notified.
+      Replaces the tracking information on one existing fulfillment. At least one tracking value is required: this operation cannot be used to clear tracking. The customer is notified only when notify_customer is true.
 
       - Action id: `update_fulfillment_tracking`
       - Kind: action
       - Contacts Shopify: yes
       - Available in workflows: yes
-      - Inputs: `connection_ref`, `fulfillment_id`, `tracking`
+      - Shopify: `fulfillmentTrackingInfoUpdate`
+      - Inputs: `connection_ref`, `fulfillment_id`, `tracking`, `notify_customer` (optional)
       - Results: `fulfillment`, `external_effect_status`, `definitely_no_external_effect`
       - Scopes: `write_assigned_fulfillment_orders`, `write_merchant_managed_fulfillment_orders`, `write_third_party_fulfillment_orders`
       - External effect: `shopify_fulfillment_tracking_update`

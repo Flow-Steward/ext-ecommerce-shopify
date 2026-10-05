@@ -24,6 +24,7 @@ from conftest import (
     quantity,
     set_quantities_payload,
 )
+
 from runtime import documents, errors
 from runtime.operations import handle_runtime
 
@@ -395,6 +396,7 @@ class TestTheResult:
                     "name": "available",
                     "delta": 2,
                     "quantity_after_change": 7,
+                    "ledger_document_uri": None,
                 }
             ],
         }

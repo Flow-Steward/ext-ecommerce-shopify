@@ -27,6 +27,11 @@ ORDER = "Order"
 FULFILLMENT_ORDER = "FulfillmentOrder"
 FULFILLMENT_ORDER_LINE_ITEM = "FulfillmentOrderLineItem"
 FULFILLMENT = "Fulfillment"
+COLLECTION = "Collection"
+SAVED_SEARCH = "SavedSearch"
+EXTERNAL_VIDEO = "ExternalVideo"
+GENERIC_FILE = "GenericFile"
+METAFIELD = "Metafield"
 
 #: The id types this extension accepts anywhere. Nothing else is addressable.
 SUPPORTED_GID_TYPES: frozenset[str] = frozenset(
@@ -43,13 +48,20 @@ SUPPORTED_GID_TYPES: frozenset[str] = frozenset(
         FULFILLMENT_ORDER,
         FULFILLMENT_ORDER_LINE_ITEM,
         FULFILLMENT,
+        COLLECTION,
+        SAVED_SEARCH,
+        EXTERNAL_VIDEO,
+        GENERIC_FILE,
+        METAFIELD,
     }
 )
 
-#: The three media types `update_product_media_alt` will address. Shopify models
-#: them as separate types, so the check is a membership test rather than one
-#: expected type.
-MEDIA_GID_TYPES: tuple[str, ...] = (MEDIA_IMAGE, VIDEO, MODEL_3D)
+#: The product media types. Shopify models them as separate types, so the
+#: check is a membership test rather than one expected type.
+MEDIA_GID_TYPES: tuple[str, ...] = (MEDIA_IMAGE, VIDEO, MODEL_3D, EXTERNAL_VIDEO)
+
+#: Every file type in Shopify Files, product media and generic files alike.
+FILE_GID_TYPES: tuple[str, ...] = (*MEDIA_GID_TYPES, GENERIC_FILE)
 
 #: The owner types each metafield operation may address, keyed by the owner type
 #: name a caller supplies.
@@ -125,18 +137,24 @@ def is_gid(value: Any, *, expected_type: str) -> bool:
 
 __all__ = [
     "CATALOG_METAFIELD_OWNERS",
+    "COLLECTION",
+    "EXTERNAL_VIDEO",
+    "FILE_GID_TYPES",
     "FULFILLMENT",
     "FULFILLMENT_ORDER",
     "FULFILLMENT_ORDER_LINE_ITEM",
+    "GENERIC_FILE",
     "INVENTORY_ITEM",
     "LOCATION",
     "MAX_GID_LENGTH",
     "MEDIA_GID_TYPES",
     "MEDIA_IMAGE",
+    "METAFIELD",
     "MODEL_3D",
     "ORDER",
     "PRODUCT",
     "PRODUCT_VARIANT",
+    "SAVED_SEARCH",
     "SUPPORTED_GID_TYPES",
     "TAXONOMY_CATEGORY",
     "VIDEO",

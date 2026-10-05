@@ -25,7 +25,14 @@ from .catalog import (
 from .catalog_export import EXPORT_PRODUCTS_OPERATION_ID, export_products
 from .connection import connection_from_payload, normalize_shop_domain
 from .errors import ExtensionError, error_response
-from .product_input import create_product_variables, product_input
+from .media_upload import stage_images
+from .product_input import (
+    create_media_input,
+    create_product_variables,
+    metafield_input,
+    product_update_variables,
+    variant_bulk_input,
+)
 from .transport import ShopifyGraphQLTransport
 
 _MESSAGE_THAT_OPERATION_IS_NOT_PART_OF_THIS_EXTENSION = (
@@ -106,7 +113,14 @@ def handle_runtime(
                     storage_opener=storage_opener,
                 )
             )
-        return _run_shopify_operation(payload, row, raw_input, transport_factory)
+        return _run_shopify_operation(
+            payload,
+            row,
+            raw_input,
+            transport_factory,
+            artifact_reader=artifact_reader,
+            storage_opener=storage_opener,
+        )
     except ExtensionError as exc:
         return error_response(exc.code, exc.message, retry_facts=exc.retry_facts())
     except Exception:
@@ -139,14 +153,33 @@ class _Context:
     operation_input: Mapping[str, Any]
     transport: Any
     document: str
+    payload: Mapping[str, Any]
+    artifact_reader: Any = None
+    storage_opener: Any = None
+
+    def staged_images(self) -> list[dict[str, Any]]:
+        """Upload the call's artifact images to Shopify's staging, if it has any.
+
+        The only requests besides the operation's own document: staging is
+        Shopify's documented first step for a file it does not fetch by URL,
+        and it changes nothing in the store.
+        """
+        return stage_images(
+            self.payload,
+            self.transport,
+            self.operation_input.get("image_files") or [],
+            reader=self.artifact_reader,
+            opener=self.storage_opener,
+        )
 
     def execute(self, variables: Mapping[str, Any], *, mutating: bool = False) -> Mapping[str, Any]:
         """Send this operation's own fixed document, once.
 
-        Exactly one Shopify request per invocation. No preflight lookup, no
+        Exactly one request for the operation itself. No preflight lookup, no
         scope discovery, no retry: a second request would double the cost of
         every workflow step and, for a mutation, make "did it happen?"
-        unanswerable.
+        unanswerable. Image staging, when a call carries artifact images, is
+        the one documented exception and happens before this.
         """
         return self.transport.execute(
             self.document,
@@ -166,7 +199,7 @@ def _is_type(node: Mapping[str, Any], expected: str) -> bool:
 
 def _media_type_of(media_id: str) -> str:
     """The concrete media type of an already-validated media GID."""
-    for name in gids.MEDIA_GID_TYPES:
+    for name in gids.FILE_GID_TYPES:
         if gids.is_gid(media_id, expected_type=name):
             return name
     raise ExtensionError(  # pragma: no cover - validation ran first
@@ -448,6 +481,9 @@ def _run_shopify_operation(
     row: Operation,
     raw_input: Any,
     transport_factory: Any,
+    *,
+    artifact_reader: Any = None,
+    storage_opener: Any = None,
 ) -> dict[str, Any]:
     operation_input = validation.validated_input(row, raw_input)
     idempotency_key = ""
@@ -468,7 +504,13 @@ def _run_shopify_operation(
             errors.UNSUPPORTED_OPERATION, _MESSAGE_THAT_OPERATION_IS_NOT_PART_OF_THIS_EXTENSION
         )
     context = _Context(
-        row=row, operation_input=operation_input, transport=transport, document=document
+        row=row,
+        operation_input=operation_input,
+        transport=transport,
+        document=document,
+        payload=payload,
+        artifact_reader=artifact_reader,
+        storage_opener=storage_opener,
     )
 
     if row.operation_id == TEST_CONNECTION_OPERATION_ID:
@@ -488,7 +530,7 @@ def _run_shopify_operation(
 
 
 def _get_shop(context: _Context) -> dict[str, Any]:
-    return {"shop": _shop(context.execute({}).get("shop"))}
+    return {"shop": shapes.shop(context.execute({}).get("shop"))}
 
 
 def _test_connection_result(data: Mapping[str, Any], shop_domain: str) -> dict[str, Any]:
@@ -574,12 +616,16 @@ def _list_locations(context: _Context) -> dict[str, Any]:
         "first": operation_input["first"],
         "after": operation_input.get("after"),
         "includeInactive": bool(operation_input.get("include_inactive", False)),
+        "includeLegacy": bool(operation_input.get("include_legacy", False)),
+        "query": operation_input.get("filter"),
+        "sortKey": operation_input["sort_key"],
+        "reverse": bool(operation_input.get("reverse", False)),
     }
     data = context.execute(variables)
     connection = data.get("locations")
     connection = connection if isinstance(connection, Mapping) else {}
     return {
-        "locations": [_location(node) for node in _nodes(connection)],
+        "locations": [shapes.location(node) for node in _nodes(connection)],
         "page_info": _page_info(connection.get("pageInfo")),
     }
 
@@ -587,18 +633,24 @@ def _list_locations(context: _Context) -> dict[str, Any]:
 def _list_inventory_items(context: _Context) -> dict[str, Any]:
     operation_input = context.operation_input
     sku = operation_input.get("sku")
+    # The Shopify search string is built here and travels as a variable, so a
+    # SKU can never become part of a document. A caller's own filter is
+    # combined with it, never spliced into it.
+    terms = [term for term in (
+        _sku_query(sku) if isinstance(sku, str) else None,
+        f"({operation_input['filter']})" if "filter" in operation_input else None,
+    ) if term]  # fmt: skip
     variables = {
         "first": operation_input["first"],
         "after": operation_input.get("after"),
-        # The Shopify search string is built here and travels as a variable, so
-        # a SKU can never become part of a document or reach another filter.
-        "query": _sku_query(sku) if isinstance(sku, str) else None,
+        "query": " AND ".join(terms) if terms else None,
+        "reverse": bool(operation_input.get("reverse", False)),
     }
     data = context.execute(variables)
     connection = data.get("inventoryItems")
     connection = connection if isinstance(connection, Mapping) else {}
     return {
-        "inventory_items": [_inventory_item(node) for node in _nodes(connection)],
+        "inventory_items": [shapes.inventory_item(node) for node in _nodes(connection)],
         "page_info": _page_info(connection.get("pageInfo")),
     }
 
@@ -620,7 +672,7 @@ def _get_inventory_item(context: _Context) -> dict[str, Any]:
         expected=operation_input["inventory_item_id"],
         what="inventory item",
     )
-    return {"inventory_item": _inventory_item(node)}
+    return {"inventory_item": shapes.inventory_item(node)}
 
 
 def _inventory_levels_batch(context: _Context) -> dict[str, Any]:
@@ -694,8 +746,8 @@ def _set_inventory_quantities(context: _Context, idempotency_key: str) -> dict[s
     """
     variables = {
         "input": {
-            "name": documents.SET_QUANTITIES_NAME,
-            "reason": documents.SET_QUANTITIES_REASON,
+            "name": operation_input.get("name", documents.SET_QUANTITIES_NAME),
+            "reason": operation_input.get("reason", documents.SET_QUANTITIES_REASON),
             "referenceDocumentUri": (f"{documents.REFERENCE_DOCUMENT_URI_PREFIX}{idempotency_key}"),
             "quantities": [
                 {
@@ -739,7 +791,7 @@ def _set_inventory_quantities(context: _Context, idempotency_key: str) -> dict[s
             "Shopify accepted the request without confirming the adjustment",
         )
     return {
-        "inventory_adjustment_group": _adjustment_group(group),
+        "inventory_adjustment_group": shapes.adjustment_group(group),
         "external_effect_status": "succeeded",
         "definitely_no_external_effect": False,
     }
@@ -748,11 +800,29 @@ def _set_inventory_quantities(context: _Context, idempotency_key: str) -> dict[s
 # -- Catalog sources --------------------------------------------------------
 
 
+#: Optional list arguments and the Shopify variable each one fills.
+_PAGE_VARIABLES: tuple[tuple[str, str], ...] = (
+    ("filter", "query"),
+    ("sort_key", "sortKey"),
+    ("saved_search_id", "savedSearchId"),
+    ("namespace", "namespace"),
+    ("keys", "keys"),
+)
+
+
 def _page(operation_input: Mapping[str, Any]) -> dict[str, Any]:
-    """The forward-only page variables every paginated source sends."""
+    """The forward page variables, plus whichever list arguments the row declares.
+
+    An optional argument the caller left out is not sent at all, which GraphQL
+    reads as ``null``; the non-null ones always arrive with their published
+    default, applied during validation.
+    """
     page = {"first": operation_input["first"], "after": operation_input.get("after")}
-    if "filter" in operation_input:
-        page["query"] = operation_input.get("filter")
+    for name, variable in _PAGE_VARIABLES:
+        if name in operation_input:
+            page[variable] = operation_input[name]
+    if "reverse" in operation_input:
+        page["reverse"] = bool(operation_input["reverse"])
     return page
 
 
@@ -934,7 +1004,10 @@ def _list_order_fulfillment_orders(context: _Context) -> dict[str, Any]:
     order_id, _node, connection = _order_connection(
         context,
         "fulfillmentOrders",
-        {"lineItemsFirst": context.operation_input["line_items_first"]},
+        {
+            "lineItemsFirst": context.operation_input["line_items_first"],
+            "displayable": bool(context.operation_input.get("displayable", False)),
+        },
     )
     return {
         "order_id": order_id,
@@ -976,6 +1049,7 @@ def _list_order_fulfillments(context: _Context) -> dict[str, Any]:
         {
             "id": order_id,
             "first": operation_input["first"],
+            "query": operation_input.get("filter"),
             "trackingFirst": documents.TRACKING_INFO_LIMIT,
         }
     )
@@ -996,85 +1070,64 @@ def _list_order_fulfillments(context: _Context) -> dict[str, Any]:
 
 
 def _create_product(context: _Context) -> dict[str, Any]:
+    """Create the product and every variant in one atomic ``productSet`` call.
+
+    Images held as artifacts are staged first; nothing in the store changes
+    until the single mutation, so a staging failure leaves no product behind.
+    """
     operation_input = context.operation_input
-    data = context.execute(create_product_variables(operation_input), mutating=True)
-    record = _confirmed(data, "productCreate", "product")
+    variables = create_product_variables(operation_input, staged_images=context.staged_images())
+    data = context.execute(variables, mutating=True)
+    record = _confirmed(data, "productSet", "product")
     product_id = _confirmed_id(record, expected_type=gids.PRODUCT)
-    variants = shapes.nodes(record.get("variants"), limit=1)
-    if len(variants) != 1:
+    expected = variables["variantsFirst"]
+    variants = shapes.nodes(record.get("variants"), limit=expected)
+    if len(variants) != expected:
         raise ExtensionError(
             errors.TIMEOUT_UNKNOWN,
-            "Shopify created the product without confirming its initial variant",
+            "Shopify created the product without confirming every variant",
         )
-    initial_variant = variants[0]
-    _confirmed_id(initial_variant, expected_type=gids.PRODUCT_VARIANT)
-    _confirmed_id(
-        shapes.mapping(initial_variant.get("product")),
-        expected_type=gids.PRODUCT,
-        expected=product_id,
-    )
-    _confirmed_id(
-        shapes.mapping(initial_variant.get("inventoryItem")),
-        expected_type=gids.INVENTORY_ITEM,
-    )
+    for variant in variants:
+        _confirmed_id(variant, expected_type=gids.PRODUCT_VARIANT)
+        _confirmed_id(
+            shapes.mapping(variant.get("product")),
+            expected_type=gids.PRODUCT,
+            expected=product_id,
+        )
+        _confirmed_id(
+            shapes.mapping(variant.get("inventoryItem")),
+            expected_type=gids.INVENTORY_ITEM,
+        )
     return {
         "product": shapes.product(record),
-        "product_variants": [shapes.product_variant(initial_variant)],
+        "product_variants": [shapes.product_variant(variant) for variant in variants],
     }
 
 
 def _update_product(context: _Context) -> dict[str, Any]:
+    """Change one product, named by id, handle or unique metafield value.
+
+    When the product was named by id, Shopify must confirm that same id; when
+    by handle, the confirmed product must carry that handle (or the new one the
+    call asked for). Anything else is a different record, reported as unknown.
+    """
     operation_input = context.operation_input
-    product_id = operation_input["product_id"]
-    product = product_input(operation_input)
-    product["id"] = product_id
-    if "replace_tags" in operation_input:
-        product["tags"] = list(operation_input["replace_tags"])
-    if "handle" in operation_input:
-        # Shopify is always asked to keep the old URL working. Silently breaking
-        # a live link is not something a metadata edit should be able to do.
-        product["redirectNewHandle"] = True
-    if "category_id" in operation_input:
-        # Changing a category can offer to delete metafields the new category
-        # constrains. This extension never takes that offer.
-        product["deleteConflictingConstrainedMetafields"] = False
-    data = context.execute({"product": product}, mutating=True)
+    variables = product_update_variables(operation_input, staged_images=context.staged_images())
+    data = context.execute(variables, mutating=True)
     record = _confirmed(data, "productUpdate", "product")
-    _confirmed_id(record, expected_type=gids.PRODUCT, expected=product_id)
-    return {"product": shapes.product(record)}
-
-
-def _variant_input(entry: Mapping[str, Any]) -> dict[str, Any]:
-    built: dict[str, Any] = {}
-    if "variant_id" in entry:
-        built["id"] = entry["variant_id"]
-    if "option_values" in entry:
-        built["optionValues"] = [
-            {"optionName": value["option_name"], "name": value["value"]}
-            for value in entry["option_values"]
-        ]
-    for source, target in (
-        ("price", "price"),
-        ("compare_at_price", "compareAtPrice"),
-        ("barcode", "barcode"),
-        ("inventory_policy", "inventoryPolicy"),
-        ("taxable", "taxable"),
+    _confirmed_id(
+        record,
+        expected_type=gids.PRODUCT,
+        expected=str(operation_input.get("product_id") or ""),
+    )
+    if "product_handle" in operation_input and record.get("handle") not in (
+        operation_input["product_handle"],
+        operation_input.get("handle"),
     ):
-        if source in entry:
-            built[target] = entry[source]
-    item = entry.get("inventory_item")
-    if isinstance(item, Mapping) and item:
-        inventory_item: dict[str, Any] = {}
-        for source, target in (
-            ("sku", "sku"),
-            ("cost", "cost"),
-            ("tracked", "tracked"),
-            ("requires_shipping", "requiresShipping"),
-        ):
-            if source in item:
-                inventory_item[target] = item[source]
-        built["inventoryItem"] = inventory_item
-    return built
+        raise ExtensionError(
+            errors.TIMEOUT_UNKNOWN, "Shopify confirmed a different product than the one requested"
+        )
+    return {"product": shapes.product(record)}
 
 
 def _create_product_variants_batch(context: _Context) -> dict[str, Any]:
@@ -1082,7 +1135,9 @@ def _create_product_variants_batch(context: _Context) -> dict[str, Any]:
     data = context.execute(
         {
             "productId": operation_input["product_id"],
-            "variants": [_variant_input(entry) for entry in operation_input["variants"]],
+            "variants": [variant_bulk_input(entry) for entry in operation_input["variants"]],
+            "media": _create_media(operation_input),
+            "strategy": operation_input["strategy"],
         },
         mutating=True,
     )
@@ -1108,7 +1163,9 @@ def _update_product_variants_batch(context: _Context) -> dict[str, Any]:
     data = context.execute(
         {
             "productId": operation_input["product_id"],
-            "variants": [_variant_input(entry) for entry in operation_input["variants"]],
+            "variants": [variant_bulk_input(entry) for entry in operation_input["variants"]],
+            "media": _create_media(operation_input),
+            "allowPartialUpdates": bool(operation_input["allow_partial_updates"]),
         },
         mutating=True,
     )
@@ -1116,6 +1173,13 @@ def _update_product_variants_batch(context: _Context) -> dict[str, Any]:
     ordered = _confirmed_by_id(records, expected_type=gids.PRODUCT_VARIANT, requested=requested)
     _assert_same_product(ordered, operation_input["product_id"])
     return {"product_variants": [shapes.product_variant(record) for record in ordered]}
+
+
+def _create_media(operation_input: Mapping[str, Any]) -> list[dict[str, Any]] | None:
+    media = operation_input.get("media")
+    if not media:
+        return None
+    return [create_media_input(item) for item in media]
 
 
 def _metafields_variables(entries: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
@@ -1140,15 +1204,23 @@ def _set_metafields(context: _Context) -> dict[str, Any]:
     return {"metafields": _confirmed_metafields(data, entries)}
 
 
-def _update_product_media_alt(context: _Context) -> dict[str, Any]:
+def _update_product_media(context: _Context) -> dict[str, Any]:
     operation_input = context.operation_input
     media_id = operation_input["media_id"]
-    # Exactly two keys. `FileUpdateInput` can also move a file's source, its
-    # filename, its preview and which products it belongs to; none of that is
-    # reachable from here, so none of it can be changed by accident.
-    data = context.execute(
-        {"files": [{"id": media_id, "alt": operation_input["alt"]}]}, mutating=True
-    )
+    built: dict[str, Any] = {"id": media_id}
+    for source, target in (
+        ("alt", "alt"),
+        ("source_url", "originalSource"),
+        ("preview_image_url", "previewImageSource"),
+        ("filename", "filename"),
+    ):
+        if source in operation_input:
+            built[target] = operation_input[source]
+    if "add_to_product_ids" in operation_input:
+        built["referencesToAdd"] = list(operation_input["add_to_product_ids"])
+    if "remove_from_product_ids" in operation_input:
+        built["referencesToRemove"] = list(operation_input["remove_from_product_ids"])
+    data = context.execute({"files": [built]}, mutating=True)
     records = _confirmed_list(data, "fileUpdate", "files")
     ordered = _confirmed_by_id(
         records, expected_type=_media_type_of(media_id), requested=[media_id]
@@ -1159,14 +1231,34 @@ def _update_product_media_alt(context: _Context) -> dict[str, Any]:
 # -- Order mutations --------------------------------------------------------
 
 
+_ORDER_FIELDS: tuple[tuple[str, str], ...] = (
+    ("note", "note"),
+    ("po_number", "poNumber"),
+    ("email", "email"),
+    ("phone", "phone"),
+)
+
+_ADDRESS_FIELDS: tuple[tuple[str, str], ...] = (
+    ("first_name", "firstName"),
+    ("last_name", "lastName"),
+    ("company", "company"),
+    ("address1", "address1"),
+    ("address2", "address2"),
+    ("city", "city"),
+    ("province_code", "provinceCode"),
+    ("zip", "zip"),
+    ("country_code", "countryCode"),
+    ("phone", "phone"),
+)
+
+
 def _update_order_metadata(context: _Context) -> dict[str, Any]:
     operation_input = context.operation_input
     order_id = operation_input["order_id"]
     built: dict[str, Any] = {"id": order_id}
-    if "note" in operation_input:
-        built["note"] = operation_input["note"]
-    if "po_number" in operation_input:
-        built["poNumber"] = operation_input["po_number"]
+    for source, target in _ORDER_FIELDS:
+        if source in operation_input:
+            built[target] = operation_input[source]
     if "replace_tags" in operation_input:
         built["tags"] = list(operation_input["replace_tags"])
     if "replace_custom_attributes" in operation_input:
@@ -1174,10 +1266,22 @@ def _update_order_metadata(context: _Context) -> dict[str, Any]:
             {"key": entry["key"], "value": entry["value"]}
             for entry in operation_input["replace_custom_attributes"]
         ]
+    address = operation_input.get("shipping_address")
+    if isinstance(address, Mapping):
+        built["shippingAddress"] = {
+            target: address[source] for source, target in _ADDRESS_FIELDS if source in address
+        }
+    if "metafields" in operation_input:
+        built["metafields"] = [metafield_input(entry) for entry in operation_input["metafields"]]
+    if "localized_fields" in operation_input:
+        built["localizedFields"] = [
+            {"key": entry["key"], "value": entry["value"]}
+            for entry in operation_input["localized_fields"]
+        ]
     data = context.execute({"input": built}, mutating=True)
     record = _confirmed(data, "orderUpdate", "order")
     _confirmed_id(record, expected_type=gids.ORDER, expected=order_id)
-    return {"order": shapes.order_metadata(record)}
+    return {"order": shapes.order(record)}
 
 
 def _tracking_variables(tracking: Mapping[str, Any]) -> dict[str, Any]:
@@ -1206,13 +1310,31 @@ def _create_fulfillment(context: _Context) -> dict[str, Any]:
             }
             for group in operation_input["fulfillment_orders"]
         ],
-        # No release in this extension emails a customer.
-        "notifyCustomer": False,
+        # Always explicit too: the customer is emailed only when asked for.
+        "notifyCustomer": bool(operation_input.get("notify_customer", documents.NOTIFY_CUSTOMER)),
     }
     if "tracking" in operation_input:
         fulfillment["trackingInfo"] = _tracking_variables(operation_input["tracking"])
+    origin = operation_input.get("origin_address")
+    if isinstance(origin, Mapping):
+        fulfillment["originAddress"] = {
+            target: origin[source]
+            for source, target in (
+                ("address1", "address1"),
+                ("address2", "address2"),
+                ("city", "city"),
+                ("zip", "zip"),
+                ("province_code", "provinceCode"),
+                ("country_code", "countryCode"),
+            )
+            if source in origin
+        }
     data = context.execute(
-        {"fulfillment": fulfillment, "trackingFirst": documents.TRACKING_INFO_LIMIT},
+        {
+            "fulfillment": fulfillment,
+            "message": operation_input.get("message"),
+            "trackingFirst": documents.TRACKING_INFO_LIMIT,
+        },
         mutating=True,
     )
     record = _confirmed(data, "fulfillmentCreate", "fulfillment")
@@ -1227,6 +1349,9 @@ def _update_fulfillment_tracking(context: _Context) -> dict[str, Any]:
         {
             "fulfillmentId": fulfillment_id,
             "trackingInfoInput": _tracking_variables(operation_input["tracking"]),
+            "notifyCustomer": bool(
+                operation_input.get("notify_customer", documents.NOTIFY_CUSTOMER)
+            ),
             "trackingFirst": documents.TRACKING_INFO_LIMIT,
         },
         mutating=True,
@@ -1254,37 +1379,6 @@ def _page_info(value: Any) -> dict[str, Any]:
     }
 
 
-def _shop(value: Any) -> dict[str, Any]:
-    shop = value if isinstance(value, Mapping) else {}
-    return {
-        "id": _text(shop.get("id")),
-        "name": _optional_text(shop.get("name")),
-        "myshopify_domain": _optional_text(shop.get("myshopifyDomain")),
-        "currency_code": _optional_text(shop.get("currencyCode")),
-        "iana_timezone": _optional_text(shop.get("ianaTimezone")),
-    }
-
-
-def _location(node: Mapping[str, Any]) -> dict[str, Any]:
-    return {
-        "id": _text(node.get("id")),
-        "name": _optional_text(node.get("name")),
-        "is_active": _optional_bool(node.get("isActive")),
-        "fulfills_online_orders": _optional_bool(node.get("fulfillsOnlineOrders")),
-        "ships_inventory": _optional_bool(node.get("shipsInventory")),
-    }
-
-
-def _inventory_item(node: Mapping[str, Any]) -> dict[str, Any]:
-    return {
-        "id": _text(node.get("id")),
-        "sku": _optional_text(node.get("sku")),
-        "tracked": _optional_bool(node.get("tracked")),
-        "requires_shipping": _optional_bool(node.get("requiresShipping")),
-        "updated_at": _optional_text(node.get("updatedAt")),
-    }
-
-
 def _inventory_level(value: Any, *, include_inactive: bool) -> dict[str, Any] | None:
     """One level, or ``None`` when the item is not stocked at that location."""
     if not isinstance(value, Mapping):
@@ -1299,8 +1393,12 @@ def _inventory_level(value: Any, *, include_inactive: bool) -> dict[str, Any] | 
         "id": _text(value.get("id")),
         "location_id": _optional_text(location.get("id")),
         "is_active": is_active,
-        "available": quantities.get(documents.AVAILABLE_QUANTITY_NAME),
-        "on_hand": quantities.get(documents.ON_HAND_QUANTITY_NAME),
+        "level_is_active": _optional_bool(value.get("isActive")),
+        "can_deactivate": _optional_bool(value.get("canDeactivate")),
+        "deactivation_alert": _optional_text(value.get("deactivationAlert")),
+        "created_at": _optional_text(value.get("createdAt")),
+        "updated_at": _optional_text(value.get("updatedAt")),
+        **{name: quantities.get(name) for name in documents.READ_QUANTITY_NAMES},
     }
 
 
@@ -1315,43 +1413,6 @@ def _quantities_by_name(value: Any) -> dict[str, int | None]:
         if isinstance(name, str) and name:
             mapped[name] = _optional_int(entry.get("quantity"))
     return mapped
-
-
-def _adjustment_group(group: Mapping[str, Any]) -> dict[str, Any]:
-    """Report the whole adjustment Shopify confirmed, with nothing dropped.
-
-    ``changes`` is deliberately not capped. One requested quantity can produce
-    several ``InventoryChange`` entries, so a batch of 250 can legitimately be
-    confirmed by more than 250 changes — and silently keeping the first 250
-    would hand back a truncated receipt for a write that already happened,
-    which is the one thing a caller reconciling stock cannot afford. The
-    response is already bounded by the transport's own size limit.
-    """
-    changes = group.get("changes")
-    changes = changes if isinstance(changes, list) else []
-    return {
-        "id": _optional_text(group.get("id")),
-        "created_at": _optional_text(group.get("createdAt")),
-        "reason": _optional_text(group.get("reason")),
-        "reference_document_uri": _optional_text(group.get("referenceDocumentUri")),
-        "changes": [
-            _adjustment_change(change) for change in changes if isinstance(change, Mapping)
-        ],
-    }
-
-
-def _adjustment_change(change: Mapping[str, Any]) -> dict[str, Any]:
-    item = change.get("item")
-    location = change.get("location")
-    return {
-        "inventory_item_id": _optional_text(item.get("id") if isinstance(item, Mapping) else None),
-        "location_id": _optional_text(
-            location.get("id") if isinstance(location, Mapping) else None
-        ),
-        "name": _optional_text(change.get("name")),
-        "delta": _optional_int(change.get("delta")),
-        "quantity_after_change": _optional_int(change.get("quantityAfterChange")),
-    }
 
 
 def _is_inventory_item(node: Mapping[str, Any]) -> bool:
@@ -1408,7 +1469,7 @@ _HANDLERS: dict[str, Callable[[_Context], dict[str, Any]]] = {
     "create_product_variants_batch": _create_product_variants_batch,
     "update_product_variants_batch": _update_product_variants_batch,
     "set_catalog_metafields": _set_metafields,
-    "update_product_media_alt": _update_product_media_alt,
+    "update_product_media": _update_product_media,
     "list_orders": _list_orders,
     "get_order": _get_order,
     "list_order_line_items": _list_order_line_items,

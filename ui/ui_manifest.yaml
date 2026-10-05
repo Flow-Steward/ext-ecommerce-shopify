@@ -3,4 +3,5 @@ pages:
   - ref: pages/setup-guide.yaml
   - ref: pages/connection.yaml
   - ref: pages/inventory-api.yaml
+  - ref: pages/api-coverage.yaml
   - ref: pages/changelog.yaml

@@ -66,7 +66,7 @@ actions:
   - shop_domain_mismatch
 - action_id: get_shop
   title: Get the store
-  description: Returns a fixed, bounded set of store identity and locale fields.
+  description: 'Returns the store''s settings: identity, currency, timezone, units, tax and order-number settings.'
   required_scopes:
   - extension:invoke
   handler:
@@ -120,6 +120,18 @@ actions:
   - name: include_inactive
     type: boolean
     required: false
+  - name: include_legacy
+    type: boolean
+    required: false
+  - name: filter
+    type: string
+    required: false
+  - name: sort_key
+    type: string
+    required: false
+  - name: reverse
+    type: boolean
+    required: false
   result_fields:
   - locations
   - page_info
@@ -144,7 +156,7 @@ actions:
   - internal_error
 - action_id: list_inventory_items
   title: List inventory items
-  description: Returns one cursor-paginated page of inventory items, optionally narrowed to one SKU. Pass end_cursor back as after to read the next page.
+  description: Returns one cursor-paginated page of inventory items, optionally narrowed to one SKU or a search. Pass end_cursor back as after to read the next page.
   required_scopes:
   - extension:invoke
   handler:
@@ -163,6 +175,12 @@ actions:
     required: false
   - name: sku
     type: string
+    required: false
+  - name: filter
+    type: string
+    required: false
+  - name: reverse
+    type: boolean
     required: false
   result_fields:
   - inventory_items
@@ -225,7 +243,7 @@ actions:
   - internal_error
 - action_id: get_inventory_levels_batch
   title: Get stock for many items at one location
-  description: Returns the available and on-hand quantities for up to 250 inventory items at one location, in the order they were asked for.
+  description: Returns every quantity state — available, on hand, committed, incoming, reserved, damaged, safety stock and quality control — for up to 250 inventory items at one location, in the order they were asked for.
   required_scopes:
   - extension:invoke
   handler:
@@ -269,7 +287,7 @@ actions:
   - internal_error
 - action_id: set_inventory_quantities
   title: Set stock quantities
-  description: Sets absolute available quantities for 1 to 250 inventory items and waits for Shopify's answer. This changes what the store has in stock; a quantity of 0 makes the item out of stock at that location.
+  description: Sets absolute available (or on-hand) quantities for 1 to 250 inventory items and waits for Shopify's answer. This changes what the store has in stock; a quantity of 0 makes the item out of stock at that location.
   required_scopes:
   - extension:invoke
   handler:
@@ -284,6 +302,12 @@ actions:
   - name: quantities
     type: array
     required: true
+  - name: name
+    type: string
+    required: false
+  - name: reason
+    type: string
+    required: false
   result_fields:
   - inventory_adjustment_group
   - external_effect_status
@@ -331,6 +355,15 @@ actions:
   - name: filter
     type: string
     required: false
+  - name: sort_key
+    type: string
+    required: false
+  - name: reverse
+    type: boolean
+    required: false
+  - name: saved_search_id
+    type: string
+    required: false
   result_fields:
   - products
   - page_info
@@ -355,7 +388,7 @@ actions:
   - internal_error
 - action_id: export_products
   title: Export all matching products
-  description: Follows every Shopify product cursor and streams the complete matching catalog to a JSONL artifact. Use filter to export a filtered subset.
+  description: Follows every Shopify product cursor and streams the complete matching catalog to a JSONL artifact. Use filter to export a subset, or quality_filter to export only products with missing or small images, short descriptions or empty fields.
   required_scopes:
   - extension:invoke
   - artifact:write
@@ -382,11 +415,24 @@ actions:
   - name: filter
     type: string
     required: false
+  - name: sort_key
+    type: string
+    required: false
+  - name: reverse
+    type: boolean
+    required: false
+  - name: saved_search_id
+    type: string
+    required: false
+  - name: quality_filter
+    type: object
+    required: false
   result_fields:
   - artifact_handle
   - filename
   - content_type
   - item_count
+  - scanned_count
   - page_count
   - size_bytes
   - sha256
@@ -450,7 +496,7 @@ actions:
   - internal_error
 - action_id: list_product_variants
   title: List product variants
-  description: Returns one cursor-paginated page of product variants across the store. Pass end_cursor back as after to read the next page.
+  description: Returns one cursor-paginated page of product variants across the store, optionally narrowed by a search such as product_id:123 or sku:ABC. Pass end_cursor back as after to read the next page.
   required_scopes:
   - extension:invoke
   handler:
@@ -465,6 +511,18 @@ actions:
     type: integer
     required: false
   - name: after
+    type: string
+    required: false
+  - name: filter
+    type: string
+    required: false
+  - name: sort_key
+    type: string
+    required: false
+  - name: reverse
+    type: boolean
+    required: false
+  - name: saved_search_id
     type: string
     required: false
   result_fields:
@@ -528,7 +586,7 @@ actions:
   - internal_error
 - action_id: list_catalog_metafields
   title: List catalog metafields
-  description: Returns one cursor-paginated page of metafields for one product or one product variant. The owner type must match the id.
+  description: Returns one cursor-paginated page of metafields for one product or one product variant, optionally narrowed to a namespace or named keys. The owner type must match the id.
   required_scopes:
   - extension:invoke
   handler:
@@ -550,6 +608,15 @@ actions:
     required: false
   - name: after
     type: string
+    required: false
+  - name: namespace
+    type: string
+    required: false
+  - name: keys
+    type: array
+    required: false
+  - name: reverse
+    type: boolean
     required: false
   result_fields:
   - owner_id
@@ -577,7 +644,7 @@ actions:
   - internal_error
 - action_id: list_product_media
   title: List product media
-  description: Returns one cursor-paginated page of the media attached to one product. Reads media and processing status, including images supplied during product creation.
+  description: 'Returns one cursor-paginated page of the media attached to one product: images with their URL, width and height, videos and 3D models, with processing status and any processing errors.'
   required_scopes:
   - extension:invoke
   handler:
@@ -596,6 +663,15 @@ actions:
     required: false
   - name: after
     type: string
+    required: false
+  - name: filter
+    type: string
+    required: false
+  - name: sort_key
+    type: string
+    required: false
+  - name: reverse
+    type: boolean
     required: false
   result_fields:
   - product_id
@@ -622,7 +698,7 @@ actions:
   - internal_error
 - action_id: create_product
   title: Create a product
-  description: Creates one product as a draft. Shopify creates only the initial variant, using the first value of each supplied option. product_variants contains that one variant and its inventory item so a workflow can immediately set SKU, price and stock; add the rest with the variant batch operations. Optional images are downloaded from public HTTPS URLs and processed asynchronously. No metafields, collections or publications are created.
+  description: 'Creates one product with its variants in a single atomic Shopify call: SKU, price, barcode, weight, starting stock, images and metafields included. The product is a DRAFT unless status says otherwise. Images come from public URLs, existing Shopify files or Flow Steward artifacts and are processed asynchronously. product_variants returns every created variant with its inventory item.'
   required_scopes:
   - extension:invoke
   handler:
@@ -649,9 +725,6 @@ actions:
   - name: product_type
     type: string
     required: false
-  - name: tags
-    type: array
-    required: false
   - name: category_id
     type: string
     required: false
@@ -661,10 +734,46 @@ actions:
   - name: seo_description
     type: string
     required: false
+  - name: template_suffix
+    type: string
+    required: false
+  - name: gift_card_template_suffix
+    type: string
+    required: false
+  - name: requires_selling_plan
+    type: boolean
+    required: false
+  - name: tags
+    type: array
+    required: false
+  - name: status
+    type: string
+    required: false
+  - name: gift_card
+    type: boolean
+    required: false
+  - name: collection_ids
+    type: array
+    required: false
+  - name: combined_listing_role
+    type: string
+    required: false
+  - name: claim_ownership
+    type: object
+    required: false
+  - name: metafields
+    type: array
+    required: false
   - name: options
     type: array
     required: false
-  - name: images
+  - name: variants
+    type: array
+    required: false
+  - name: media
+    type: array
+    required: false
+  - name: image_files
     type: array
     required: false
   result_fields:
@@ -695,7 +804,7 @@ actions:
   - timeout_unknown
 - action_id: create_products_bulk
   title: Create products in bulk
-  description: Uploads a batch of new draft products for asynchronous creation. Supply either products or a JSONL artifact containing create_product fields. Submission success is not per-row success; Shopify continues processing after this action returns. Creates only the initial variant.
+  description: 'Uploads a batch of new products for asynchronous creation. Each row takes the same fields as create_product, variants included, except image_files: use media URLs. Supply either products or a JSONL artifact. Submission success is not per-row success; Shopify continues processing after this action returns.'
   required_scopes:
   - extension:invoke
   - artifact:read
@@ -742,7 +851,7 @@ actions:
   - timeout_unknown
 - action_id: update_product
   title: Update a product
-  description: Changes one product. Only the fields you supply are sent; everything else is left as it is. replace_tags overwrites the whole tag list. Status, publications, collections, media and metafields are out of reach here.
+  description: Changes one product, found by id, handle or a unique metafield. Only the fields you supply are sent; everything else is left as it is. replace_tags overwrites the whole tag list. New images can be attached from URLs or Flow Steward artifacts.
   required_scopes:
   - extension:invoke
   handler:
@@ -756,9 +865,21 @@ actions:
     required: true
   - name: product_id
     type: string
-    required: true
+    required: false
+  - name: product_handle
+    type: string
+    required: false
+  - name: product_custom_id
+    type: object
+    required: false
   - name: title
     type: string
+    required: false
+  - name: handle
+    type: string
+    required: false
+  - name: redirect_new_handle
+    type: boolean
     required: false
   - name: description_html
     type: string
@@ -769,12 +890,6 @@ actions:
   - name: product_type
     type: string
     required: false
-  - name: handle
-    type: string
-    required: false
-  - name: replace_tags
-    type: array
-    required: false
   - name: category_id
     type: string
     required: false
@@ -783,6 +898,39 @@ actions:
     required: false
   - name: seo_description
     type: string
+    required: false
+  - name: template_suffix
+    type: string
+    required: false
+  - name: gift_card_template_suffix
+    type: string
+    required: false
+  - name: requires_selling_plan
+    type: boolean
+    required: false
+  - name: replace_tags
+    type: array
+    required: false
+  - name: status
+    type: string
+    required: false
+  - name: join_collection_ids
+    type: array
+    required: false
+  - name: leave_collection_ids
+    type: array
+    required: false
+  - name: delete_conflicting_constrained_metafields
+    type: boolean
+    required: false
+  - name: metafields
+    type: array
+    required: false
+  - name: media
+    type: array
+    required: false
+  - name: image_files
+    type: array
     required: false
   result_fields:
   - product
@@ -811,7 +959,7 @@ actions:
   - timeout_unknown
 - action_id: create_product_variants_batch
   title: Create product variants
-  description: 'Creates 1 to 250 variants on one product in a single call. The product''s options must already exist. The product''s standalone variant is preserved. Stock quantities are not part of this: set them with the inventory operations.'
+  description: Creates 1 to 250 variants on one product in a single call. The product's options must already exist. By default the product's standalone variant is preserved.
   required_scopes:
   - extension:invoke
   handler:
@@ -829,6 +977,12 @@ actions:
   - name: variants
     type: array
     required: true
+  - name: media
+    type: array
+    required: false
+  - name: strategy
+    type: string
+    required: false
   result_fields:
   - product_variants
   - external_effect_status
@@ -856,7 +1010,7 @@ actions:
   - timeout_unknown
 - action_id: update_product_variants_batch
   title: Update product variants
-  description: Changes 1 to 250 existing variants on one product in a single call. Shopify is asked to apply all of them or none. Each entry must name a variant and carry at least one actual change.
+  description: Changes 1 to 250 existing variants on one product in a single call. By default Shopify applies all of them or none. Each entry must name a variant and carry at least one actual change.
   required_scopes:
   - extension:invoke
   handler:
@@ -874,6 +1028,12 @@ actions:
   - name: variants
     type: array
     required: true
+  - name: media
+    type: array
+    required: false
+  - name: allow_partial_updates
+    type: boolean
+    required: false
   result_fields:
   - product_variants
   - external_effect_status
@@ -941,9 +1101,9 @@ actions:
   - internal_error
   - missing_idempotency_key
   - timeout_unknown
-- action_id: update_product_media_alt
-  title: Update media alt text
-  description: 'Changes the alt text of one existing media file. Nothing else about the file is touched: not its source, filename, preview, or which products it belongs to.'
+- action_id: update_product_media
+  title: Update a media file
+  description: 'Changes one existing file in Shopify Files: its alt text, its source (replacing the file), its preview image, its filename, and which products it is attached to.'
   required_scopes:
   - extension:invoke
   handler:
@@ -960,7 +1120,22 @@ actions:
     required: true
   - name: alt
     type: string
-    required: true
+    required: false
+  - name: source_url
+    type: string
+    required: false
+  - name: preview_image_url
+    type: string
+    required: false
+  - name: filename
+    type: string
+    required: false
+  - name: add_to_product_ids
+    type: array
+    required: false
+  - name: remove_from_product_ids
+    type: array
+    required: false
   result_fields:
   - file
   - external_effect_status
@@ -988,7 +1163,7 @@ actions:
   - timeout_unknown
 - action_id: list_orders
   title: List orders
-  description: Returns one cursor-paginated page of orders. Customer, address, payment and contact details are never requested.
+  description: Returns one cursor-paginated page of orders, optionally filtered and sorted. Customer names, emails, phone numbers and addresses are never requested.
   required_scopes:
   - extension:invoke
   handler:
@@ -1003,6 +1178,18 @@ actions:
     type: integer
     required: false
   - name: after
+    type: string
+    required: false
+  - name: filter
+    type: string
+    required: false
+  - name: sort_key
+    type: string
+    required: false
+  - name: reverse
+    type: boolean
+    required: false
+  - name: saved_search_id
     type: string
     required: false
   result_fields:
@@ -1029,7 +1216,7 @@ actions:
   - internal_error
 - action_id: get_order
   title: Get an order
-  description: Returns one order, found by its Shopify order id. Customer, address, payment and contact details are never requested.
+  description: Returns one order, found by its Shopify order id. Customer names, emails, phone numbers and addresses are never requested.
   required_scopes:
   - extension:invoke
   handler:
@@ -1086,6 +1273,9 @@ actions:
   - name: after
     type: string
     required: false
+  - name: reverse
+    type: boolean
+    required: false
   result_fields:
   - order_id
   - line_items
@@ -1111,7 +1301,7 @@ actions:
   - internal_error
 - action_id: list_order_metafields
   title: List order metafields
-  description: Returns one cursor-paginated page of the metafields on one order.
+  description: Returns one cursor-paginated page of the metafields on one order, optionally narrowed to a namespace or named keys.
   required_scopes:
   - extension:invoke
   handler:
@@ -1130,6 +1320,15 @@ actions:
     required: false
   - name: after
     type: string
+    required: false
+  - name: namespace
+    type: string
+    required: false
+  - name: keys
+    type: array
+    required: false
+  - name: reverse
+    type: boolean
     required: false
   result_fields:
   - order_id
@@ -1156,7 +1355,7 @@ actions:
   - internal_error
 - action_id: list_order_fulfillment_orders
   title: List fulfillment orders
-  description: Returns one cursor-paginated page of the fulfillment orders on one order, each with an explicitly sized page of its own line items.
+  description: Returns one cursor-paginated page of the fulfillment orders on one order, each with an explicitly sized page of its own line items. first multiplied by line_items_first is bounded so the request stays within Shopify's cost limit.
   required_scopes:
   - extension:invoke
   handler:
@@ -1178,6 +1377,15 @@ actions:
     required: false
   - name: line_items_first
     type: integer
+    required: false
+  - name: reverse
+    type: boolean
+    required: false
+  - name: displayable
+    type: boolean
+    required: false
+  - name: filter
+    type: string
     required: false
   result_fields:
   - order_id
@@ -1247,7 +1455,7 @@ actions:
   - internal_error
 - action_id: list_order_fulfillments
   title: List order fulfillments
-  description: Returns up to 250 of an order's fulfillments plus the store's own total, so a caller can tell a complete answer from a partial one.
+  description: Returns up to 50 of an order's fulfillments plus the store's own total, so a caller can tell a complete answer from a partial one.
   required_scopes:
   - extension:invoke
   handler:
@@ -1263,6 +1471,9 @@ actions:
     required: true
   - name: first
     type: integer
+    required: false
+  - name: filter
+    type: string
     required: false
   result_fields:
   - order_id
@@ -1289,8 +1500,8 @@ actions:
   - blocked_address
   - internal_error
 - action_id: update_order_metadata
-  title: Update order metadata
-  description: Changes an order's note, PO number, tags or custom attributes. The two replace_ fields overwrite their whole list. Customers, addresses, payments, line items, refunds and order edits are out of reach here.
+  title: Update an order
+  description: 'Changes what Shopify lets an app edit on an existing order: note, PO number, tags, custom attributes, metafields, contact email and phone, shipping address and localized fields. The replace_ fields overwrite their whole list. Line items, payments, refunds and order edits are out of reach here.'
   required_scopes:
   - extension:invoke
   handler:
@@ -1315,6 +1526,21 @@ actions:
     type: array
     required: false
   - name: replace_custom_attributes
+    type: array
+    required: false
+  - name: email
+    type: string
+    required: false
+  - name: phone
+    type: string
+    required: false
+  - name: shipping_address
+    type: object
+    required: false
+  - name: metafields
+    type: array
+    required: false
+  - name: localized_fields
     type: array
     required: false
   result_fields:
@@ -1386,7 +1612,7 @@ actions:
   - timeout_unknown
 - action_id: create_fulfillment
   title: Create a fulfillment
-  description: 'Fulfills named line items on named fulfillment orders. Every line item and quantity must be stated: Shopify would otherwise fulfil everything remaining, and that is not a decision an omitted field should make. The customer is not notified.'
+  description: 'Fulfills named line items on named fulfillment orders. Every line item and quantity must be stated: Shopify would otherwise fulfil everything remaining, and that is not a decision an omitted field should make. The customer is notified only when notify_customer is true.'
   required_scopes:
   - extension:invoke
   handler:
@@ -1403,6 +1629,15 @@ actions:
     required: true
   - name: tracking
     type: object
+    required: false
+  - name: notify_customer
+    type: boolean
+    required: false
+  - name: origin_address
+    type: object
+    required: false
+  - name: message
+    type: string
     required: false
   result_fields:
   - fulfillment
@@ -1431,7 +1666,7 @@ actions:
   - timeout_unknown
 - action_id: update_fulfillment_tracking
   title: Update fulfillment tracking
-  description: 'Replaces the tracking information on one existing fulfillment. At least one tracking value is required: this operation cannot be used to clear tracking. The customer is not notified.'
+  description: 'Replaces the tracking information on one existing fulfillment. At least one tracking value is required: this operation cannot be used to clear tracking. The customer is notified only when notify_customer is true.'
   required_scopes:
   - extension:invoke
   handler:
@@ -1449,6 +1684,9 @@ actions:
   - name: tracking
     type: object
     required: true
+  - name: notify_customer
+    type: boolean
+    required: false
   result_fields:
   - fulfillment
   - external_effect_status

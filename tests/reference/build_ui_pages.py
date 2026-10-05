@@ -1,10 +1,13 @@
 """Render the extension-owned UI pages that must track the runtime registry.
 
-Two pages are generated rather than written by hand, because both restate facts
-that live somewhere else and would otherwise drift:
+Three pages are generated rather than written by hand, because each restates
+facts that live somewhere else and would otherwise drift:
 
 * ``ui/pages/inventory-api.yaml`` lists every operation, its inputs and its
   results, straight from ``runtime/catalog.py``.
+* ``ui/pages/api-coverage.yaml`` states, per operation, how much of Shopify's
+  official API it covers and what is deliberately not reachable and why, from
+  the pinned schema slice and ``runtime/coverage.py``.
 * ``ui/pages/changelog.yaml`` renders ``CHANGELOG.md``.
 
 ``tests/test_user_documentation.py`` fails if either shipped page differs from
@@ -19,13 +22,21 @@ from pathlib import Path
 BUNDLE_ROOT = Path(__file__).resolve().parents[2]
 if str(BUNDLE_ROOT) not in sys.path:
     sys.path.insert(0, str(BUNDLE_ROOT))
+REFERENCE_ROOT = Path(__file__).resolve().parent
+if str(REFERENCE_ROOT) not in sys.path:
+    sys.path.insert(0, str(REFERENCE_ROOT))
 
+import admin_schema  # noqa: E402
+from graphql_selection import named_type, parse  # noqa: E402
+
+from runtime import coverage  # noqa: E402
 from runtime.catalog import OPERATIONS  # noqa: E402
 from runtime.documents import API_VERSION  # noqa: E402
 
 CHANGELOG = BUNDLE_ROOT / "CHANGELOG.md"
 CHANGELOG_PAGE = BUNDLE_ROOT / "ui" / "pages" / "changelog.yaml"
 INVENTORY_PAGE = BUNDLE_ROOT / "ui" / "pages" / "inventory-api.yaml"
+COVERAGE_PAGE = BUNDLE_ROOT / "ui" / "pages" / "api-coverage.yaml"
 
 INDENT = "      "
 
@@ -67,6 +78,8 @@ def _operation_lines() -> list[str]:
         lines.append(f"- Kind: {row.kind}")
         lines.append(f"- Contacts Shopify: {'yes' if row.contacts_shopify else 'no'}")
         lines.append(f"- Available in workflows: {'yes' if row.workflow_visible else 'no'}")
+        if row.document:
+            lines.append(f"- Shopify: `{parse(row.document).selections[0].name}`")
         required = set(row.required_input_field_names)
         inputs = [
             f"`{name}`{'' if name in required else ' (optional)'}" for name in row.input_field_names
@@ -106,6 +119,144 @@ def inventory_page() -> str:
     )
 
 
+#: The record table each operation returns, for the coverage page.
+_RESULT_RECORDS: dict[str, tuple[str, ...]] = {
+    "get_shop": ("Shop",),
+    "list_locations": ("Location",),
+    "list_inventory_items": ("InventoryItem",),
+    "get_inventory_item": ("InventoryItem",),
+    "set_inventory_quantities": ("InventoryAdjustmentGroup",),
+    "list_products": ("Product",),
+    "export_products": ("Product", "ProductVariant"),
+    "get_product": ("Product",),
+    "create_product": ("Product", "ProductVariant"),
+    "update_product": ("Product",),
+    "list_product_variants": ("ProductVariant",),
+    "get_product_variant": ("ProductVariant",),
+    "create_product_variants_batch": ("ProductVariant",),
+    "update_product_variants_batch": ("ProductVariant",),
+    "list_catalog_metafields": ("Metafield",),
+    "set_catalog_metafields": ("Metafield",),
+    "list_product_media": ("Media",),
+    "update_product_media": ("File",),
+    "list_orders": ("Order",),
+    "get_order": ("Order",),
+    "update_order_metadata": ("Order",),
+    "list_order_line_items": ("LineItem",),
+    "list_order_metafields": ("Metafield",),
+    "set_order_metafields": ("Metafield",),
+    "list_order_fulfillment_orders": ("FulfillmentOrder",),
+    "get_fulfillment_order": ("FulfillmentOrder",),
+    "list_order_fulfillments": ("Fulfillment",),
+    "create_fulfillment": ("Fulfillment",),
+    "update_fulfillment_tracking": ("Fulfillment",),
+}
+
+
+def _eligible(snapshot: dict, type_name: str) -> list[str]:
+    found = []
+    for name, declared in snapshot["objects"][type_name].items():
+        if declared["deprecated"] or any(a.endswith("!") for a in declared["args"].values()):
+            continue
+        target = named_type(declared["type"])
+        if snapshot["kinds"].get(target) in ("SCALAR", "ENUM") or target in ("MoneyBag", "MoneyV2"):
+            found.append(name)
+    return found
+
+
+def _coverage_lines() -> list[str]:
+    snapshot = admin_schema.load()
+    lines = [
+        f"Every operation is checked, field by field, against Shopify's official Admin GraphQL "
+        f"`{API_VERSION}` schema by the extension's own tests. The rule is complete coverage of "
+        "each endpoint used:",
+        "",
+        "- **Writes:** every field of every Shopify input object the mutation accepts can be set.",
+        "- **Lists:** every filter, sort and order argument Shopify offers can be used.",
+        "- **Records:** every scalar and money field of the Shopify type is returned.",
+        "",
+        "Anything outside that rule is listed below with its reason. Pages are always read "
+        "forwards (`first` and `after`; Shopify's `last` and `before` are not offered). "
+        + coverage.MONEY_NOTE
+        + " Related records — a customer, an address, a transaction — are not part of a record; "
+        "where Flow Steward offers a dedicated operation for one, use that.",
+        "",
+    ]
+    for row in OPERATIONS:
+        if not row.document:
+            continue
+        operation = parse(row.document)
+        lines.append(f"### {row.display_name} (`{row.operation_id}`)")
+        lines.append("")
+        if row.operation_id == "create_products_bulk":
+            from runtime.bulk_documents import CREATE_ROW
+
+            operation = parse(CREATE_ROW)
+            lines.append("Shopify: `bulkOperationRunMutation`, running `productSet` for each row.")
+        else:
+            lines.append(f"Shopify: `{operation.selections[0].name}`.")
+        root_field = operation.selections[0].name
+        root_type = snapshot["roots"][operation.kind]
+        if operation.kind == "mutation":
+            paths = []
+            for argument, type_ref in snapshot["objects"][root_type][root_field]["args"].items():
+                paths.append(argument)
+                target = named_type(type_ref)
+                if snapshot["kinds"].get(target) == "INPUT_OBJECT":
+                    paths += [f"{argument}.{p}" for p in admin_schema.input_paths(snapshot, target)]
+            excluded = coverage.INPUT_EXCLUSIONS.get(row.operation_id, {})
+            available = [
+                path
+                for path in paths
+                if not any(path == item or path.startswith(f"{item}.") for item in excluded)
+            ]
+            lines.append(
+                f"Inputs: {len(available)} of {len(paths)} official input fields can be set"
+                + (", not offered:" if excluded else " — all of them.")
+            )
+            for path, reason in excluded.items():
+                lines.append(f"- `{path}` — {reason}")
+        for table in _RESULT_RECORDS.get(row.operation_id, ()):
+            eligible = _eligible(snapshot, table)
+            excluded_fields = coverage.FIELD_EXCLUSIONS.get(table, {})
+            lines.append(
+                f"Result `{table}`: {len(eligible) - len(excluded_fields)} of {len(eligible)} "
+                "scalar and money fields" + (", without:" if excluded_fields else " — all of them.")
+            )
+            for name, reason in excluded_fields.items():
+                lines.append(f"- `{name}` — {reason}")
+        lines.append("")
+    lines.append("### Arguments set by the extension itself")
+    lines.append("")
+    for field, arguments in coverage.ARGUMENT_EXCLUSIONS.items():
+        for argument, reason in arguments.items():
+            lines.append(f"- `{field}({argument})` — {reason}")
+    return lines
+
+
+def coverage_page() -> str:
+    return (
+        "\n".join(
+            [
+                "# Generated by tests/reference/build_ui_pages.py from runtime/coverage.py and",
+                "# the pinned official schema slice. Do not edit by hand.",
+                "page_id: api-coverage",
+                "title: Shopify API coverage",
+                "description: What of Shopify's official API each operation covers, and what it "
+                "deliberately does not.",
+                "project_scoped: false",
+                "components:",
+                "  - component_id: api_coverage",
+                "    type: markdown",
+                "    title: Coverage of the official Admin API",
+                "    body: |",
+                _block(_coverage_lines()),
+            ]
+        )
+        + "\n"
+    )
+
+
 def changelog_page() -> str:
     """The Changelog page renders CHANGELOG.md, so the two cannot disagree."""
     body = CHANGELOG.read_text(encoding="utf-8").strip()
@@ -135,6 +286,7 @@ def changelog_page() -> str:
 
 GENERATED_PAGES: dict[Path, object] = {
     INVENTORY_PAGE: inventory_page,
+    COVERAGE_PAGE: coverage_page,
     CHANGELOG_PAGE: changelog_page,
 }
 
@@ -153,8 +305,10 @@ if __name__ == "__main__":
 
 __all__ = [
     "CHANGELOG_PAGE",
+    "COVERAGE_PAGE",
     "GENERATED_PAGES",
     "INVENTORY_PAGE",
     "changelog_page",
+    "coverage_page",
     "inventory_page",
 ]

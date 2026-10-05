@@ -7,7 +7,12 @@ query FlowStewardExportImages($ids: [ID!]!, $after: String) {
     ... on Product {
       media(first: 50, after: $after, query: "media_type:IMAGE", sortKey: POSITION) {
         pageInfo { hasNextPage endCursor }
-        nodes { id alt ... on MediaImage { image { url } } }
+        nodes {
+          id
+          alt
+          status
+          ... on MediaImage { image { url width height } }
+        }
       }
     }
   }
@@ -15,16 +20,36 @@ query FlowStewardExportImages($ids: [ID!]!, $after: String) {
 """
 
 VARIANTS = """\
-query FlowStewardExportVariants($ids: [ID!]!, $after: String, $inventory: Boolean!) {
+query FlowStewardExportVariants($ids: [ID!]!, $after: String) {
   nodes(ids: $ids) {
     id
     ... on Product {
-      variants(first: 50, after: $after) {
+      variants(first: 20, after: $after) {
         pageInfo { hasNextPage endCursor }
         nodes {
-          id title sku price compareAtPrice
+          id
+          product { id }
+          title
+          displayName
+          sku
+          barcode
+          position
+          price
+          compareAtPrice
+          unitPrice { amount currencyCode }
+          showUnitPrice
+          unitPriceMeasurement { measuredType quantityUnit quantityValue referenceUnit referenceValue }
+          inventoryPolicy
+          inventoryQuantity
+          sellableOnlineQuantity
+          availableForSale
+          taxable
+          requiresComponents
+          legacyResourceId
+          createdAt
+          updatedAt
           selectedOptions { name value }
-          inventoryItem @include(if: $inventory) { id tracked }
+          inventoryItem { id sku tracked requiresShipping updatedAt countryCodeOfOrigin createdAt duplicateSkuCount harmonizedSystemCode inventoryHistoryUrl legacyResourceId provinceCodeOfOrigin unitCost { amount currencyCode } measurement { id weight { unit value } } }
         }
       }
     }
