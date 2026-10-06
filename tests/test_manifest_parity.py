@@ -142,7 +142,7 @@ class TestTheManifestAndTheRegistryAgree:
 
     def test_the_manifest_identity_is_the_declared_one(self) -> None:
         assert MANIFEST["extension_id"] == "flowsteward.shopify"
-        assert MANIFEST["version"] == "0.4.0"
+        assert MANIFEST["version"] == "0.4.1"
         assert MANIFEST["manifest_version"] == 2
         assert MANIFEST["kind"] == "tool_provider"
         assert MANIFEST["features"] == ["tool", "action"]

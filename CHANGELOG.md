@@ -16,6 +16,15 @@ integrator can read it:
   Query: `inventoryItem.inventoryLevels`.
 ```
 
+## 0.4.1
+
+### Added
+
+- **A long catalog export shows how far it has got.** While `export_products` runs, Job Details
+  shows how many products have been exported so far (and, with a quality filter, how many were
+  checked), updated after every page Shopify returns. Needs Flow Steward with extension SDK 0.3.0
+  or later; on an older Flow Steward the export runs as before, without the progress line.
+
 ## 0.4.0
 
 Every endpoint this extension uses now covers Shopify's official Admin GraphQL `2026-07` schema

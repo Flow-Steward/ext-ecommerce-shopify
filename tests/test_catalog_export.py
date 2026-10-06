@@ -88,6 +88,44 @@ def test_export_follows_every_cursor_and_streams_jsonl(http: FakeHttp) -> None:
     assert result["artifacts"]["shopify-products.jsonl"]["sha256"] == "a" * 64
 
 
+def test_export_reports_progress_after_every_page(http: FakeHttp, monkeypatch) -> None:
+    from runtime import catalog_export
+
+    http.queue(
+        graphql_response({"products": connection([product_node()], has_next=True, cursor="c-1")}),
+        graphql_response(
+            {
+                "products": connection(
+                    [product_node("gid://shopify/Product/3002", handle="boots-2")],
+                    has_next=False,
+                    cursor="c-2",
+                )
+            }
+        ),
+    )
+    reported: list[tuple[str, int | None]] = []
+    monkeypatch.setattr(
+        catalog_export,
+        "report_progress",
+        lambda message="", *, done=None, total=None: reported.append((message, done)),
+    )
+
+    def artifact_writer(payload, chunks, **kwargs):
+        body = b"".join(chunks)
+        return {"artifact_handle": "artifact:art_1", "size_bytes": len(body), "sha256": "a" * 64}
+
+    catalog_export.export_products(
+        connection_payload("export_products", {"first": 1}),
+        {"connection_ref": "conn-1", "first": 1},
+        transport_factory=lambda shopify_connection: ShopifyGraphQLTransport(
+            shopify_connection, opener=http
+        ),
+        artifact_writer=artifact_writer,
+    )
+
+    assert reported == [("Exported 1 product", 1), ("Exported 2 products", 2)]
+
+
 def test_export_refuses_a_partial_start_before_network(http: FakeHttp) -> None:
     from runtime.catalog_export import export_products
 

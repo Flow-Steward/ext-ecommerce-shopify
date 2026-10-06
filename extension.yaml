@@ -2,7 +2,7 @@ manifest_version: 2
 lifecycle: {data_schema_version: 1, data_migrations: []}
 extension_id: flowsteward.shopify
 kind: tool_provider
-version: 0.4.0
+version: 0.4.1
 release_stage: active
 billing_mode: free
 display_name: Shopify

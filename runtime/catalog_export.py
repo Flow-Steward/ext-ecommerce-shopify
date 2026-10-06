@@ -14,6 +14,16 @@ from typing import Any
 
 from flowsteward_extension_sdk import write_artifact_stream
 
+try:
+    from flowsteward_extension_sdk import report_progress
+except ImportError:  # a Core with an SDK older than 0.3.0 shows no progress
+
+    def report_progress(
+        message: str = "", *, done: int | None = None, total: int | None = None
+    ) -> None:
+        return None
+
+
 from . import catalog_quality, errors, shapes, validation
 from .catalog import DEFAULT_PAGE_SIZE, Operation, operation
 from .connection import connection_from_payload
@@ -117,6 +127,15 @@ def export_products(
     }
 
 
+def _progress_message(state: Mapping[str, int], *, filtered: bool) -> str:
+    """Name what the export has done so far; Shopify does not say how many will match."""
+    exported = state["item_count"]
+    noun = "product" if exported == 1 else "products"
+    if filtered:
+        return f"Exported {exported} matching {noun} of {state['scanned_count']} checked"
+    return f"Exported {exported} {noun}"
+
+
 def _product_jsonl_chunks(
     transport: Any,
     row: Operation,
@@ -161,6 +180,10 @@ def _product_jsonl_chunks(
                 json.dumps(product, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
                 + b"\n"
             )
+        report_progress(
+            _progress_message(state, filtered=bool(quality)),
+            done=state["scanned_count"],
+        )
         if not page_info["has_next_page"]:
             return
         next_cursor = page_info["end_cursor"]

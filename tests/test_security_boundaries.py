@@ -67,6 +67,8 @@ ALLOWED_SDK_NAMES = {
     "parse_retry_after",
     "write_artifact_stream",
     "read_artifact_bytes",
+    # Writes one line to the host's progress channel; opens nothing.
+    "report_progress",
 }
 
 #: The public SDK is the one ``flowsteward_*`` import the bundle may make.
