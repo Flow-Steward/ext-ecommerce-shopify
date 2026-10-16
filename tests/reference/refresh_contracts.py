@@ -30,7 +30,7 @@ def main() -> int:
         print(f"wrote {relative}")
     for path, render in GENERATED_PAGES.items():
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(render(), encoding="utf-8")
+        path.write_text(render(), encoding="utf-8")  # type: ignore[operator]
         print(f"wrote {path.relative_to(BUNDLE_ROOT)}")
     manifest = BUNDLE_ROOT / "extension.yaml"
     manifest.write_text(

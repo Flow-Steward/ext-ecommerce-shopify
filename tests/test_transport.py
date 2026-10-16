@@ -53,7 +53,7 @@ def run_mutation(http: FakeHttp) -> dict:
 
 
 def http_error(status: int) -> HTTPError:
-    return HTTPError("https://example.test", status, "boom", {}, None)
+    return HTTPError("https://example.test", status, "boom", {}, None)  # type: ignore[arg-type]
 
 
 class TestTheRequestItself:
@@ -108,7 +108,7 @@ class TestTheRequestItself:
 
 class TestHttpFailuresAreClassified:
     def test_a_rate_limited_read_exposes_only_retry_safe_facts(self, http: FakeHttp) -> None:
-        http.queue(HTTPError("https://example.test", 429, "boom", {"Retry-After": "7"}, None))
+        http.queue(HTTPError("https://example.test", 429, "boom", {"Retry-After": "7"}, None))  # type: ignore[arg-type]
 
         response = run("get_shop", http)
 

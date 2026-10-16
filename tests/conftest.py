@@ -23,6 +23,22 @@ CONNECTION_ID = "conn-1"
 ACCESS_TOKEN = "shpat_fixture_token_1"  # pragma: allowlist secret
 EXTERNAL_EFFECT_ID = "6a3f1c2e-7b45-4d0a-9c11-2f8e5b7a0d31"
 
+#: The host contract every subprocess payload declares.
+HOST_CONTRACT_VERSION = "extension_host_v2"
+#: The final extension_host_v2 execution scope: all four keys, at most one owner.
+ROOT_STEP_SCOPE: dict[str, Any] = {
+    "group_id": None,
+    "for_each_id": None,
+    "step_id": "sync_stock",
+    "step_execution_id": "5c1d2e3f-4a5b-4c6d-8e7f-000000000001",
+}
+GROUP_STEP_SCOPE: dict[str, Any] = {**ROOT_STEP_SCOPE, "group_id": "prepare_catalog"}
+FOR_EACH_STEP_SCOPE: dict[str, Any] = {
+    **ROOT_STEP_SCOPE,
+    "for_each_id": "each_product",
+    "step_execution_id": "5c1d2e3f-4a5b-4c6d-8e7f-000000000002",
+}
+
 PRODUCT_A = "gid://shopify/Product/3001"
 PRODUCT_B = "gid://shopify/Product/3002"
 VARIANT_A = "gid://shopify/ProductVariant/4001"
@@ -173,6 +189,7 @@ def connection_payload(
     connection_type_id: str = "shopify_admin",
     runtime_context: dict[str, Any] | None = None,
     config: dict[str, Any] | None = None,
+    scope: dict[str, Any] | None = None,
     secrets: dict[str, Any] | None = None,
     action_extra: dict[str, Any] | None = None,
     extra: dict[str, Any] | None = None,
@@ -182,7 +199,12 @@ def connection_payload(
         **(operation_input or {}),
     }
     payload: dict[str, Any] = {
+        "contract_version": HOST_CONTRACT_VERSION,
         "mode": "action",
+        "runtime_context": {
+            **(ROOT_STEP_SCOPE if scope is None else scope),
+            **(runtime_context or {}),
+        },
         "action": {
             "action_id": operation_id,
             "input": action_input,
@@ -204,8 +226,6 @@ def connection_payload(
             **(action_extra or {}),
         },
     }
-    if runtime_context is not None:
-        payload["runtime_context"] = runtime_context
     if extra:
         payload.update(extra)
     return payload

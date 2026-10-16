@@ -49,7 +49,8 @@ def _rows(payload: Mapping[str, Any], inputs: dict[str, Any], reader: Any) -> li
     if not isinstance(rows, list) or not 1 <= len(rows) <= MAX_PRODUCTS:
         raise _invalid("Supply between 1 and 10000 products")
     create = operation("create_product")
-    assert create is not None
+    if create is None:
+        raise ExtensionError(errors.INTERNAL_ERROR, "The operation could not be completed")
     validated = []
     handles: set[str] = set()
     for index, row in enumerate(rows):

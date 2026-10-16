@@ -3,21 +3,41 @@
 from __future__ import annotations
 
 import pytest
+from typing import Any
+
 from conftest import (
     EXTERNAL_EFFECT_ID,
+    FOR_EACH_STEP_SCOPE,
+    GROUP_STEP_SCOPE,
+    HOST_CONTRACT_VERSION,
+    ROOT_STEP_SCOPE,
     FakeHttp,
+    FakeResponse,
+    connection,
     connection_payload,
     graphql_response,
+    product_node,
 )
 
 from dispatcher import OPERATION_REGISTRY, dispatch_runtime
 from runtime import errors
 from runtime.catalog import ACTION_OPERATION_IDS, NETWORK_OPERATION_IDS, OPERATION_IDS
 from runtime.operations import handle_runtime
+from runtime.transport import ShopifyGraphQLTransport
+
 
 #: The whole routable surface, in registry order. Written out rather than
 #: derived, so adding a row to the registry has to be a deliberate edit here
 #: too — which is the point of a closed surface.
+def _host(body: dict[str, Any]) -> dict[str, Any]:
+    """One subprocess payload as the host sends it: contract, scope and body."""
+    return {
+        "contract_version": HOST_CONTRACT_VERSION,
+        "runtime_context": dict(ROOT_STEP_SCOPE),
+        **body,
+    }
+
+
 EXPECTED_OPERATIONS = (
     "validate_connection_settings",
     "test_connection",
@@ -103,7 +123,7 @@ class TestTheRegistryIsClosed:
     )
     def test_an_operation_that_is_not_declared_is_refused(self, operation_id: str) -> None:
         response = dispatch_runtime(
-            {"mode": "action", "action": {"action_id": operation_id, "input": {}}}
+            _host({"mode": "action", "action": {"action_id": operation_id, "input": {}}})
         )
 
         assert response["error_code"] == errors.UNSUPPORTED_OPERATION
@@ -193,7 +213,7 @@ class TestTheActionEnvelopeIsExact:
         ],
     )
     def test_a_malformed_envelope_is_refused(self, payload: dict) -> None:
-        response = handle_runtime(payload, transport_factory=lambda c: None)
+        response = handle_runtime(_host(payload), transport_factory=lambda c: None)
 
         assert response["ok"] is False
         assert response["error_code"] in {errors.INVALID_PAYLOAD, errors.UNSUPPORTED_OPERATION}
@@ -202,13 +222,15 @@ class TestTheActionEnvelopeIsExact:
 class TestTheResponseEnvelope:
     def test_a_success_carries_every_declared_key(self, http: FakeHttp) -> None:
         response = dispatch_runtime(
-            {
-                "mode": "action",
-                "action": {
-                    "action_id": "validate_connection_settings",
-                    "input": {"shop_domain": "acme"},
-                },
-            }
+            _host(
+                {
+                    "mode": "action",
+                    "action": {
+                        "action_id": "validate_connection_settings",
+                        "input": {"shop_domain": "acme"},
+                    },
+                }
+            )
         )
 
         assert set(response) == {"ok", "result", "error_code", "error", "errors"}
@@ -219,7 +241,7 @@ class TestTheResponseEnvelope:
 
     def test_a_failure_carries_the_same_keys_and_one_error(self) -> None:
         response = dispatch_runtime(
-            {"mode": "action", "action": {"action_id": "nope", "input": {}}}
+            _host({"mode": "action", "action": {"action_id": "nope", "input": {}}})
         )
 
         assert set(response) == {"ok", "result", "error_code", "error", "errors"}
@@ -230,7 +252,7 @@ class TestTheResponseEnvelope:
         ]
 
     def test_every_error_code_a_failure_reports_is_in_the_safe_vocabulary(self) -> None:
-        response = dispatch_runtime({"mode": "action", "action": {"action_id": "x"}})
+        response = dispatch_runtime(_host({"mode": "action", "action": {"action_id": "x"}}))
 
         assert response["error_code"] in errors.SAFE_ERROR_CODES
 
@@ -248,3 +270,162 @@ class TestTheResponseEnvelope:
 
         assert response["error_code"] == errors.INTERNAL_ERROR
         assert "shpat_secret" not in str(response)
+
+
+def _route_with(
+    monkeypatch: pytest.MonkeyPatch,
+    **fakes: Any,
+) -> None:
+    """Let ``dispatch_runtime`` reach the real runtime with fake I/O."""
+    import dispatcher
+
+    monkeypatch.setattr(
+        dispatcher, "handle_runtime", lambda payload: handle_runtime(payload, **fakes)
+    )
+
+
+class TestTheFinalExecutionScope:
+    """Every execution-scope owner reaches the operations and their artifacts."""
+
+    @pytest.mark.parametrize(
+        "scope",
+        [ROOT_STEP_SCOPE, GROUP_STEP_SCOPE, FOR_EACH_STEP_SCOPE],
+        ids=["root", "group", "for_each"],
+    )
+    def test_the_catalog_export_writes_its_artifact_for_every_owner(
+        self, http: FakeHttp, monkeypatch: pytest.MonkeyPatch, scope: dict[str, Any]
+    ) -> None:
+        http.queue(graphql_response({"products": connection([product_node()], has_next=False)}))
+        written: list[dict[str, Any]] = []
+
+        def artifact_writer(payload: Any, chunks: Any, **kwargs: Any) -> dict[str, Any]:
+            body = b"".join(chunks)
+            written.append({"scope": dict(payload["runtime_context"]), "body": body})
+            return {
+                "artifact_handle": "artifact:art_export",
+                "size_bytes": len(body),
+                "sha256": "a" * 64,
+            }
+
+        _route_with(
+            monkeypatch,
+            transport_factory=lambda c: ShopifyGraphQLTransport(c, opener=http),
+            artifact_writer=artifact_writer,
+        )
+
+        response = dispatch_runtime(connection_payload("export_products", {}, scope=scope))
+
+        assert response["ok"] is True
+        assert response["result"]["artifact_handle"] == "artifact:art_export"
+        assert response["result"]["item_count"] == 1
+        assert len(written) == 1
+        assert {key: written[0]["scope"][key] for key in scope} == scope
+        assert b"gid://shopify/Product/3001" in written[0]["body"]
+
+    @pytest.mark.parametrize(
+        "scope",
+        [ROOT_STEP_SCOPE, GROUP_STEP_SCOPE, FOR_EACH_STEP_SCOPE],
+        ids=["root", "group", "for_each"],
+    )
+    def test_the_bulk_import_reads_its_artifact_for_every_owner(
+        self, http: FakeHttp, monkeypatch: pytest.MonkeyPatch, scope: dict[str, Any]
+    ) -> None:
+        from test_bulk_products import BULK_ID, accepted, staged
+
+        storage = FakeHttp()
+        storage.queue(FakeResponse(201, b""))
+        http.queue(staged(), accepted())
+        reads: list[str] = []
+
+        def artifact_reader(payload: Any, **kwargs: Any) -> bytes:
+            reads.append(payload["runtime_context"]["step_execution_id"])
+            return b'{"title": "Boots", "handle": "boots"}\n'
+
+        _route_with(
+            monkeypatch,
+            transport_factory=lambda c: ShopifyGraphQLTransport(c, opener=http),
+            artifact_reader=artifact_reader,
+            storage_opener=storage,
+        )
+        payload = connection_payload(
+            "create_products_bulk",
+            {"artifact_handle": "artifact:products_jsonl"},
+            runtime_context={"external_effect_id": EXTERNAL_EFFECT_ID},
+            scope=scope,
+        )
+
+        response = dispatch_runtime(payload)
+
+        assert response["ok"] is True
+        assert response["result"]["bulk_operation"]["id"] == BULK_ID
+        assert reads == [scope["step_execution_id"]]
+        assert len(storage.requests) == 1
+        assert b'"handle":"boots"' in storage.last["body"]
+
+
+class TestAForeignOrIncompleteEnvelopeIsRefused:
+    """Refused before the connection, an artifact or Shopify is touched."""
+
+    @pytest.mark.parametrize(
+        ("contract_version", "scope", "reason"),
+        [
+            ("extension_host_v1", FOR_EACH_STEP_SCOPE, "Unsupported host contract"),
+            ("", FOR_EACH_STEP_SCOPE, "Unsupported host contract"),
+            (
+                HOST_CONTRACT_VERSION,
+                {k: v for k, v in FOR_EACH_STEP_SCOPE.items() if k != "for_each_id"},
+                "misses execution scope",
+            ),
+            (
+                HOST_CONTRACT_VERSION,
+                {**FOR_EACH_STEP_SCOPE, "group_id": "prepare_catalog"},
+                "both a Group and a For each",
+            ),
+            (
+                HOST_CONTRACT_VERSION,
+                {**ROOT_STEP_SCOPE, "step_execution_id": None},
+                "without its logical execution",
+            ),
+        ],
+        ids=["v1", "no_contract", "missing_key", "two_owners", "step_without_execution"],
+    )
+    def test_nothing_is_read_sent_or_written(
+        self,
+        http: FakeHttp,
+        monkeypatch: pytest.MonkeyPatch,
+        contract_version: str,
+        scope: dict[str, Any],
+        reason: str,
+    ) -> None:
+        touched: list[str] = []
+
+        def forbidden(name: str) -> Any:
+            def call(*args: Any, **kwargs: Any) -> Any:
+                touched.append(name)
+                raise AssertionError(f"{name} ran for a refused envelope")
+
+            return call
+
+        _route_with(
+            monkeypatch,
+            transport_factory=forbidden("transport"),
+            artifact_reader=forbidden("artifact_reader"),
+            artifact_writer=forbidden("artifact_writer"),
+            storage_opener=forbidden("storage"),
+        )
+        payload = connection_payload(
+            "create_products_bulk",
+            {"artifact_handle": "artifact:products_jsonl"},
+            runtime_context={"external_effect_id": EXTERNAL_EFFECT_ID},
+        )
+        payload["contract_version"] = contract_version
+        payload["runtime_context"] = {**scope, "external_effect_id": EXTERNAL_EFFECT_ID}
+
+        response = dispatch_runtime(payload)
+
+        assert response["ok"] is False
+        assert response["error_code"] == errors.INVALID_HOST_ENVELOPE
+        assert reason in response["error"]
+        assert response["definitely_no_external_effect"] is True
+        assert touched == []
+        assert http.requests == []

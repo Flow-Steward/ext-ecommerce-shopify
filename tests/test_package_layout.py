@@ -8,11 +8,21 @@ import sys
 from pathlib import Path
 
 import yaml
+from conftest import HOST_CONTRACT_VERSION, ROOT_STEP_SCOPE
 from health import check_health
 from runtime.catalog import NETWORK_OPERATION_IDS, OPERATIONS
 from runtime.documents import API_VERSION
 
 BUNDLE_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _host(body: dict) -> dict:
+    """One subprocess payload as the host sends it: contract, scope and body."""
+    return {
+        "contract_version": HOST_CONTRACT_VERSION,
+        "runtime_context": dict(ROOT_STEP_SCOPE),
+        **body,
+    }
 
 
 def _run_entrypoint(payload: object) -> tuple[int, dict]:
@@ -37,6 +47,7 @@ def test_every_task_owned_file_lives_inside_this_bundle() -> None:
         "dispatcher.py",
         "health.py",
         "main.py",
+        "pyproject.toml",
         "requirements-dev.txt",
         "runtime",
         "tests",
@@ -78,7 +89,7 @@ def test_the_health_command_runs_as_a_subprocess() -> None:
 
 def test_the_entrypoint_refuses_an_unknown_operation() -> None:
     code, response = _run_entrypoint(
-        {"mode": "action", "action": {"action_id": "execute_graphql", "input": {}}}
+        _host({"mode": "action", "action": {"action_id": "execute_graphql", "input": {}}})
     )
 
     assert code == 2
@@ -88,6 +99,24 @@ def test_the_entrypoint_refuses_an_unknown_operation() -> None:
 
 def test_the_entrypoint_reports_success_with_exit_code_zero() -> None:
     code, response = _run_entrypoint(
+        _host(
+            {
+                "mode": "action",
+                "action": {
+                    "action_id": "validate_connection_settings",
+                    "input": {"shop_domain": "Example-Store"},
+                },
+            }
+        )
+    )
+
+    assert code == 0
+    assert response["ok"] is True
+    assert response["result"]["normalized_shop_domain"] == "example-store.myshopify.com"
+
+
+def test_the_entrypoint_refuses_an_envelope_of_another_contract() -> None:
+    payload = _host(
         {
             "mode": "action",
             "action": {
@@ -96,10 +125,14 @@ def test_the_entrypoint_reports_success_with_exit_code_zero() -> None:
             },
         }
     )
+    payload["contract_version"] = "extension_host_v1"
 
-    assert code == 0
-    assert response["ok"] is True
-    assert response["result"]["normalized_shop_domain"] == "example-store.myshopify.com"
+    code, response = _run_entrypoint(payload)
+
+    assert code == 2
+    assert response["ok"] is False
+    assert response["error_code"] == "invalid_host_envelope"
+    assert response["definitely_no_external_effect"] is True
 
 
 def test_the_entrypoint_refuses_a_non_json_request() -> None:

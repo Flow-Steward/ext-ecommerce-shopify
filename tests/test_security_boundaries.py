@@ -67,6 +67,8 @@ ALLOWED_SDK_NAMES = {
     "parse_retry_after",
     "write_artifact_stream",
     "read_artifact_bytes",
+    # Validates the host envelope; opens nothing.
+    "runtime_context_from_payload",
     # Writes one line to the host's progress channel; opens nothing.
     "report_progress",
 }
@@ -282,7 +284,7 @@ class TestTheTokenIsNeverObservable:
 
         from runtime.transport import ShopifyGraphQLTransport
 
-        http.queue(HTTPError("https://x", 401, "no", {}, None))
+        http.queue(HTTPError("https://x", 401, "no", {}, None))  # type: ignore[arg-type]
 
         response = handle_runtime(
             connection_payload("get_shop"),

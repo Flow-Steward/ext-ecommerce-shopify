@@ -13,9 +13,11 @@ from pathlib import Path
 
 import pytest
 from conftest import (
+    HOST_CONTRACT_VERSION,
     ITEM_A,
     LOCATION_A,
     SHOP_DOMAIN,
+    ROOT_STEP_SCOPE,
     FakeHttp,
     adjustment_group_response,
     connection_payload,
@@ -262,6 +264,8 @@ class TestTheEntrypointBoundsAndSanitizesItsOutput:
             cwd=str(BUNDLE_ROOT),
             input=json.dumps(
                 {
+                    "contract_version": HOST_CONTRACT_VERSION,
+                    "runtime_context": dict(ROOT_STEP_SCOPE),
                     "mode": "action",
                     "action": {
                         "action_id": "validate_connection_settings",
@@ -281,4 +285,5 @@ class TestTheEntrypointBoundsAndSanitizesItsOutput:
         code, response = self._entrypoint({})
 
         assert code == 2
-        assert response["error_code"] in {"invalid_payload", "unsupported_operation"}
+        # An empty request declares no host contract, so the envelope check refuses it.
+        assert response["error_code"] == "invalid_host_envelope"

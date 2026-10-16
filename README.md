@@ -12,6 +12,16 @@ Shopify client: nothing here deletes, cancels or refunds, there is no webhook, n
 and no way to run GraphQL of your own. Authorization is OAuth, and it is the only OAuth here: the
 extension holds no other credential and performs no other flow.
 
+## Requirements
+
+This release speaks the host contract `extension_host_v2` with its final
+execution scope (`group_id`, `for_each_id`, `step_id`, `step_execution_id`)
+and is built on `flowsteward-extension-sdk` 0.4.0. A request with another
+contract, a missing scope key, or both a Group and a For each as its owner is
+refused before the connection is read, an artifact is opened or Shopify is
+contacted. Install it on a Flow Steward Core that speaks this contract; an
+older Core does not run it.
+
 ## What it can do
 
 A fixed surface over Shopify Admin GraphQL `2026-07`: inventory, catalog and orders.
@@ -408,8 +418,9 @@ Toolkit validation is a schema check, not a substitute for the repository tests.
 ```
 extension.yaml                  manifest v2: identity, effects, contract refs, entrypoint
 main.py                         subprocess entrypoint: bounded stdin, sanitized bounded output
-dispatcher.py                   the closed registry, checked before anything else happens
+dispatcher.py                   the host envelope, then the closed registry, before anything else
 health.py                       health command
+pyproject.toml                  ruff and mypy settings for the extension gate
 contracts/                      connection types, operation manifest, step UI, artifact policies
 runtime/catalog.py              the 33 declared operations, with their own schemas
 runtime/inputs.py               input schema fragments mirroring Shopify's input objects

@@ -10,6 +10,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from flowsteward_extension_sdk import runtime_context_from_payload
+
 from runtime import errors
 from runtime.catalog import OPERATIONS_BY_ID, Operation
 from runtime.errors import error_response
@@ -21,6 +23,14 @@ OPERATION_IDS: frozenset[str] = frozenset(OPERATION_REGISTRY)
 
 def dispatch_runtime(payload: dict[str, Any]) -> dict[str, Any]:
     """Route one runtime invocation, or refuse it."""
+    # The host envelope is checked before anything is read or sent: another
+    # contract, a missing execution-scope key or two owners is refused here.
+    try:
+        runtime_context_from_payload(payload)
+    except ValueError as exc:
+        response = error_response(errors.INVALID_HOST_ENVELOPE, str(exc))
+        response["definitely_no_external_effect"] = True
+        return response
     operation_id = _operation_id(payload)
     if operation_id not in OPERATION_REGISTRY:
         return error_response(

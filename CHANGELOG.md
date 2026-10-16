@@ -16,6 +16,24 @@ integrator can read it:
   Query: `inventoryItem.inventoryLevels`.
 ```
 
+## 0.5.0
+
+### Changed
+
+- **Speaks the final Flow Steward host contract.** The extension declares
+  `runtime.contract_version: extension_host_v2` and is built on extension SDK 0.4.0. Every
+  operation runs the same whether its step sits at the workflow root, inside a Group or inside a
+  For each, including the artifact operations `export_products` and `create_products_bulk`.
+  Needs a Flow Steward Core that speaks this contract; an older Core does not run this release.
+
+### Security
+
+- **A request from another contract is refused before anything happens.** An envelope with
+  another contract, a missing execution-scope key (`group_id`, `for_each_id`, `step_id`,
+  `step_execution_id`), both a Group and a For each as owner, or a step without its execution is
+  answered with `invalid_host_envelope` and `definitely_no_external_effect: true` before the
+  connection is read, an artifact is opened or Shopify is contacted.
+
 ## 0.4.1
 
 ### Added

@@ -15,6 +15,8 @@ _MESSAGE_SHOPIFY_COULD_NOT_COMPLETE_THE_REQUEST = "Shopify could not complete th
 _MESSAGE_THE_OUTCOME_OF_THIS_REQUEST_IS_UNKNOWN = "The outcome of this request is unknown"
 
 INVALID_PAYLOAD = "invalid_payload"
+#: The host sent an envelope of another contract or an invalid execution scope.
+INVALID_HOST_ENVELOPE = "invalid_host_envelope"
 INVALID_CONFIGURATION = "invalid_configuration"
 INVALID_CONNECTION = "invalid_connection"
 #: The connection exists but holds no usable grant any more. Distinct from a
@@ -43,6 +45,7 @@ INTERNAL_ERROR = "internal_error"
 
 SAFE_ERROR_CODES: tuple[str, ...] = (
     INVALID_PAYLOAD,
+    INVALID_HOST_ENVELOPE,
     INVALID_CONFIGURATION,
     INVALID_CONNECTION,
     REAUTHORIZATION_REQUIRED,

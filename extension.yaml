@@ -2,7 +2,7 @@ manifest_version: 2
 lifecycle: {data_schema_version: 1, data_migrations: []}
 extension_id: flowsteward.shopify
 kind: tool_provider
-version: 0.4.1
+version: 0.5.0
 release_stage: active
 billing_mode: free
 display_name: Shopify
@@ -34,6 +34,7 @@ external_effects:
   - {operation_id: create_fulfillment, effect_kind: shopify_fulfillment_create, channel: shopify_admin_graphql, idempotency: required, test_mode_behavior: suppress}
   - {operation_id: update_fulfillment_tracking, effect_kind: shopify_fulfillment_tracking_update, channel: shopify_admin_graphql, idempotency: required, test_mode_behavior: suppress}
 runtime:
+  contract_version: extension_host_v2
   extension_contract_v2:
     oauth_providers:
       - provider_id: shopify_admin_oauth

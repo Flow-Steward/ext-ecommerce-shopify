@@ -111,7 +111,7 @@ class TestAnUnreadableAnswerLeavesTheOutcomeUnknown:
 
     @pytest.mark.parametrize("status", [408, 500, 502, 503, 504])
     def test_a_server_failure_after_sending_is_unknown(self, status: int, http: FakeHttp) -> None:
-        http.queue(HTTPError("https://x", status, "boom", {}, None))
+        http.queue(HTTPError("https://x", status, "boom", {}, None))  # type: ignore[arg-type]
 
         result = update_order(http)
 
@@ -170,7 +170,7 @@ class TestAnExplicitRejectionIsDefinite:
 
     @pytest.mark.parametrize("status", [401, 403, 429])
     def test_a_refusal_before_execution_is_not_ambiguous(self, status: int, http: FakeHttp) -> None:
-        http.queue(HTTPError("https://x", status, "no", {}, None))
+        http.queue(HTTPError("https://x", status, "no", {}, None))  # type: ignore[arg-type]
 
         result = update_order(http)
 
@@ -211,7 +211,8 @@ class TestSuccessIsOnlyEverConfirmed:
 
 class TestNothingIsRetriedOrChunked:
     @pytest.mark.parametrize(
-        "failure", [TimeoutError("t"), URLError("r"), HTTPError("https://x", 503, "b", {}, None)]
+        "failure",
+        [TimeoutError("t"), URLError("r"), HTTPError("https://x", 503, "b", {}, None)],  # type: ignore[arg-type]
     )
     def test_an_ambiguous_mutation_is_sent_exactly_once(
         self, failure: BaseException, http: FakeHttp
@@ -332,7 +333,7 @@ class TestUpstreamTextIsNeverEchoed:
         assert leak not in json.dumps(result)
 
     def test_an_http_error_body_does_not_reach_the_caller(self, http: FakeHttp) -> None:
-        http.queue(HTTPError("https://acme.myshopify.com/secret?token=abc", 500, "b", {}, None))
+        http.queue(HTTPError("https://acme.myshopify.com/secret?token=abc", 500, "b", {}, None))  # type: ignore[arg-type]
 
         result = run_operation("get_order", {"order_id": ORDER_A}, http)
 

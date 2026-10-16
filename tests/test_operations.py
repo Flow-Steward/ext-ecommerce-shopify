@@ -547,7 +547,7 @@ class TestGetInventoryItem:
 
 
 class TestGetInventoryLevelsBatch:
-    def _base(self, ids: list[str], **extra) -> dict:
+    def _base(self, ids: object, **extra) -> dict:
         return {"location_id": LOCATION_A, "inventory_item_ids": ids, **extra}
 
     def test_each_row_carries_the_stock_of_the_item_it_names(self, http: FakeHttp) -> None:

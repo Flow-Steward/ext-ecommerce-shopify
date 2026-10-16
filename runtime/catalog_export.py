@@ -12,17 +12,7 @@ import json
 from collections.abc import Callable, Iterable, Mapping
 from typing import Any
 
-from flowsteward_extension_sdk import write_artifact_stream
-
-try:
-    from flowsteward_extension_sdk import report_progress
-except ImportError:  # a Core with an SDK older than 0.3.0 shows no progress
-
-    def report_progress(
-        message: str = "", *, done: int | None = None, total: int | None = None
-    ) -> None:
-        return None
-
+from flowsteward_extension_sdk import report_progress, write_artifact_stream
 
 from . import catalog_quality, errors, shapes, validation
 from .catalog import DEFAULT_PAGE_SIZE, Operation, operation
