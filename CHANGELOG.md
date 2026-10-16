@@ -25,6 +25,7 @@ integrator can read it:
   operation runs the same whether its step sits at the workflow root, inside a Group or inside a
   For each, including the artifact operations `export_products` and `create_products_bulk`.
   Needs a Flow Steward Core that speaks this contract; an older Core does not run this release.
+- **The extension has a logo.** `icon.png` carries the Flow Steward wave mark.
 
 ### Security
 

@@ -46,6 +46,7 @@ def test_every_task_owned_file_lives_inside_this_bundle() -> None:
         "docs",
         "dispatcher.py",
         "health.py",
+        "icon.png",
         "main.py",
         "pyproject.toml",
         "requirements-dev.txt",
@@ -193,3 +194,16 @@ def test_no_shipped_file_is_missing_from_the_bundle() -> None:
         "ui/pages/changelog.yaml",
     ):
         assert (BUNDLE_ROOT / relative).is_file(), relative
+
+
+def test_the_logo_is_a_small_square_png() -> None:
+    """Core requires icon.png beside extension.yaml: PNG, square, 32-512 px, <= 100 KB."""
+    import struct
+
+    data = (BUNDLE_ROOT / "icon.png").read_bytes()
+    assert data[:8] == b"\x89PNG\r\n\x1a\n"
+    assert data[12:16] == b"IHDR"
+    width, height = struct.unpack(">II", data[16:24])
+    assert width == height
+    assert 32 <= width <= 512
+    assert len(data) <= 100 * 1024
