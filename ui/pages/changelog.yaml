@@ -26,6 +26,12 @@ components:
         Query: `inventoryItem.inventoryLevels`.
       ```
 
+      ## 0.5.1
+
+      ### Fixed
+
+      - The logo (`icon.png`) now has a transparent background; in 0.5.0 the Flow Steward wave sat on a black box on dark themes.
+
       ## 0.5.0
 
       ### Changed
