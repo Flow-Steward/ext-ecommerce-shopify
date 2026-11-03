@@ -22,7 +22,7 @@ refused before the connection is read, an artifact is opened or Shopify is
 contacted. Install it on a Flow Steward Core that speaks this contract; an
 older Core does not run it.
 
-Logo: `icon.png` (the Flow Steward wave mark), next to `extension.yaml`.
+Logo: `icon.png` (the official full-color Shopify shopping bag; PNG, 512x512), next to `extension.yaml`.
 
 ## What it can do
 
@@ -422,7 +422,7 @@ extension.yaml                  manifest v2: identity, effects, contract refs, e
 main.py                         subprocess entrypoint: bounded stdin, sanitized bounded output
 dispatcher.py                   the host envelope, then the closed registry, before anything else
 health.py                       health command
-icon.png                        the extension logo (Flow Steward wave mark)
+icon.png                        the extension logo (the official full-color Shopify shopping bag; PNG, 512x512)
 pyproject.toml                  ruff and mypy settings for the extension gate
 contracts/                      connection types, operation manifest, step UI, artifact policies
 runtime/catalog.py              the 33 declared operations, with their own schemas
@@ -464,3 +464,5 @@ schema and rerun the tests:
 ```bash
 python tests/reference/admin_schema.py path/to/admin_2026-07.json.gz
 ```
+
+Logo sources and attribution: [BRANDING.md](BRANDING.md).

@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "extension_id": "flowsteward.shopify",
+  "release_version": "0.5.2",
+  "asset": "icon.png",
+  "asset_sha256": "e37a22a0ec3b1f9c63b5698fae79f46d40ceb603654660d24dae5b8ebf326dda",
+  "dimensions": "512x512",
+  "official_source_page": "https://www.shopify.com/brand-assets",
+  "sources": [
+    {
+      "url": "https://cdn.shopify.com/static/brand-assets/shopify-shopping-bag.zip",
+      "member": "02 - Glyph/png/shopify_glyph.png",
+      "sha256": "9d34a3fe1f8ed812dd2543134eb8c6916d70d69cecf7e28004ccdb94dfd32f67",
+      "archive_sha256": "2e1a9658062f076a63a011a7cbbc5919bbe040884530daa12d4621813f2b575b"
+    }
+  ],
+  "transformation": "Official full-color shopping bag PNG, proportionally scaled and centered with generous clearspace. Official guidelines support bag-only in limited square/circle space.",
+  "renderer": "ImageMagick (original PNG input except WhatsApp SVG rendered at density 1600)",
+  "trademark_attribution": "The Shopify names and marks belong to Shopify Inc.. This independent integration identifies the supported service; it is not endorsed by or affiliated with the trademark owners.",
+  "usage_notes": "Brand page says written authorization for use; preserve white S; link logo/name to shopify.com; no endorsement; min 80px specified for logo generally. No checkbox/legal agreement accepted.",
+  "legal_agreement_accepted": false
+}
