@@ -21,7 +21,6 @@ from build_contracts import (
     operation_manifest,
     step_ui_manifest,
 )
-
 from runtime import schema
 from runtime.catalog import (
     ACTION_OPERATION_IDS,
@@ -142,7 +141,7 @@ class TestTheManifestAndTheRegistryAgree:
 
     def test_the_manifest_identity_is_the_declared_one(self) -> None:
         assert MANIFEST["extension_id"] == "flowsteward.shopify"
-        assert MANIFEST["version"] == "0.5.1"
+        assert MANIFEST["version"] == "0.5.2"
         assert MANIFEST["manifest_version"] == 2
         assert MANIFEST["kind"] == "tool_provider"
         assert MANIFEST["features"] == ["tool", "action"]
