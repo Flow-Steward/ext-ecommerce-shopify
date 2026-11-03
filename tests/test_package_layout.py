@@ -38,6 +38,7 @@ def _run_entrypoint(payload: object) -> tuple[int, dict]:
 
 def test_every_task_owned_file_lives_inside_this_bundle() -> None:
     expected_top_level = {
+        "BRANDING.md",
         "README.md",
         "CHANGELOG.md",
         "__init__.py",
