@@ -2,11 +2,18 @@ manifest_version: 2
 lifecycle: {data_schema_version: 1, data_migrations: []}
 extension_id: flowsteward.shopify
 kind: tool_provider
-version: 0.5.2
+version: 0.5.3
 release_stage: active
 billing_mode: free
 display_name: Shopify
-description: Shopify Admin GraphQL API 2026-07 for inventory, catalog and order automation, typed and scoped to project-owned Shopify stores. Every endpoint it uses is covered in full, and what is not reachable is listed with the reason.
+description: |-
+  Connect Shopify catalog, inventory and fulfillment work to Flow Steward through the Admin GraphQL API version 2026-07. Create products together with their variants, SKUs, prices and starting stock, using media URLs or image files from workflow storage. Update product details, variant fields, catalog metafields and media, or set inventory quantities for specific locations.
+
+  Read products, variants, inventory items, locations and stock levels for downstream workflows. Product export gathers matching records into a JSONL file, with optional images, variants and location inventory. Quality filters identify missing images, small images, missing alt text, short descriptions and gaps in fields such as SKU, barcode or SEO metadata. This supports supplier catalog imports, stock updates and focused content-improvement queues.
+
+  Order operations read orders, line items, metafields and fulfillment information, update order metadata, create fulfillments and update tracking. Bulk product creation submits larger batches for Shopify's asynchronous processing and returns a submission identifier; completion and row outcomes require separate reconciliation.
+
+  The release provides a fixed 33-operation surface, including connection helpers. Each call selects one authorized store connection. Its scope covers the named catalog, inventory and fulfillment tasks; customer management, refunds, order cancellation and arbitrary GraphQL are outside this release. Store authorization requires the extension's configured OAuth scope set.
 vendor:
   name: Flow Steward
   support_url: https://github.com/Flow-Steward/ext-ecommerce-shopify/issues
@@ -14,7 +21,8 @@ vendor:
 listing:
   category: ecommerce
   tags: [shopify, inventory, stock, products, orders, fulfillment, graphql, ecommerce]
-  summary: Create products with SKU, price, stock and images in one step; manage inventory, catalog and orders; find products with missing or small images.
+  summary: "Create Shopify products with variants, prices, stock and images; automate catalog quality checks, inventory, order metadata and fulfillment."
+  setup_summary: "Create your Shopify app, configure its client ID, secret, callback URL and the eight required access scopes in Flow Steward and Shopify. Add a project connection for the myshopify.com store and authorize the app; the connection uses OAuth rather than a pasted Admin API token."
 features: [tool, action]
 required_scopes: [extension:invoke, artifact:read, artifact:write]
 account_scope:

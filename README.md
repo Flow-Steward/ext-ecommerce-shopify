@@ -1,16 +1,16 @@
 # Shopify
 
-Shopify Admin GraphQL API `2026-07` for inventory, catalog and order automation, typed and
-scoped to project-owned Shopify stores.
+Connect Shopify catalog, inventory and fulfillment work to Flow Steward through the Admin GraphQL API version 2026-07. Create products together with their variants, SKUs, prices and starting stock, using media URLs or image files from workflow storage. Update product details, variant fields, catalog metafields and media, or set inventory quantities for specific locations.
 
-The surface is a fixed set of operations, and each one covers its Shopify endpoint completely:
-every input field Shopify's mutation accepts, every filter and sort its list offers, and every
-scalar and money field of the record it returns. What is deliberately not reachable is listed
-with its reason on the **Shopify API coverage** page (`ui/pages/api-coverage.yaml`), and the
-tests compare every operation with Shopify's official schema field by field. It is not a general
-Shopify client: nothing here deletes, cancels or refunds, there is no webhook, no REST Admin API
-and no way to run GraphQL of your own. Authorization is OAuth, and it is the only OAuth here: the
-extension holds no other credential and performs no other flow.
+Read products, variants, inventory items, locations and stock levels for downstream workflows. Product export gathers matching records into a JSONL file, with optional images, variants and location inventory. Quality filters identify missing images, small images, missing alt text, short descriptions and gaps in fields such as SKU, barcode or SEO metadata. This supports supplier catalog imports, stock updates and focused content-improvement queues.
+
+Order operations read orders, line items, metafields and fulfillment information, update order metadata, create fulfillments and update tracking. Bulk product creation submits larger batches for Shopify's asynchronous processing and returns a submission identifier; completion and row outcomes require separate reconciliation.
+
+The release provides a fixed 33-operation surface, including connection helpers. Each call selects one authorized store connection. Its scope covers the named catalog, inventory and fulfillment tasks; customer management, refunds, order cancellation and arbitrary GraphQL are outside this release. Store authorization requires the extension's configured OAuth scope set.
+
+Create your Shopify app, configure its client ID, secret, callback URL and the eight required access scopes in Flow Steward and Shopify. Add a project connection for the myshopify.com store and authorize the app; the connection uses OAuth rather than a pasted Admin API token.
+
+The supported operation list and the exclusions are documented on the **Shopify API coverage** page (`ui/pages/api-coverage.yaml`).
 
 ## Requirements
 
