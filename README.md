@@ -1,5 +1,7 @@
 # Shopify
 
+See [Workflow actions and examples](docs/workflow-actions.md) for connection setup, action inputs and end-to-end examples.
+
 Connect Shopify catalog, inventory and fulfillment work to Flow Steward through the Admin GraphQL API version 2026-07. Create products together with their variants, SKUs, prices and starting stock, using media URLs or image files from workflow storage. Update product details, variant fields, catalog metafields and media, or set inventory quantities for specific locations.
 
 Read products, variants, inventory items, locations and stock levels for downstream workflows. Product export gathers matching records into a JSONL file, with optional images, variants and location inventory. Quality filters identify missing images, small images, missing alt text, short descriptions and gaps in fields such as SKU, barcode or SEO metadata. This supports supplier catalog imports, stock updates and focused content-improvement queues.

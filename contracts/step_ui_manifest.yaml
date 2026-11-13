@@ -8,6 +8,7 @@ forms:
     label: Store address
     widget_type: text
     required: true
+    help_text: store-name or store-name.myshopify.com.
 - operation_id: test_connection
   title: Test the connection
   fields: []
@@ -21,30 +22,38 @@ forms:
     label: Page size
     widget_type: number
     required: false
+    help_text: How many locations to return, 1 to 250.
+    placeholder: '10'
   - name: after
     label: After cursor
     widget_type: text
     required: false
+    help_text: The end_cursor of the previous page.
   - name: include_inactive
     label: Include deactivated locations
     widget_type: boolean
     required: false
+    help_text: Deactivated locations can no longer stock inventory.
   - name: include_legacy
     label: Include legacy locations
     widget_type: boolean
     required: false
+    help_text: Include locations of legacy fulfillment services.
   - name: filter
     label: Shopify search query
     widget_type: text
     required: false
+    help_text: An optional Shopify search expression, for example name:Warehouse or "active:true".
   - name: sort_key
     label: Sort by
     widget_type: text
     required: false
+    help_text: Sort field for this list or export. Choose a value supported by this action; reverse controls its direction.
   - name: reverse
     label: Reverse order
     widget_type: boolean
     required: false
+    help_text: Return the results in reverse order.
 - operation_id: list_inventory_items
   title: List inventory items
   fields:
@@ -52,22 +61,29 @@ forms:
     label: Page size
     widget_type: number
     required: false
+    help_text: How many inventory items to return, 1 to 200.
+    placeholder: '10'
   - name: after
     label: After cursor
     widget_type: text
     required: false
+    help_text: The end_cursor of the previous page.
   - name: sku
     label: SKU
     widget_type: text
     required: false
+    help_text: Narrow the page to this SKU. The value is sent to Shopify as a quoted search term, so matching follows Shopify's own SKU search.
+    placeholder: MUG-BLUE-01
   - name: filter
     label: Shopify search query
     widget_type: text
     required: false
+    help_text: An optional Shopify search expression, for example tracked:true or updated_at:>2026-01-01.
   - name: reverse
     label: Reverse order
     widget_type: boolean
     required: false
+    help_text: Return the results in reverse order.
 - operation_id: get_inventory_item
   title: Get an inventory item
   fields:
@@ -75,6 +91,8 @@ forms:
     label: Inventory item id
     widget_type: text
     required: true
+    help_text: A gid://shopify/InventoryItem/... id.
+    placeholder: gid://shopify/InventoryItem/3042
 - operation_id: get_inventory_levels_batch
   title: Get stock for many items at one location
   fields:
@@ -82,14 +100,19 @@ forms:
     label: Location id
     widget_type: text
     required: true
+    help_text: A gid://shopify/Location/... id.
+    placeholder: gid://shopify/Location/4042
   - name: inventory_item_ids
     label: Inventory item ids
     widget_type: json
     required: true
+    help_text: Between 1 and 250 distinct gid://shopify/InventoryItem/... ids.
+    placeholder: '["gid://shopify/InventoryItem/3042"]'
   - name: include_inactive
     label: Include a deactivated location
     widget_type: boolean
     required: false
+    help_text: When false, stock held at a deactivated location is reported as no level.
 - operation_id: set_inventory_quantities
   title: Set stock quantities
   fields:
@@ -97,14 +120,18 @@ forms:
     label: Quantities
     widget_type: json
     required: true
+    help_text: Between 1 and 250 absolute quantities. Each entry names one inventory item at one location.
+    placeholder: '[{"inventory_item_id": "gid://shopify/InventoryItem/3042", "location_id": "gid://shopify/Location/4042", "quantity": 24, "change_from_quantity": 18}]'
   - name: name
     label: Quantity state
     widget_type: text
     required: false
+    help_text: available (default) or on_hand.
   - name: reason
     label: Reason
     widget_type: text
     required: false
+    help_text: 'Shopify''s reason code, recorded on the adjustment: correction (default), cycle_count_available, damaged, movement_created, movement_received, movement_updated, movement_canceled, other, promotion, quality_control, received, reservation_created, reservation_deleted, reservation_updated, restock, safety_stock or shrinkage.'
 - operation_id: list_products
   title: List products
   fields:
@@ -112,26 +139,33 @@ forms:
     label: Page size
     widget_type: number
     required: false
+    help_text: How many products to return, 1 to 200.
+    placeholder: '10'
   - name: after
     label: After cursor
     widget_type: text
     required: false
+    help_text: The end_cursor of the previous page.
   - name: filter
     label: Shopify search query
     widget_type: text
     required: false
+    help_text: An optional Shopify search expression, for example status:active, vendor:Acme, tag:summer, or category_id:sg-4-17.
   - name: sort_key
     label: Sort by
     widget_type: text
     required: false
+    help_text: Sort field for this list or export. Choose a value supported by this action; reverse controls its direction.
   - name: reverse
     label: Reverse order
     widget_type: boolean
     required: false
+    help_text: Return the results in reverse order.
   - name: saved_search_id
     label: Saved search id
     widget_type: text
     required: false
+    help_text: A gid://shopify/SavedSearch/... id whose query to apply.
 - operation_id: export_products
   title: Export all matching products
   fields:
@@ -139,38 +173,48 @@ forms:
     label: Page size
     widget_type: number
     required: false
+    help_text: How many products to read per request, 1 to 200.
+    placeholder: '10'
   - name: include_images
     label: Include images
     widget_type: boolean
     required: false
+    help_text: Export every image with URL, alt text, width and height, plus image_count. Adds paginated reads.
   - name: include_variants
     label: Include variants
     widget_type: boolean
     required: false
+    help_text: Export every variant record. Adds paginated reads.
   - name: include_inventory
     label: Include inventory
     widget_type: boolean
     required: false
+    help_text: Include variants automatically and export all inventory locations and quantities. Requires read_inventory or write_inventory, plus read_locations. Adds paginated reads.
   - name: filter
     label: Shopify search query
     widget_type: text
     required: false
+    help_text: An optional Shopify search expression, for example status:active, vendor:Acme, tag:summer, or category_id:sg-4-17.
   - name: sort_key
     label: Sort by
     widget_type: text
     required: false
+    help_text: Sort field for this list or export. Choose a value supported by this action; reverse controls its direction.
   - name: reverse
     label: Reverse order
     widget_type: boolean
     required: false
+    help_text: Return the results in reverse order.
   - name: saved_search_id
     label: Saved search id
     widget_type: text
     required: false
+    help_text: A gid://shopify/SavedSearch/... id whose query to apply.
   - name: quality_filter
     label: Only products that need attention
     widget_type: json
     required: false
+    help_text: Export only the products with catalog gaps — missing or small images, short descriptions, empty attributes — each with the list of what is wrong. Shopify's search cannot filter on these, so the whole matching catalog is read and checked.
 - operation_id: get_product
   title: Get a product
   fields:
@@ -178,6 +222,8 @@ forms:
     label: Product id
     widget_type: text
     required: true
+    help_text: A gid://shopify/Product/... id.
+    placeholder: gid://shopify/Product/1042
 - operation_id: list_product_variants
   title: List product variants
   fields:
@@ -185,26 +231,33 @@ forms:
     label: Page size
     widget_type: number
     required: false
+    help_text: How many variants to return, 1 to 100.
+    placeholder: '10'
   - name: after
     label: After cursor
     widget_type: text
     required: false
+    help_text: The end_cursor of the previous page.
   - name: filter
     label: Shopify search query
     widget_type: text
     required: false
+    help_text: An optional Shopify search expression, for example product_id:123, sku:ABC-1 or barcode:4006381333931.
   - name: sort_key
     label: Sort by
     widget_type: text
     required: false
+    help_text: Sort field for this list or export. Choose a value supported by this action; reverse controls its direction.
   - name: reverse
     label: Reverse order
     widget_type: boolean
     required: false
+    help_text: Return the results in reverse order.
   - name: saved_search_id
     label: Saved search id
     widget_type: text
     required: false
+    help_text: A gid://shopify/SavedSearch/... id whose query to apply.
 - operation_id: get_product_variant
   title: Get a product variant
   fields:
@@ -212,6 +265,8 @@ forms:
     label: Product variant id
     widget_type: text
     required: true
+    help_text: A gid://shopify/ProductVariant/... id.
+    placeholder: gid://shopify/ProductVariant/2042
 - operation_id: list_catalog_metafields
   title: List catalog metafields
   fields:
@@ -219,30 +274,40 @@ forms:
     label: Owner type
     widget_type: text
     required: true
+    help_text: Which kind of record owns the metafields.
   - name: owner_id
     label: Owner id
     widget_type: text
     required: true
+    help_text: A Product or ProductVariant id matching the owner type.
   - name: first
     label: Page size
     widget_type: number
     required: false
+    help_text: How many metafields to return, 1 to 250.
+    placeholder: '10'
   - name: after
     label: After cursor
     widget_type: text
     required: false
+    help_text: The end_cursor of the previous page.
   - name: namespace
     label: Namespace
     widget_type: text
     required: false
+    help_text: Only metafields in this namespace.
+    placeholder: custom
   - name: keys
     label: Keys
     widget_type: json
     required: false
+    help_text: Only these metafields, each written "namespace.key".
+    placeholder: '["custom.supplier_ref"]'
   - name: reverse
     label: Reverse order
     widget_type: boolean
     required: false
+    help_text: Return the results in reverse order.
 - operation_id: list_product_media
   title: List product media
   fields:
@@ -250,26 +315,34 @@ forms:
     label: Product id
     widget_type: text
     required: true
+    help_text: A gid://shopify/Product/... id.
+    placeholder: gid://shopify/Product/1042
   - name: first
     label: Page size
     widget_type: number
     required: false
+    help_text: How many media items to return, 1 to 150.
+    placeholder: '10'
   - name: after
     label: After cursor
     widget_type: text
     required: false
+    help_text: The end_cursor of the previous page.
   - name: filter
     label: Shopify search query
     widget_type: text
     required: false
+    help_text: An optional Shopify search expression, for example media_type:IMAGE.
   - name: sort_key
     label: Sort by
     widget_type: text
     required: false
+    help_text: Sort field for this list or export. Choose a value supported by this action; reverse controls its direction.
   - name: reverse
     label: Reverse order
     widget_type: boolean
     required: false
+    help_text: Return the results in reverse order.
 - operation_id: create_product
   title: Create a product
   fields:
@@ -277,90 +350,118 @@ forms:
     label: Title
     widget_type: text
     required: true
+    help_text: 'Product name shown in the store. Example: Blue ceramic mug.'
+    placeholder: Blue ceramic mug
   - name: handle
     label: Handle
     widget_type: text
     required: true
+    help_text: The URL handle. Required here so a product is found again by a known handle; Shopify refuses one that is already taken.
   - name: description_html
     label: Description HTML
     widget_type: text
     required: false
+    help_text: 'Product description as HTML. Example: <p>Blue ceramic mug, 300 ml.</p>'
+    placeholder: <p>Blue ceramic mug, 300 ml.</p>
   - name: vendor
     label: Vendor
     widget_type: text
     required: false
+    help_text: 'Vendor or brand name saved on the product. Example: Example Ceramics.'
+    placeholder: Example Ceramics
   - name: product_type
     label: Product type
     widget_type: text
     required: false
+    help_text: 'Merchant-defined product classification. Example: Drinkware.'
+    placeholder: Drinkware
   - name: category_id
     label: Category id
     widget_type: text
     required: false
+    help_text: A gid://shopify/TaxonomyCategory/... id.
   - name: seo_title
     label: SEO title
     widget_type: text
     required: false
+    help_text: 'Search-engine title for the product page. Example: Blue ceramic mug | Example Store.'
   - name: seo_description
     label: SEO description
     widget_type: text
     required: false
+    help_text: 'Search-engine summary for the product page. Example: A glazed blue ceramic mug for everyday use.'
   - name: template_suffix
     label: Theme template suffix
     widget_type: text
     required: false
+    help_text: 'Suffix of an existing product template in the store''s theme. Example: preorder for product.preorder.'
   - name: gift_card_template_suffix
     label: Gift card template suffix
     widget_type: text
     required: false
+    help_text: Suffix of an existing gift card template in the store's theme.
   - name: requires_selling_plan
     label: Sold only by subscription
     widget_type: boolean
     required: false
+    help_text: Whether customers must purchase this product through a selling plan.
   - name: tags
     label: Tags
     widget_type: json
     required: false
+    help_text: 'Product tags as a JSON array of strings. Example: ["summer", "ceramics"].'
+    placeholder: '["summer", "ceramics"]'
   - name: status
     label: Status
     widget_type: text
     required: false
+    help_text: DRAFT unless you choose otherwise. ACTIVE makes it sellable.
   - name: gift_card
     label: Gift card
     widget_type: boolean
     required: false
+    help_text: Whether this new product is a gift card.
   - name: collection_ids
     label: Collections
     widget_type: json
     required: false
+    help_text: gid://shopify/Collection/... ids.
   - name: combined_listing_role
     label: Combined listing role
     widget_type: text
     required: false
+    help_text: Role of this product in a combined listing. Choose a value from the declared schema; Shopify determines whether the store is eligible.
   - name: claim_ownership
     label: Claim ownership
     widget_type: json
     required: false
+    help_text: Claim this product for your app's bundles.
   - name: metafields
     label: Metafields
     widget_type: json
     required: false
+    help_text: Metafields to set on the new product.
   - name: options
     label: Options
     widget_type: json
     required: false
+    help_text: Up to three options. Give values, or link the option to a metafield. Without variants, Shopify builds the initial variant from the first value of each.
   - name: variants
     label: Variants
     widget_type: json
     required: false
+    help_text: The variants to create with the product, each with its own SKU, price, barcode, weight and stock. Omit to get one variant built from the first value of each option. Without options, give at most one variant.
   - name: media
     label: Media
     widget_type: json
     required: false
+    help_text: Images, videos and 3D models by public URL or existing file id. Shopify processes them asynchronously; creation success does not mean they are READY.
+    placeholder: '[{"source_url": "https://example.com/blue-mug.jpg", "content_type": "IMAGE", "alt": "Blue ceramic mug"}]'
   - name: image_files
     label: Image files
     widget_type: json
     required: false
+    help_text: Images stored in Flow Steward (workflow artifacts) to upload and attach. Each file goes through Shopify's staged upload first; up to 20 per call.
 - operation_id: create_products_bulk
   title: Create products in bulk
   fields:
@@ -368,10 +469,12 @@ forms:
     label: Products
     widget_type: json
     required: false
+    help_text: New products using create_product fields, without connection_ref and image_files. Use a JSONL artifact for large batches.
   - name: artifact_handle
     label: Products JSONL artifact
     widget_type: text
     required: false
+    help_text: One product per line using create_product fields. Mutually exclusive with products. Maximum 10000 products and 100 MB.
 - operation_id: update_product
   title: Update a product
   fields:
@@ -379,94 +482,123 @@ forms:
     label: Product id
     widget_type: text
     required: false
+    help_text: A gid://shopify/Product/... id.
+    placeholder: gid://shopify/Product/1042
   - name: product_handle
     label: Product handle
     widget_type: text
     required: false
+    help_text: Find the product by its handle instead of its id.
   - name: product_custom_id
     label: Product custom id
     widget_type: json
     required: false
+    help_text: Find the product by a unique metafield value instead of its id.
   - name: title
     label: Title
     widget_type: text
     required: false
+    help_text: 'Product name shown in the store. Example: Blue ceramic mug.'
+    placeholder: Blue ceramic mug
   - name: handle
     label: Handle
     widget_type: text
     required: false
+    help_text: A new URL handle.
   - name: redirect_new_handle
     label: Redirect the old handle
     widget_type: boolean
     required: false
+    help_text: Keep the old URL working when the handle changes. Default true.
   - name: description_html
     label: Description HTML
     widget_type: text
     required: false
+    help_text: 'Product description as HTML. Example: <p>Blue ceramic mug, 300 ml.</p>'
+    placeholder: <p>Blue ceramic mug, 300 ml.</p>
   - name: vendor
     label: Vendor
     widget_type: text
     required: false
+    help_text: 'Vendor or brand name saved on the product. Example: Example Ceramics.'
+    placeholder: Example Ceramics
   - name: product_type
     label: Product type
     widget_type: text
     required: false
+    help_text: 'Merchant-defined product classification. Example: Drinkware.'
+    placeholder: Drinkware
   - name: category_id
     label: Category id
     widget_type: text
     required: false
+    help_text: A gid://shopify/TaxonomyCategory/... id.
   - name: seo_title
     label: SEO title
     widget_type: text
     required: false
+    help_text: 'Search-engine title for the product page. Example: Blue ceramic mug | Example Store.'
   - name: seo_description
     label: SEO description
     widget_type: text
     required: false
+    help_text: 'Search-engine summary for the product page. Example: A glazed blue ceramic mug for everyday use.'
   - name: template_suffix
     label: Theme template suffix
     widget_type: text
     required: false
+    help_text: 'Suffix of an existing product template in the store''s theme. Example: preorder for product.preorder.'
   - name: gift_card_template_suffix
     label: Gift card template suffix
     widget_type: text
     required: false
+    help_text: Suffix of an existing gift card template in the store's theme.
   - name: requires_selling_plan
     label: Sold only by subscription
     widget_type: boolean
     required: false
+    help_text: Whether customers must purchase this product through a selling plan.
   - name: replace_tags
     label: Replace tags
     widget_type: json
     required: false
+    help_text: Replaces the product's entire tag list. Send [] to clear every tag.
   - name: status
     label: Status
     widget_type: text
     required: false
+    help_text: Product publication status. Choose a value from the declared schema; omitted fields retain the action's native behavior.
   - name: join_collection_ids
     label: Add to collections
     widget_type: json
     required: false
+    help_text: gid://shopify/Collection/... ids.
   - name: leave_collection_ids
     label: Remove from collections
     widget_type: json
     required: false
+    help_text: gid://shopify/Collection/... ids.
   - name: delete_conflicting_constrained_metafields
     label: Delete metafields the new category does not allow
     widget_type: boolean
     required: false
+    help_text: 'Only with category_id. Default false: such metafields are kept and Shopify refuses the change instead.'
   - name: metafields
     label: Metafields
     widget_type: json
     required: false
+    help_text: Metafields to create or update on the product.
   - name: media
     label: Media
     widget_type: json
     required: false
+    help_text: Media to create from public URLs and attach. Processed asynchronously.
+    placeholder: '[{"source_url": "https://example.com/blue-mug.jpg", "content_type": "IMAGE", "alt": "Blue ceramic mug"}]'
   - name: image_files
     label: Image files
     widget_type: json
     required: false
+    help_text: Images stored in Flow Steward (workflow artifacts) to upload and attach. Each file goes through Shopify's staged upload first; up to 20 per call.
 - operation_id: create_product_variants_batch
   title: Create product variants
   fields:
@@ -474,18 +606,24 @@ forms:
     label: Product id
     widget_type: text
     required: true
+    help_text: A gid://shopify/Product/... id.
+    placeholder: gid://shopify/Product/1042
   - name: variants
     label: Variants
     widget_type: json
     required: true
+    help_text: Between 1 and 250 variants to create.
   - name: media
     label: Media
     widget_type: json
     required: false
+    help_text: Media to create from public URLs and attach. Processed asynchronously.
+    placeholder: '[{"source_url": "https://example.com/blue-mug.jpg", "content_type": "IMAGE", "alt": "Blue ceramic mug"}]'
   - name: strategy
     label: Standalone variant
     widget_type: text
     required: false
+    help_text: PRESERVE_STANDALONE_VARIANT (default) keeps the product's default variant; REMOVE_STANDALONE_VARIANT deletes it; DEFAULT follows Shopify.
 - operation_id: update_product_variants_batch
   title: Update product variants
   fields:
@@ -493,18 +631,24 @@ forms:
     label: Product id
     widget_type: text
     required: true
+    help_text: A gid://shopify/Product/... id.
+    placeholder: gid://shopify/Product/1042
   - name: variants
     label: Variants
     widget_type: json
     required: true
+    help_text: Between 1 and 250 variants to change.
   - name: media
     label: Media
     widget_type: json
     required: false
+    help_text: Media to create from public URLs and attach. Processed asynchronously.
+    placeholder: '[{"source_url": "https://example.com/blue-mug.jpg", "content_type": "IMAGE", "alt": "Blue ceramic mug"}]'
   - name: allow_partial_updates
     label: Allow partial updates
     widget_type: boolean
     required: false
+    help_text: 'false (default): all variants change or none do.'
 - operation_id: set_catalog_metafields
   title: Set catalog metafields
   fields:
@@ -512,6 +656,7 @@ forms:
     label: Metafields
     widget_type: json
     required: true
+    help_text: Between 1 and 25 metafields to set.
 - operation_id: update_product_media
   title: Update a media file
   fields:
@@ -519,30 +664,38 @@ forms:
     label: Media id
     widget_type: text
     required: true
+    help_text: A MediaImage, Video, Model3d, ExternalVideo or GenericFile id.
   - name: alt
     label: Alt text
     widget_type: text
     required: false
+    help_text: The replacement alt text.
   - name: source_url
     label: Replacement source URL
     widget_type: text
     required: false
+    help_text: A public https:// URL to replace the file's content with.
   - name: preview_image_url
     label: Preview image URL
     widget_type: text
     required: false
+    help_text: A public https:// image URL to use as the file's preview.
   - name: filename
     label: Filename
     widget_type: text
     required: false
+    help_text: 'Replacement filename for the media file, including its extension. Example: blue-mug.jpg.'
+    placeholder: blue-mug.jpg
   - name: add_to_product_ids
     label: Attach to products
     widget_type: json
     required: false
+    help_text: 'Existing product GIDs to associate with this file, as a JSON array. Example: ["gid://shopify/Product/1042"].'
   - name: remove_from_product_ids
     label: Detach from products
     widget_type: json
     required: false
+    help_text: 'Existing product GIDs to disassociate from this file, as a JSON array. Example: ["gid://shopify/Product/1042"].'
 - operation_id: list_orders
   title: List orders
   fields:
@@ -550,26 +703,33 @@ forms:
     label: Page size
     widget_type: number
     required: false
+    help_text: How many orders to return, 1 to 15.
+    placeholder: '10'
   - name: after
     label: After cursor
     widget_type: text
     required: false
+    help_text: The end_cursor of the previous page.
   - name: filter
     label: Shopify search query
     widget_type: text
     required: false
+    help_text: An optional Shopify search expression, for example financial_status:paid, fulfillment_status:unfulfilled, created_at:>2026-01-01 or tag:wholesale.
   - name: sort_key
     label: Sort by
     widget_type: text
     required: false
+    help_text: Sort field for this list or export. Choose a value supported by this action; reverse controls its direction.
   - name: reverse
     label: Reverse order
     widget_type: boolean
     required: false
+    help_text: Return the results in reverse order.
   - name: saved_search_id
     label: Saved search id
     widget_type: text
     required: false
+    help_text: A gid://shopify/SavedSearch/... id whose query to apply.
 - operation_id: get_order
   title: Get an order
   fields:
@@ -577,6 +737,8 @@ forms:
     label: Order id
     widget_type: text
     required: true
+    help_text: A gid://shopify/Order/... id.
+    placeholder: gid://shopify/Order/5042
 - operation_id: list_order_line_items
   title: List order line items
   fields:
@@ -584,18 +746,24 @@ forms:
     label: Order id
     widget_type: text
     required: true
+    help_text: A gid://shopify/Order/... id.
+    placeholder: gid://shopify/Order/5042
   - name: first
     label: Page size
     widget_type: number
     required: false
+    help_text: How many line items to return, 1 to 40.
+    placeholder: '10'
   - name: after
     label: After cursor
     widget_type: text
     required: false
+    help_text: The end_cursor of the previous page.
   - name: reverse
     label: Reverse order
     widget_type: boolean
     required: false
+    help_text: Return the results in reverse order.
 - operation_id: list_order_metafields
   title: List order metafields
   fields:
@@ -603,26 +771,36 @@ forms:
     label: Order id
     widget_type: text
     required: true
+    help_text: A gid://shopify/Order/... id.
+    placeholder: gid://shopify/Order/5042
   - name: first
     label: Page size
     widget_type: number
     required: false
+    help_text: How many metafields to return, 1 to 250.
+    placeholder: '10'
   - name: after
     label: After cursor
     widget_type: text
     required: false
+    help_text: The end_cursor of the previous page.
   - name: namespace
     label: Namespace
     widget_type: text
     required: false
+    help_text: Only metafields in this namespace.
+    placeholder: custom
   - name: keys
     label: Keys
     widget_type: json
     required: false
+    help_text: Only these metafields, each written "namespace.key".
+    placeholder: '["custom.supplier_ref"]'
   - name: reverse
     label: Reverse order
     widget_type: boolean
     required: false
+    help_text: Return the results in reverse order.
 - operation_id: list_order_fulfillment_orders
   title: List fulfillment orders
   fields:
@@ -630,30 +808,39 @@ forms:
     label: Order id
     widget_type: text
     required: true
+    help_text: A gid://shopify/Order/... id.
+    placeholder: gid://shopify/Order/5042
   - name: first
     label: Page size
     widget_type: number
     required: false
+    help_text: How many fulfillment orders to return, 1 to 50.
+    placeholder: '10'
   - name: after
     label: After cursor
     widget_type: text
     required: false
+    help_text: The end_cursor of the previous page.
   - name: line_items_first
     label: Line items per fulfillment order
     widget_type: number
     required: false
+    help_text: How many line items to return inside each fulfillment order, 1 to 100.
   - name: reverse
     label: Reverse order
     widget_type: boolean
     required: false
+    help_text: Return the results in reverse order.
   - name: displayable
     label: Only displayable
     widget_type: boolean
     required: false
+    help_text: Only fulfillment orders a merchant can see and act on.
   - name: filter
     label: Shopify search query
     widget_type: text
     required: false
+    help_text: An optional Shopify search expression, for example status:open or assigned_location_id:123.
 - operation_id: get_fulfillment_order
   title: Get a fulfillment order
   fields:
@@ -661,14 +848,18 @@ forms:
     label: Fulfillment order id
     widget_type: text
     required: true
+    help_text: A gid://shopify/FulfillmentOrder/... id.
+    placeholder: gid://shopify/FulfillmentOrder/6042
   - name: line_items_first
     label: Line items page size
     widget_type: number
     required: false
+    help_text: How many line items to return, 1 to 250.
   - name: line_items_after
     label: After cursor
     widget_type: text
     required: false
+    help_text: The line_items_page_info end_cursor of the previous page.
 - operation_id: list_order_fulfillments
   title: List order fulfillments
   fields:
@@ -676,14 +867,19 @@ forms:
     label: Order id
     widget_type: text
     required: true
+    help_text: A gid://shopify/Order/... id.
+    placeholder: gid://shopify/Order/5042
   - name: first
     label: Page size
     widget_type: number
     required: false
+    help_text: How many fulfillments to return, 1 to 50.
+    placeholder: '10'
   - name: filter
     label: Shopify search query
     widget_type: text
     required: false
+    help_text: An optional Shopify search expression, for example status:success.
 - operation_id: update_order_metadata
   title: Update an order
   fields:
@@ -691,42 +887,53 @@ forms:
     label: Order id
     widget_type: text
     required: true
+    help_text: A gid://shopify/Order/... id.
+    placeholder: gid://shopify/Order/5042
   - name: note
     label: Note
     widget_type: text
     required: false
+    help_text: Replaces the order note.
   - name: po_number
     label: PO number
     widget_type: text
     required: false
+    help_text: Replaces the purchase order number.
   - name: replace_tags
     label: Replace tags
     widget_type: json
     required: false
+    help_text: Replaces the order's entire tag list. Send [] to clear every tag.
   - name: replace_custom_attributes
     label: Replace custom attributes
     widget_type: json
     required: false
+    help_text: Replaces the order's entire custom attribute list.
   - name: email
     label: Contact email
     widget_type: text
     required: false
+    help_text: The order's contact email. Needs Shopify's protected customer data access.
   - name: phone
     label: Contact phone
     widget_type: text
     required: false
+    help_text: The order's contact phone in E.164 format. Needs Shopify's protected customer data access.
   - name: shipping_address
     label: Shipping address
     widget_type: json
     required: false
+    help_text: Replaces the shipping address. Needs Shopify's protected customer data access.
   - name: metafields
     label: Metafields
     widget_type: json
     required: false
+    help_text: Metafields to create or update on the order.
   - name: localized_fields
     label: Localized fields
     widget_type: json
     required: false
+    help_text: Country-specific fields such as TAX_CREDENTIAL_BR or SHIPPING_CREDENTIAL_MX.
 - operation_id: set_order_metafields
   title: Set order metafields
   fields:
@@ -734,6 +941,7 @@ forms:
     label: Metafields
     widget_type: json
     required: true
+    help_text: Between 1 and 25 metafields to set.
 - operation_id: create_fulfillment
   title: Create a fulfillment
   fields:
@@ -741,22 +949,27 @@ forms:
     label: Fulfillment orders
     widget_type: json
     required: true
+    help_text: The fulfillment orders to fulfil, each with its explicit line items.
   - name: tracking
     label: Tracking
     widget_type: json
     required: false
+    help_text: Carrier and tracking details. At least one field must be present.
   - name: notify_customer
     label: Notify the customer
     widget_type: boolean
     required: false
+    help_text: Email the customer about this change. Default false.
   - name: origin_address
     label: Shipped from
     widget_type: json
     required: false
+    help_text: The address the goods leave from, if not the assigned location.
   - name: message
     label: Message
     widget_type: text
     required: false
+    help_text: A note recorded with the fulfillment.
 - operation_id: update_fulfillment_tracking
   title: Update fulfillment tracking
   fields:
@@ -764,11 +977,15 @@ forms:
     label: Fulfillment id
     widget_type: text
     required: true
+    help_text: A gid://shopify/Fulfillment/... id.
+    placeholder: gid://shopify/Fulfillment/7042
   - name: tracking
     label: Tracking
     widget_type: json
     required: true
+    help_text: Carrier and tracking details. At least one field must be present.
   - name: notify_customer
     label: Notify the customer
     widget_type: boolean
     required: false
+    help_text: Email the customer about this change. Default false.

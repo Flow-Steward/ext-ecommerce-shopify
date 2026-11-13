@@ -17,6 +17,7 @@ from typing import Any
 
 import yaml
 
+from runtime.action_copy import field_guidance
 from runtime.catalog import (
     CATEGORY,
     CHANNEL,
@@ -126,6 +127,7 @@ def step_ui_manifest() -> dict[str, Any]:
                 "label": field.label,
                 "widget_type": field.widget_type,
                 "required": field.required,
+                **field_guidance(field.name, row.input_schema["properties"][field.name]),
             }
             for field in ui_fields(row)
         ]

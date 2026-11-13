@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.4
+
+- Clarify workflow field guidance and examples, with a setup and workflow action guide. Existing action IDs, input contracts and behavior are unchanged.
+
 ## 0.5.3
 
 ### Changed
